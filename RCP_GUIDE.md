@@ -295,7 +295,7 @@ everyone, especially around the May 24 and June 7 deadlines:
   runai submit \
     --name "cs552-${GASPAR}-${GROUP}-train-$(date +%H%M%S)" \
     -p "course-cs-552-${GASPAR}" \
-    --image "registry.rcp.epfl.ch/course-cs-552/base-vllm:v1" \
+    --image "${IMAGE}" \
     --gpu 1 --large-shm --node-pools a100-40g \
     --environment HF_HOME=/scratch/hf_cache \
     --environment HF_TOKEN="${HF_TOKEN:-}" \
