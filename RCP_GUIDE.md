@@ -6,8 +6,7 @@ The included `Dockerfile` and `build.sh` are only a base for teams that
 genuinely need a custom image.
 
 For the official project scope, grading weights, rubrics, report
-requirements, and deadlines, refer to your project description
-([Standard](https://docs.google.com/document/d/1TECHv4q_eR0X-HIyW10vHFbcU2bHLSph/edit?usp=sharing&ouid=117565422542731737285&rtpof=true&sd=true) or [Open](https://docs.google.com/document/d/1NI4UKsasYuFLxOGGzsAweCbW0XOEtc59/edit?usp=sharing&ouid=117565422542731737285&rtpof=true&sd=true)). This guide focuses on the compute environment and
+requirements, and deadlines, refer to your [project description](https://docs.google.com/document/d/1TECHv4q_eR0X-HIyW10vHFbcU2bHLSph/edit?usp=sharing&ouid=117565422542731737285&rtpof=true&sd=true). This guide focuses on the compute environment and
 the files needed to run your code.
 
 Use `/scratch` for caches, datasets, checkpoints, and large generated
