@@ -42,7 +42,7 @@ Every checkpoint you push must satisfy all of the following, or it will fail val
 
 - **Starting model:** `Qwen/Qwen3-1.7B`. The starting model cannot be swapped — switching architectures will fail the checkpoint loading and forfeit the milestone.
 - **Format:** vLLM-loadable safetensors; `config.json` and weights at the root of the repo. See the starting model repo for details.
-- `**generation_config.json`** must be committed alongside the weights. You may tune `temperature`, `top_k`, `top_p`.
+- **`generation_config.json`** must be committed alongside the weights. You may tune `temperature`, `top_k`, `top_p`.
 - **Tokenizer:** must have a `chat_template` file. The CI sends prompts through `tokenizer.apply_chat_template(messages, add_generation_prompt=True)` — **nothing else is passed**, so any prompt-construction preference must be encoded inside the template itself.
 - **Output contract:** every answer must be wrapped in `\boxed{...}`. Anything outside the box is treated as reasoning and not evaluated.
 
@@ -170,7 +170,7 @@ A: ...reasoning... \boxed{C}
 
 ## Validation snapshot (`validation/`)
 
-We provide a frozen sample of **5 problems per benchmark** (20 total) so you can sanity-check your inference and prompt formatting.
+We provide a frozen sample of **10 problems per benchmark** (40 total) so you can sanity-check your inference and prompt formatting.
 
 ```
 validation/
