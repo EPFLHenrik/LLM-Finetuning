@@ -34,8 +34,8 @@
 set -euo pipefail
 
 # ============== EDIT THESE LINES ==============
-GASPAR="atarun"              # <-- YOUR GASPAR EPFL username.
-GROUP="g75"                  # <-- YOUR TEAM, e.g. g07.
+GASPAR=""              # <-- YOUR GASPAR EPFL username.
+GROUP="gxx"                  # <-- YOUR TEAM, e.g. g07.
 # ==============================================
 
 # Refuse to run with placeholders.
@@ -81,6 +81,7 @@ runai submit \
   --large-shm \
   --interactive \
   --node-pools "${NODE}" \
+  --working-dir /scratch \
   --environment HF_HOME=/scratch/hf_cache \
   --environment HF_HUB_ENABLE_HF_TRANSFER=1 \
   --environment HF_TOKEN="${HF_TOKEN:-}" \
@@ -91,6 +92,7 @@ runai submit \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
   --command -- /bin/bash -lc "\
     mkdir -p /scratch/hf_cache /scratch/wandb && \
+    ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
     cd /scratch && \
     jupyter lab \
       --ip=0.0.0.0 --port=8888 --no-browser --allow-root \

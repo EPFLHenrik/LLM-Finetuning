@@ -297,13 +297,16 @@ everyone, especially around the May 24 and June 7 deadlines:
     -p "course-cs-552-${GASPAR}" \
     --image "${IMAGE}" \
     --gpu 1 --large-shm --node-pools a100-40g \
+    --working-dir /scratch \
     --environment HF_HOME=/scratch/hf_cache \
     --environment HF_TOKEN="${HF_TOKEN:-}" \
     --environment WANDB_API_KEY="${WANDB_API_KEY:-}" \
     --existing-pvc "claimname=course-cs-552-scratch-${GROUP},path=/scratch" \
     --existing-pvc "claimname=course-cs-552-shared-ro,path=/shared-ro" \
     --existing-pvc "claimname=course-cs-552-shared-rw,path=/shared-rw" \
-    --command -- /bin/bash -lc "cd /scratch/<your-repo> && python train.py"
+    --command -- /bin/bash -lc "\
+      ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
+      cd /scratch/<your-repo> && python train.py"
   ```
   Stream logs with `runai logs -f <job-name>`. The job exits on its own
   when the script finishes — still run `runai delete job` if you abort.
