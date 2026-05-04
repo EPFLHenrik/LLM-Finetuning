@@ -137,7 +137,7 @@ Adversarial prompts that probe **refusal calibration**, harm categories, and jai
 
 ### Multilinguality
 
-Questions in **5 languages** spanning regional knowledge, civics, culture, and professional licensing material. **Multiple-choice. pass@1**
+Questions in **5 languages** (Italian, Spanish, Chinese, Russian, Hindi) spanning regional knowledge, civics, culture, and professional licensing material. **Multiple-choice. pass@1**
 
 ### Question formats — train for both
 
@@ -168,7 +168,7 @@ A: ...reasoning... \boxed{C}
 
 ---
 
-## Validation snapshot (`validation/`)
+## Validation snapshot (`validation_samples/`)
 
 We provide a frozen sample of **10 problems per benchmark** (40 total) so you can sanity-check your inference and prompt formatting.
 
@@ -217,6 +217,10 @@ https://huggingface.co/cs-552-2026-<your-org>/<model_name>/discussions
 > The PR is **non-blocking** — you do not need to merge it, and merging it does not affect your grade. Reading it is just the fastest debug loop.
 
 If your model was **not** re-evaluated this round (because its `lastModified` did not change), no new PR is opened. Push something to your repo to trigger a re-evaluation on the next nightly run.
+
+## Sample Evaluation Code (`evaluate`)
+
+This folder contains sample evaluation code, and you must make sure that your model responds in a way that can be parsed by this code, as this mimics the way our evaluation framework will work.
 
 ---
 
