@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/2gAxtbuU)
 # CS-552 MNLP Spring 2026 — Project Starter
 
 Welcome to the EPFL **CS-552 Modern Natural Language Processing** course project. Over the next ~5 weeks, your team of 4 will post-train **Qwen3-1.7B** into a small family of reasoning models and submit them to the course leaderboard. The project is **70% of your final grade**.
