@@ -200,19 +200,6 @@ VS Code is the most ergonomic option for serious code editing during
 the project. Jupyter is still convenient for quick exploration and
 plots.
 
-## What's in the image
-
-The course image (`registry.rcp.epfl.ch/course-cs-552/base-vllm:v1`) is
-built on the official vLLM image and ships:
-
-- **Core**: CUDA, PyTorch, vLLM, FlashAttention, FlashInfer, bitsandbytes
-- **Training**: transformers, TRL (SFT/DPO/PPO), PEFT (LoRA/QLoRA), accelerate
-- **Data**: datasets, huggingface_hub with hf_transfer
-- **RAG**: sentence-transformers, faiss-cpu, rank-bm25, langchain
-- **Eval**: lm-eval-harness, rouge-score, sacrebleu, bert-score
-- **Tracking**: wandb, tensorboard
-- **Notebook**: jupyterlab with widgets
-
 ## I need a package that isn't in the image
 
 Three options, in order of preference:
@@ -222,7 +209,7 @@ Three options, in order of preference:
 2. **`requirements.txt` in your repo** — keep a `requirements.txt` with all the requirements in each line and install it at the beginning of each session using CLI or a jupyter cell using `pip install -r requirements.txt`. 
 3. **Build your own image.** If your project genuinely needs something
    that can't be pip-installed (custom CUDA kernels, weird system libs),
-   you can use the included `Dockerfile` and `build.sh` as a base. The
+   you can use the included `Dockerfile` and `build.sh` as a base in the `docker` folder. The
    image lives on **your own public Docker Hub repo** so the cluster
    can pull it without credentials.
    - Create a free Docker Hub account and a **public** repo: see
