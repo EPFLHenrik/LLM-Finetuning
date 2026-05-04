@@ -1,8 +1,8 @@
 # CS-552 MNLP Spring 2026 — Project Starter
 
-Welcome to the EPFL **CS-552 Modern Natural Language Processing** course project. Over the next ~5 weeks your team of 4 will post-train **Qwen3-1.7B** into a small family of reasoning models and submit them to the course leaderboard. The project is **70% of your final grade**.
+Welcome to the EPFL **CS-552 Modern Natural Language Processing** course project. Over the next ~5 weeks, your team of 4 will post-train **Qwen3-1.7B** into a small family of reasoning models and submit them to the course leaderboard. The project is **70% of your final grade**.
 
-This repository contains everything you need to get started: required model layout, evaluation contract, validation snapshot, and a description of the CI pipeline that will score your work.
+This repository contains everything you need to get started: the required model layout, the evaluation contract, the validation snapshot, and a description of the CI pipeline that will score your work.
 
 ## Project Timeline, Milestones & Deliverables
 
@@ -24,13 +24,15 @@ Use your **team name verbatim as the org slug**.
 
 Create these five **public** model repos under your team org. Names must match **exactly** — the CI pipeline looks them up by these slugs.
 
-| Repo path | Owner | Evaluated on |
-|---|---|---|
-| `cs-552-2026-<your-org>/group_model` | whole team | all 4 benchmarks |
-| `cs-552-2026-<your-org>/math_model` | one teammate | math |
+
+| Repo path                                        | Owner        | Evaluated on      |
+| ------------------------------------------------ | ------------ | ----------------- |
+| `cs-552-2026-<your-org>/group_model`             | whole team   | all 4 benchmarks  |
+| `cs-552-2026-<your-org>/math_model`              | one teammate | math              |
 | `cs-552-2026-<your-org>/general_knowledge_model` | one teammate | general knowledge |
-| `cs-552-2026-<your-org>/safety_model` | one teammate | safety |
-| `cs-552-2026-<your-org>/multilingual_model` | one teammate | multilinguality |
+| `cs-552-2026-<your-org>/safety_model`            | one teammate | safety            |
+| `cs-552-2026-<your-org>/multilingual_model`      | one teammate | multilinguality   |
+
 
 The four specialty models must each have a different student owner — every team member owns exactly one specialty model and contributes to the group model.
 
@@ -40,7 +42,7 @@ Every checkpoint you push must satisfy all of the following, or it will fail val
 
 - **Starting model:** `Qwen/Qwen3-1.7B`. The starting model cannot be swapped — switching architectures will fail the checkpoint loading and forfeit the milestone.
 - **Format:** vLLM-loadable safetensors; `config.json` and weights at the root of the repo. See the starting model repo for details.
-- **`generation_config.json`** must be committed alongside the weights. You may tune `temperature`, `top_k`, `top_p`.
+- `**generation_config.json`** must be committed alongside the weights. You may tune `temperature`, `top_k`, `top_p`.
 - **Tokenizer:** must have a `chat_template` file. The CI sends prompts through `tokenizer.apply_chat_template(messages, add_generation_prompt=True)` — **nothing else is passed**, so any prompt-construction preference must be encoded inside the template itself.
 - **Output contract:** every answer must be wrapped in `\boxed{...}`. Anything outside the box is treated as reasoning and not evaluated.
 
@@ -90,7 +92,6 @@ You can iterate as often as you want — push a new commit and the next nightly 
 
 ### Expacted date of CI online
 
-
 ### When it runs
 
 - **Nightly at 23:59**, automatically.
@@ -107,11 +108,11 @@ You can iterate as often as you want — push a new commit and the next nightly 
 ### Hardware budget
 
 - 1× NVIDIA A100 40 GB, FP16 inference.
-- Max model length 8192. The generation stops once the `\boxed{...}` answer is generated or the model reaches an EoS token, or the maximmum length is reached.
+- Max model length 8192. The generation stops once the `\boxed{...}` answer is generated, or the model reaches an EoS token, or the maximum length is reached.
 
 ### Metrics
 
-- **mean@8** = mean correctness across the 8 sampled completions per question (i.e. expected per-attempt accuracy).
+- **pass@1** = per-attempt accuracy with one completion per question.
 - **pass@8** = fraction of questions for which **at least one** of the 8 sampled completions is correct (unbiased pass@k from Chen et al., 2021).
 - The group model gets an additional **4-domain average** that determines its leaderboard rank.
 
@@ -122,16 +123,21 @@ You can iterate as often as you want — push a new commit and the next nightly 
 The exact benchmark datasets are kept secret, but here is what to expect in each domain. Train accordingly.
 
 ### Math
-Competition-style problems across **algebra, number theory, combinatorics, and geometry**. Free-form numeric or short algebraic answers. Expect questions that require multi-step reasoning before the final boxed answer.
+
+Competition-style problems across **Prealgebra, Algebra, Number Theory, Combinatorics, Probability, Geometry, Precalculus, and Calculus**.
+Free-form numeric or short algebraic answers. Expect questions that require multi-step reasoning before the final boxed answer. **Freeform. pass@8**
 
 ### General knowledge
-**Closed-book** factual and reasoning questions across the sciences, humanities, geography, and current events. **Multiple-choice.**
+
+**Closed-book** factual and reasoning questions across the sciences, humanities, and geography. **Multiple-choice. pass@1**
 
 ### Safety
-Adversarial prompts that probe **refusal calibration**, harm categories, and jailbreak resistance. **Multiple-choice.**
+
+Adversarial prompts that probe **refusal calibration**, harm categories, and jailbreak resistance. **Multiple-choice. pass@1**
 
 ### Multilinguality
-Questions in **5 languages** spanning regional knowledge, civics, culture, and professional licensing material. **Multiple-choice.**
+
+Questions in **5 languages** spanning regional knowledge, civics, culture, and professional licensing material. **Multiple-choice. pass@1**
 
 ### Question formats — train for both
 
@@ -164,7 +170,7 @@ A: ...reasoning... \boxed{C}
 
 ## Validation snapshot (`validation/`)
 
-We provide a frozen sample of **10 problems per benchmark** (40 total) so you can sanity-check your inference and prompt formatting **without HF auth and without any risk of leaking eval data**.
+We provide a frozen sample of **5 problems per benchmark** (20 total) so you can sanity-check your inference and prompt formatting.
 
 ```
 validation/
@@ -249,21 +255,22 @@ If your model was **not** re-evaluated this round (because its `lastModified` di
 
 ## Common failure modes
 
-| Symptom in `EVAL_REPORT.md` | Likely cause |
-|---|---|
-| `validation: tokenizer has no chat_template` | Save the chat template alongside the tokenizer, e.g. `tokenizer.chat_template = ...; tokenizer.save_pretrained(...)` before pushing. |
-| `validation: vLLM failed to load model` | Missing or malformed `config.json` / `generation_config.json`, or you accidentally pushed a non-Qwen3 architecture. |
-| `pass@1 ≈ 0` but model "looks fine" locally | Output is missing `\boxed{...}`. Check your system prompt and reinforce boxed-output behaviour in SFT data. |
-| `pass@1` collapses on multilingual or knowledge | Your prompt template hardcodes 4 options. Re-check the **2–20 option** requirement. |
-| `inference: Timeout (1800s)` | Model is generating too many tokens. Reduce `max_new_tokens` *only* if your answers still complete; otherwise revisit decoding hyperparameters. |
+
+| Symptom in `EVAL_REPORT.md`                     | Likely cause                                                                                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `validation: tokenizer has no chat_template`    | Save the chat template alongside the tokenizer, e.g. `tokenizer.chat_template = ...; tokenizer.save_pretrained(...)` before pushing. |
+| `validation: vLLM failed to load model`         | Missing or malformed `config.json` / `generation_config.json`, or you accidentally pushed a non-Qwen3 architecture.                  |
+| `pass@1 ≈ 0` but model "looks fine" locally     | Output is missing `\boxed{...}`. Check your system prompt and reinforce boxed-output behavior in SFT data.                          |
+| `pass@1` collapses on multilingual or knowledge | Your prompt template hardcodes 4 options. Re-check the **2–20 option** requirement.                                                  |
+
 
 ---
 
 ## Resources
 
-- Course page: see Moodle (CS-552, Spring 2026).
-- HuggingFace Hub docs: <https://huggingface.co/docs/hub>.
-- vLLM docs: <https://docs.vllm.ai>.
-- Qwen3 model card: <https://huggingface.co/Qwen/Qwen3-1.7B>.
+- Standard project description: [https://docs.google.com/document/d/1TECHv4q_eR0X-HIyW10vHFbcU2bHLSph/edit?usp=sharing&ouid=109194228875252004302&rtpof=true&sd=true](https://docs.google.com/document/d/1TECHv4q_eR0X-HIyW10vHFbcU2bHLSph/edit?usp=sharing&ouid=109194228875252004302&rtpof=true&sd=true).
+- HuggingFace Hub docs: [https://huggingface.co/docs/hub](https://huggingface.co/docs/hub).
+- vLLM docs: [https://docs.vllm.ai](https://docs.vllm.ai).
+- Qwen3 model card: [https://huggingface.co/Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B).
 
 Good luck — and ship early.
