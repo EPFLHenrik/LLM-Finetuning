@@ -108,7 +108,7 @@ You can iterate as often as you want — push a new commit and the next nightly 
 ### Hardware budget
 
 - 1× NVIDIA A100 40 GB, FP16 inference.
-- Max model length 8192. The generation stops once the `\boxed{...}` answer is generated, or the model reaches an EoS token, or the maximum length is reached.
+- Max model length 4096. The generation stops once the `\boxed{...}` answer is generated, or the model reaches an EoS token, or the maximum length is reached.
 
 ### Metrics
 
