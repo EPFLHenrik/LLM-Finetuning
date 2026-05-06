@@ -34,8 +34,8 @@
 set -euo pipefail
 
 # ============== EDIT THESE LINES ==============
-GASPAR=""              # <-- YOUR GASPAR EPFL username.
-GROUP="gxx"                  # <-- YOUR TEAM, e.g. g07.
+GASPAR="demule"              # <-- YOUR GASPAR EPFL username.
+GROUP="g02"                  # <-- YOUR TEAM, e.g. g07.
 # ==============================================
 
 # Refuse to run with placeholders.
@@ -73,7 +73,7 @@ WANDB_API_KEY="${WANDB_API_KEY:-}"
 
 echo ">>> Submitting ${JOB_NAME}  (1 GPU)"
 
-runai submit \
+MSYS_NO_PATHCONV=1 runai submit \
   --name "${JOB_NAME}" \
   -p "${PROJECT}" \
   --image "${IMAGE}" \

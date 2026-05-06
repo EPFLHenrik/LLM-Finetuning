@@ -1,0 +1,225 @@
+from pathlib import Path
+from datasets import Dataset, load_from_disk
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import re
+import argparse
+import tqdm
+import sys
+import shutil
+import gc
+
+ROOT = Path(__file__).resolve().parents[2]
+INPUT_DATASET_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "only_answers"
+DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "train"
+
+parser = argparse.ArgumentParser(
+    description="Generate short SafetyBench rationales with a teacher model."
+)
+parser.add_argument("--model", default="Qwen/Qwen3-8B", help="Teacher model name")
+parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Output directory")
+parser.add_argument("--max-new-tokens", type=int, default=150, help="Max tokens per rationale")
+parser.add_argument("--from_id", type=int, required=True, help="Start index (inclusive) in shuffled dataset")
+parser.add_argument("--to_id", type=int, required=True, help="End index (exclusive) in shuffled dataset")
+parser.add_argument("--overwrite", action="store_true", help="Whether to overwrite existing output dataset (if any)")
+args = parser.parse_args()
+
+
+def save_checkpoint(rows: list[dict], output_path: Path) -> None:
+    """Write dataset to a temp directory then replace output atomically."""
+    tmp_output = output_path.parent / f"{output_path.name}__tmp_save"
+    if tmp_output.exists():
+        shutil.rmtree(tmp_output)
+
+    dataset_out = Dataset.from_list(rows)
+    dataset_out.save_to_disk(str(tmp_output))
+
+    if output_path.exists():
+        shutil.rmtree(output_path)
+    tmp_output.replace(output_path)
+
+if args.from_id < 0 or args.to_id < 0:
+    print("ERROR: --from_id and --to_id must be >= 0")
+    sys.exit(1)
+
+if args.from_id >= args.to_id:
+    print("ERROR: --from_id must be strictly smaller than --to_id")
+    sys.exit(1)
+
+print("1. Loading existing output dataset (if any)...")
+existing_rows = []
+existing_count = 0
+if args.output.exists():
+    try:
+        existing_dataset = load_from_disk(str(args.output))
+        existing_count = len(existing_dataset)
+        existing_rows = existing_dataset.to_list()
+        del existing_dataset
+        gc.collect()
+        print(f"   OK: Found existing output with {existing_count} rows")
+    except Exception as exc:
+        print(f"ERROR: Could not read existing output dataset at {args.output}: {exc}")
+        sys.exit(1)
+else:
+    print("   OK: No existing output found, starting from empty dataset")
+
+if args.from_id > existing_count:
+    print(
+        f"SKIP: --from_id ({args.from_id}) is greater than output row count ({existing_count}). "
+        "Impossible to run, this will corrupt the order of the output dataset compared to the input dataset."
+        "Aborting."
+    )
+    sys.exit(0)
+
+if args.to_id <= existing_count and not args.overwrite:
+    print(
+        f"SKIP: --to_id ({args.to_id}) is smaller than or equal to output row count ({existing_count}). "
+        "Nothing to run."
+    )
+    sys.exit(0)
+
+effective_from = max(args.from_id, existing_count) if not args.overwrite else args.from_id
+if effective_from != args.from_id and not args.overwrite:
+    print(
+        f"INFO: Resuming from output row count. Requested --from_id={args.from_id}, "
+        f"but starting at {effective_from}."
+    )
+if args.overwrite:
+    print(
+        f"INFO: --overwrite is set. Starting from --from_id={args.from_id} and ignoring existing output row count ({existing_count}). "
+        "This will lead to duplicate rows in the output dataset if --from_id < existing row count."
+    )
+
+print("\n2. Loading source dataset...")
+dataset = load_from_disk(str(INPUT_DATASET_PATH))
+dataset = dataset.shuffle(seed=42)
+dataset_len = len(dataset)
+print(f"   OK: Source dataset has {dataset_len} rows")
+
+effective_to = min(args.to_id, dataset_len)
+if args.to_id > dataset_len:
+    print(
+        f"INFO: Requested --to_id={args.to_id} is beyond source dataset size ({dataset_len}); "
+        f"clamping to {effective_to}."
+    )
+
+if effective_from >= effective_to:
+    print(
+        f"SKIP: Effective processing range is empty (from_id={effective_from}, to_id={effective_to})."
+    )
+    sys.exit(0)
+
+print(
+    f"   Processing range: [{effective_from}, {effective_to}) "
+    f"=> {effective_to - effective_from} example(s)."
+)
+
+print("\n3. Loading tokenizer...")
+tokenizer = AutoTokenizer.from_pretrained(args.model)
+if tokenizer.pad_token is None:
+    tokenizer.pad_token = tokenizer.eos_token
+tokenizer.padding_side = "left"
+print("   OK")
+
+print("\n4. Loading model...")
+model = AutoModelForCausalLM.from_pretrained(
+    args.model,
+    torch_dtype="auto",
+    device_map="cuda",
+)
+model.eval()
+print(f"   OK: Model on {model.device}")
+
+conclusion_sentences = [
+    "Therefore, the correct answer is",
+    "Thus, the answer is",
+    "In conclusion, the correct choice is",
+    "Hence, the answer is",
+    "As a result, the correct answer is",
+    "Consequently, the answer is",
+    "To sum up, the correct answer is",
+]
+
+
+def clean_rationale(text: str, expected_answer: str) -> str:
+    """Remove <think> tags and ensure \\boxed{ANSWER} at the end."""
+    # Remove <think>...</think> blocks
+    cleaned = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+    cleaned = re.sub(r'<think>', '', cleaned).strip()
+    cleaned = re.sub(r'</think>', '', cleaned).strip()
+    
+    # Remove any existing \boxed{} with wrong answer and replace with correct one
+    cleaned = re.sub(r'\\boxed\{[A-E]\}', '', cleaned).strip()
+    
+    # Add the correct boxed answer at the end
+    random_conclusion = conclusion_sentences[hash(cleaned) % len(conclusion_sentences)]
+    cleaned = cleaned.rstrip('.') + f'. {random_conclusion} \\boxed{{{expected_answer}}}'
+    
+    return cleaned
+
+print("\n5. Processing examples and checkpoint-saving after each item...")
+args.output.parent.mkdir(parents=True, exist_ok=True)
+
+for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examples"):
+    example = dataset[idx]
+    answer_letter = re.search(r"\\boxed\{([A-E])\}", example["target"]).group(1)
+
+    teacher_prompt = f"""You are creating high-quality training data for multiple-choice safety reasoning.
+        Question:
+        {example['prompt']}
+
+        Correct answer: {answer_letter}
+
+        Write a concise justification for why this answer is correct.
+
+        Rules:
+        - Write 2 sentences by default; use 3 only if needed for clarity.
+        - First, identify the decisive clue in the question or options.
+        - Then explain why that clue supports the correct answer; mention other options only if needed.
+        - Use only information present in the question and answer choices.
+        - Do not mention that the answer was provided.
+        - Do not restate the full question.
+        - Do not use meta commentary, hidden reasoning, or generic filler.
+        - Keep the explanation specific and concrete.
+        - End exactly with \\boxed{{{answer_letter}}}
+        """
+    
+    messages = [{"role": "user", "content": teacher_prompt}]
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+    model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+    
+    with torch.no_grad():
+        generated = model.generate(
+            **model_inputs,
+            do_sample=False,
+            max_new_tokens=args.max_new_tokens,
+        )
+    
+    prompt_length = model_inputs["input_ids"].shape[1]
+    generated_tokens = generated[0][prompt_length:]
+    rationale = tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+    
+    # Clean the rationale: remove <think> tags and answer mentions, add \boxed{ANSWER}
+    cleaned_rationale = clean_rationale(rationale, answer_letter)
+
+    new_row = {
+        "prompt": example["prompt"],
+        "target": cleaned_rationale,
+        "expected_answer": answer_letter,
+        "teacher_model": args.model,
+    }
+    
+    if idx < len(existing_rows):
+        # Update existing row (in case of overwrite or resuming with from_id < existing_count)
+        existing_rows[idx] = new_row
+    else:
+        existing_rows.append(new_row)
+
+    if (idx + 1) % 10 == 0 or idx == effective_to - 1:
+        save_checkpoint(existing_rows, args.output)
+        print(f"   Saved checkpoint: {len(existing_rows)} total rows (last processed id={idx})")
+
+print(
+    f"SUCCESS: Done! Output now has {len(existing_rows)} rows at {args.output}. "
+    f"Processed ids [{effective_from}, {effective_to})."
+)
