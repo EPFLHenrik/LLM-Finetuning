@@ -36,7 +36,7 @@ BENCHMARK_TO_METHOD = {
 
 def _read_jsonl(path: Path) -> list[dict]:
     items = []
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         for lineno, line in enumerate(f, 1):
             line = line.strip()
             if not line:
@@ -191,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        with open(args.output, "w") as f:
+        with open(args.output, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
         print(f"Wrote detailed results to {args.output}")
 

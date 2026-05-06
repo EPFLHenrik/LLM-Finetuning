@@ -11,7 +11,7 @@ from vllm import LLM, SamplingParams
 
 ROOT = Path(__file__).resolve().parents[2]
 INPUT_DATASET_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "only_answers"
-DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "train"
+DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "rationales"
 TEACHER_MODEL_PATH = str(ROOT.parent.parent.parent / "hf_cache" / "hub" / "models--Qwen--Qwen3-8B" / "snapshots" / "b968826d9c46dd6066d109eabc6255188de91218")
 
 parser = argparse.ArgumentParser(
