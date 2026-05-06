@@ -19,11 +19,10 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Output directory")
 parser.add_argument("--max-new-tokens", type=int, default=150, help="Max tokens per rationale")
-parser.add_argument("--from_id", type=int, required=True, help="Start index (inclusive) in shuffled dataset")
-parser.add_argument("--to_id", type=int, required=True, help="End index (exclusive) in shuffled dataset")
+parser.add_argument("--from_id", type=int, required=False, help="Start index (inclusive) in shuffled dataset")
+parser.add_argument("--to_id", type=int, required=False, help="End index (exclusive) in shuffled dataset")
 parser.add_argument("--overwrite", action="store_true", help="Whether to overwrite existing output dataset (if any)")
 args = parser.parse_args()
-
 
 def save_checkpoint(rows: list[dict], output_path: Path) -> None:
     """Write dataset to a temp directory then replace output atomically."""
@@ -38,14 +37,6 @@ def save_checkpoint(rows: list[dict], output_path: Path) -> None:
         shutil.rmtree(output_path)
     tmp_output.replace(output_path)
 
-if args.from_id < 0 or args.to_id < 0:
-    print("ERROR: --from_id and --to_id must be >= 0")
-    sys.exit(1)
-
-if args.from_id >= args.to_id:
-    print("ERROR: --from_id must be strictly smaller than --to_id")
-    sys.exit(1)
-
 print("1. Loading existing output dataset (if any)...")
 existing_rows = []
 existing_count = 0
@@ -54,6 +45,7 @@ if args.output.exists():
         existing_dataset = load_from_disk(str(args.output))
         existing_count = len(existing_dataset)
         existing_rows = existing_dataset.to_list()
+        dataset_len = len(existing_dataset)
         del existing_dataset
         gc.collect()
         print(f"   OK: Found existing output with {existing_count} rows")
@@ -62,6 +54,26 @@ if args.output.exists():
         sys.exit(1)
 else:
     print("   OK: No existing output found, starting from empty dataset")
+
+print("\n2. Loading source dataset...")
+dataset = load_from_disk(str(INPUT_DATASET_PATH))
+dataset = dataset.shuffle(seed=42)
+dataset_len = len(dataset)
+print(f"   OK: Source dataset has {dataset_len} rows")
+
+if not args.from_id:
+    args.from_id = 0
+if not args.to_id:
+    args.to_id = dataset_len
+
+if args.from_id < 0 or args.to_id < 0:
+    print("ERROR: --from_id and --to_id must be >= 0")
+    sys.exit(1)
+
+if args.from_id >= args.to_id:
+    print("ERROR: --from_id must be strictly smaller than --to_id")
+    sys.exit(1)
+
 
 if args.from_id > existing_count:
     print(
@@ -89,12 +101,6 @@ if args.overwrite:
         f"INFO: --overwrite is set. Starting from --from_id={args.from_id} and ignoring existing output row count ({existing_count}). "
         "This will lead to duplicate rows in the output dataset if --from_id < existing row count."
     )
-
-print("\n2. Loading source dataset...")
-dataset = load_from_disk(str(INPUT_DATASET_PATH))
-dataset = dataset.shuffle(seed=42)
-dataset_len = len(dataset)
-print(f"   OK: Source dataset has {dataset_len} rows")
 
 effective_to = min(args.to_id, dataset_len)
 if args.to_id > dataset_len:
