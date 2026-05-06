@@ -20,8 +20,9 @@ import json
 import sys
 from pathlib import Path
 
-from .benchmarks import VALID_METHODS, extract_benchmark_answer, is_correct_benchmark_answer
-from .pass_at_k import compute_pass_at_k_for_dataset
+from evaluate.benchmarks import VALID_METHODS, extract_benchmark_answer, is_correct_benchmark_answer
+from evaluate.extract_answer import extract_boxed_answer
+from evaluate.pass_at_k import compute_pass_at_k_for_dataset
 
 
 # Mirrors config/benchmarks.yaml in the CI repo.
@@ -67,6 +68,9 @@ def score_generations(
     n_completions = None
     per_problem_correct: list[int] = []
     detailed: list[dict] = []
+    total_completions = 0
+    boxed_completions = 0
+    correct_boxed_completions = 0
 
     for i, item in enumerate(items):
         completions = item.get("completions")
@@ -87,10 +91,24 @@ def score_generations(
         comp_details = []
         for comp in completions:
             comp_text = str(comp)
+            total_completions += 1
+
+            # Box compliance is measured independently from benchmark extraction method.
+            boxed_answer = extract_boxed_answer(comp_text, strip_double_curly_brace=True)
+            has_boxed_answer = boxed_answer is not None
+            boxed_completions += int(has_boxed_answer)
+
             extracted = extract_benchmark_answer(comp_text, method, reference)
             correct = is_correct_benchmark_answer(extracted, reference, method)
             c += int(correct)
-            comp_details.append({"extracted": extracted, "correct": correct})
+            if has_boxed_answer and correct:
+                correct_boxed_completions += 1
+
+            comp_details.append({
+                "extracted": extracted,
+                "correct": correct,
+                "has_boxed_answer": has_boxed_answer,
+            })
 
         per_problem_correct.append(c)
         detailed.append({
@@ -107,6 +125,16 @@ def score_generations(
     if not k_values:
         raise SystemExit(f"Need at least n=1 completions per row; got n={n}.")
     metrics = compute_pass_at_k_for_dataset(per_problem_correct, n, k_values)
+
+    box_compliance_rate = (
+        boxed_completions / total_completions if total_completions > 0 else None
+    )
+    pass_at_1_among_extracted = (
+        correct_boxed_completions / boxed_completions if boxed_completions > 0 else None
+    )
+
+    metrics["box_compliance_rate"] = box_compliance_rate
+    metrics["pass@1_among_extracted"] = pass_at_1_among_extracted
 
     return {
         "benchmark_method": method,
@@ -151,7 +179,9 @@ def main(argv: list[str] | None = None) -> int:
     items = _read_jsonl(args.generations)
     result = score_generations(items, method)
 
-    parts = [f"{k}={v:.4f}" for k, v in result["metrics"].items()]
+    parts = []
+    for k, v in result["metrics"].items():
+        parts.append(f"{k}=None" if v is None else f"{k}={v:.4f}")
     summary = (
         f"{', '.join(parts)} "
         f"(n_problems={result['n_problems']}, n_completions={result['n_completions']}, "

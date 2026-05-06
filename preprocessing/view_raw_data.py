@@ -16,8 +16,8 @@ print(f"Rows: {len(dataset)}  |  Columns: {dataset.column_names}\n")
 
 SEP = "─" * 72
 
-start = 45
-N = 1
+start = 4500
+N = 5
 
 end = start + N
 

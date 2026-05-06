@@ -1,8 +1,10 @@
 import argparse
 import hashlib
+from pprint import pprint
 import random
 from collections import Counter
 from pathlib import Path
+from constants.global_variables import DatasetFieldNames
 
 from datasets import Dataset, DatasetDict, load_from_disk
 
@@ -233,24 +235,24 @@ def build_binary_sft_split(ds, keep_ratio=0.8):
         content, _ = make_sft_content(ex)
         target, boxed = make_sft_target(ex, forced_refusal=False)
         records.append({
-            "content": content,
-            "target": target,
-            "boxed_answer": boxed,
-            "subcategory": ex.get("subcategory", "others"),
-            "subcategory_text": _subcategory_text(ex),
-            "adversarial": request_is_adversarial(ex),
+            DatasetFieldNames.SFT_INPUT: content,
+            DatasetFieldNames.SFT_TARGET: target,
+            DatasetFieldNames.SFT_ANSWER: boxed,
+            # DatasetFieldNames.SFT_SUBCATEGORY: ex.get("subcategory", "others"),
+            # DatasetFieldNames.SFT_SUBCATEGORY_TEXT: _subcategory_text(ex),
+            # DatasetFieldNames.SFT_ADVERSARIAL: request_is_adversarial(ex),
         })
 
     for ex in binary_unsafe:
         content, _ = make_sft_content(ex)
         target, boxed = make_sft_target(ex, forced_refusal=True)
         records.append({
-            "content": content,
-            "target": target,
-            "boxed_answer": boxed,
-            "subcategory": ex.get("subcategory", "others"),
-            "subcategory_text": _subcategory_text(ex),
-            "adversarial": request_is_adversarial(ex),
+            DatasetFieldNames.SFT_INPUT: content,
+            DatasetFieldNames.SFT_TARGET: target,
+            DatasetFieldNames.SFT_ANSWER: boxed,
+            # DatasetFieldNames.SFT_SUBCATEGORY: ex.get("subcategory", "others"),
+            # DatasetFieldNames.SFT_SUBCATEGORY_TEXT: _subcategory_text(ex),
+            # DatasetFieldNames.SFT_ADVERSARIAL: request_is_adversarial(ex),
         })
 
     random.Random(SEED).shuffle(records)
@@ -273,12 +275,12 @@ def build_open_form_sft_split(ds, open_ratio=0.2):
         content = make_open_form_content(ex)
         target, boxed = make_open_form_target(ex)
         records.append({
-            "content": content,
-            "target": target,
-            "boxed_answer": boxed,
-            "subcategory": ex.get("subcategory", "others"),
-            "subcategory_text": _subcategory_text(ex),
-            "adversarial": request_is_adversarial(ex),
+            DatasetFieldNames.SFT_INPUT: content,
+            DatasetFieldNames.SFT_TARGET: target,
+            DatasetFieldNames.SFT_ANSWER: boxed,
+            # DatasetFieldNames.SFT_SUBCATEGORY: ex.get("subcategory", "others"),
+            # DatasetFieldNames.SFT_SUBCATEGORY_TEXT: _subcategory_text(ex),
+            # DatasetFieldNames.SFT_ADVERSARIAL: request_is_adversarial(ex),
         })
 
     random.Random(SEED).shuffle(records)
@@ -378,7 +380,7 @@ def build_combo_rlvr_split(ds):
         content_parts.append(build_options([label_fn(c) for c in choices]))
 
         content = "\n\n".join(content_parts)
-        records.append({"content": content, "boxed_answer": answer})
+        records.append({DatasetFieldNames.RLVR_INPUT: content, DatasetFieldNames.RLVR_ANSWER: answer})
 
     return Dataset.from_list(records)
 
@@ -432,13 +434,13 @@ def main():
         "subcategory_rlvr_test": len(subcategory_rlvr["test"]),
         "combo_rlvr_train": len(combo_rlvr["train"]),
         "combo_rlvr_test": len(combo_rlvr["test"]),
-        "binary_sft_train_boxed_counts": dict(Counter(binary_sft["train"]["boxed_answer"])),
-        "binary_sft_test_boxed_counts": dict(Counter(binary_sft["test"]["boxed_answer"])),
-        "open_form_sft_train_boxed_counts": dict(Counter(open_form_sft["train"]["boxed_answer"])),
-        "open_form_sft_test_boxed_counts": dict(Counter(open_form_sft["test"]["boxed_answer"])),
+        "binary_sft_train_boxed_counts": dict(Counter(binary_sft["train"][DatasetFieldNames.SFT_ANSWER])),
+        "binary_sft_test_boxed_counts": dict(Counter(binary_sft["test"][DatasetFieldNames.SFT_ANSWER])),
+        "open_form_sft_train_boxed_counts": dict(Counter(open_form_sft["train"][DatasetFieldNames.SFT_ANSWER])),
+        "open_form_sft_test_boxed_counts": dict(Counter(open_form_sft["test"][DatasetFieldNames.SFT_ANSWER])),
     }
 
-    print(stats)
+    pprint(stats)
 
 
 if __name__ == "__main__":

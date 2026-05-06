@@ -1,0 +1,1 @@
+uv run evaluate/score.py --generations runs/outputs/example_safety_outputs.jsonl --benchmark safety --output runs/benchmark/example_safety_results.json

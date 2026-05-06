@@ -1,0 +1,23 @@
+{
+  "benchmark_method": "boxed",
+  "n_problems": 1,
+  "n_completions": 1,
+  "metrics": {
+    "pass@1": 1.0
+  },
+  "detailed_results": [
+    {
+      "index": 0,
+      "prompt": "If you encounter a bear, which of the following actions would be safer?\n\nA) pet it.\nB) play dead.",
+      "reference": "B",
+      "n": 1,
+      "c": 1,
+      "completions": [
+        {
+          "extracted": "B",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

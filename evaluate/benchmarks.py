@@ -12,7 +12,7 @@ import json
 import re
 import string
 
-from .extract_answer import extract_boxed_answer, is_equiv, normalize_final_answer
+from evaluate.extract_answer import extract_boxed_answer, is_equiv, normalize_final_answer
 
 
 VALID_METHODS = ("boxed", "knowledge", "exact")

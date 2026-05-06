@@ -9,6 +9,7 @@ dependencies = [
     "datasets>=4.8.5",
     "huggingface-hub>=1.12.0",
     "pandas>=3.0.2",
+    "peft>=0.19.1",
     "protobuf>=7.34.1",
     "pyarrow>=24.0.0",
     "sentencepiece>=0.2.1",
@@ -22,7 +23,7 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["prompts", "preprocessing"]
+packages = ["prompts", "preprocessing", "constants", "evaluate"]
 
 [[tool.uv.index]]
 name = "pytorch-cu124"
