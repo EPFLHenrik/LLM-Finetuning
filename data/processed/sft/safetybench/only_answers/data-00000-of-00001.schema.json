@@ -1,0 +1,24 @@
+{
+  "fields": [
+    {
+      "name": "prompt",
+      "type": {},
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "target",
+      "type": {},
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "expected_boxed_answer",
+      "type": {},
+      "nullable": true,
+      "metadata": {}
+    }
+  ],
+  "metadata": {},
+  "dictionaries": {}
+}

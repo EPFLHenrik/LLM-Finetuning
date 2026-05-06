@@ -9,4 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
-data/
+data/*
+!data/processed/
+data/processed/*
+!data/processed/sft/
+data/processed/sft/*
+!data/processed/sft/safetybench/
+
+# In data, only keep the folder processed/safetybench, which cannot be regenerated quickly (teacher model)
