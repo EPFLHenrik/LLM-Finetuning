@@ -1,0 +1,20 @@
+
+# Evaluation outputs
+multilingual/results/*
+!multilingual/results/.gitkeep
+
+# Large local data/cache
+multilingual/data/eval_raw/
+multilingual/data/eval_processed/
+
+# Model checkpoints/adapters
+checkpoints/
+outputs/
+models/
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# Experiment logs
+wandb/
