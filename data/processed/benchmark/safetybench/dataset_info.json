@@ -6,15 +6,7 @@
       "dtype": "string",
       "_type": "Value"
     },
-    "target": {
-      "dtype": "string",
-      "_type": "Value"
-    },
-    "expected_answer": {
-      "dtype": "string",
-      "_type": "Value"
-    },
-    "teacher_model": {
+    "answer": {
       "dtype": "string",
       "_type": "Value"
     }

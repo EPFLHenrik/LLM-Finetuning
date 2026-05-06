@@ -10,11 +10,11 @@
       "dtype": "string",
       "_type": "Value"
     },
-    "expected_answer": {
+    "teacher_model": {
       "dtype": "string",
       "_type": "Value"
     },
-    "teacher_model": {
+    "answer": {
       "dtype": "string",
       "_type": "Value"
     }

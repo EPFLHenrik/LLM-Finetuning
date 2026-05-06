@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import List
+from constants.global_variables import DatasetFieldNames
 
 from datasets import Dataset
 
@@ -33,9 +34,9 @@ for i in range(len(questions)):
     question = questions[i]
     answer = answers.get(str(i), "No answer found")
     processed_dataset.append({
-        "prompt": format_mcq_prompt(question["question"], question["options"], int(answer["answer"])),
-        "target": f"\\boxed{{{letters[int(answer['answer'])]}}}",
-        "expected_boxed_answer": letters[int(answer["answer"])]
+        DatasetFieldNames.SFT_ANSWER: format_mcq_prompt(question["question"], question["options"], int(answer["answer"])),
+        DatasetFieldNames.SFT_TARGET: f"\\boxed{{{letters[int(answer['answer'])]}}}",
+        DatasetFieldNames.SFT_ANSWER: letters[int(answer["answer"])]
         })
 
 dataset = Dataset.from_list(processed_dataset)

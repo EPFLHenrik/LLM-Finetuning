@@ -9,3 +9,6 @@ class DatasetFieldNames:
 
     RLVR_INPUT = "prompt"
     RLVR_ANSWER = "answer"
+
+class DistillationFieldNames:
+    TEACHER_MODEL = "teacher_model"
