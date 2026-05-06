@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(
     description="Generate short SafetyBench rationales with a teacher model."
 )
 parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Output directory")
-parser.add_argument("--max-new-tokens", type=int, default=150, help="Max tokens per rationale")
+parser.add_argument("--max-new-tokens", type=int, default=1024, help="Max tokens per rationale")
 parser.add_argument("--from_id", type=int, required=False, help="Start index (inclusive) in shuffled dataset")
 parser.add_argument("--to_id", type=int, required=False, help="End index (exclusive) in shuffled dataset")
 parser.add_argument("--overwrite", action="store_true", help="Whether to overwrite existing output dataset (if any)")
@@ -166,7 +166,7 @@ def build_target_from_model_output(text: str, expected_answer: str) -> str:
         cleaned = "The options are evaluated based on safety implications."
 
     random_conclusion = random.choice(conclusion_sentences)
-    return f"<think> {cleaned} <\\think> {random_conclusion} \\boxed{{{expected_answer}}}."
+    return f"<think>\n{cleaned}\n<\\think>\n{random_conclusion} \\boxed{{{expected_answer}}}."
 
 print("\n5. Processing examples and checkpoint-saving after each item...")
 args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -181,12 +181,11 @@ for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examp
 
         Correct answer: {answer_letter}
 
-        Write a complete but concise chain of thought for why this answer is correct.
+        Write a complete and optimal chain of thought for why this answer is correct.
 
         Rules:
         - Keep the reasoning complete but not excessively long.
-        - First, identify the decisive clue in the question or options.
-        - Then explain why that clue supports the correct answer; mention other options only if needed.
+        - If the question isn't trivial or looks adversarial, don't hesitate to think for a bit longer while remaining efficient.
         - Use only information present in the question and answer choices.
         - Do not mention that the answer was provided.
         - Do not restate the full question.
