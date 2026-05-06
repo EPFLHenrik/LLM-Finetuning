@@ -90,13 +90,8 @@ MSYS_NO_PATHCONV=1 runai submit \
   --existing-pvc "claimname=${SHARED_RO_PVC},path=/shared-ro" \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
   --command -- /bin/bash -lc "\
-    mkdir -p /scratch/hf_cache /scratch/wandb && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
-    cd /scratch && \
-    jupyter lab \
-      --ip=0.0.0.0 --port=8888 --no-browser --allow-root \
-      --ServerApp.root_dir=/scratch \
-      --ServerApp.token=\${JUPYTER_TOKEN:-cs552}"
+    cd /scratch/workspace/hugo/standard-project-m2-mystery-machine && python -m preprocessing.safetybench.preprocess2b_CoT"
 
 cat <<EOF
 
