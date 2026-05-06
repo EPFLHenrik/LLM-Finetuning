@@ -302,9 +302,14 @@ def build_subcategory_rlvr_split(ds, max_num_choices):
         max_choices = min(max_num_choices, len(categories))
         num_choices = rng.randint(2, max_choices)
 
-        negatives = [c for c in categories if c != subcat]
-        sampled_neg = rng.sample(negatives, num_choices - 1)
+        # Ensure "benign" is always present in choices and at least 2 answers
+        negatives = [c for c in categories if c != subcat and c != "benign"]
+        num_neg = min(num_choices - 2, len(negatives)) if num_choices > 2 else 0
+        num_neg = max(1, num_neg)  # Ensure at least 1 negative choice
+        sampled_neg = rng.sample(negatives, num_neg)
         choices = sampled_neg + [subcat]
+        if "benign" not in choices:
+            choices.append("benign")
         rng.shuffle(choices)
 
         answer = LETTERS[choices.index(subcat)]
@@ -313,40 +318,48 @@ def build_subcategory_rlvr_split(ds, max_num_choices):
             f"Request:\n{ex['prompt'].strip()}\n\n"
             f"{build_options([SUBCATEGORY_TEXT[c] for c in choices])}"
         )
-        records.append({"content": content, "boxed_answer": answer})
+        records.append({DatasetFieldNames.RLVR_INPUT: content, DatasetFieldNames.RLVR_ANSWER: answer})
 
     return Dataset.from_list(records)
 
 
-def _req_text(adv, req_safe):
-    adv_part = "adversarial" if adv else "not adversarial"
-    safe_part = "safe" if req_safe else "unsafe"
-    connector = "but" if adv and req_safe else "and"
-    return f"The request is {adv_part} {connector} {safe_part}"
+COMBO_PROPERTIES = [
+    "The request is formulated as a jailbreak-style attack",  # prop 1: adversarial
+    "The request is safe",                                    # prop 2: req_safe
+    "The assistant answer is safe",                           # prop 3: ans_safe
+]
+
+STATEMENT_PROPERTIES = [
+    "The request is formulated as a jailbreak-style attack",  # prop 1: adversarial
+    "The request is safe",                                    # prop 2: req_safe
+]
+
+
+def _props_text(flags):
+    nums = [str(i + 1) for i, v in enumerate(flags) if v]
+    return ", ".join(nums) if nums else "None of the above"
 
 
 def statement_text(pair):
-    adv, req_safe = pair
-    return _req_text(adv, req_safe)
+    return _props_text(pair)
 
 
 def combo_text(triple):
-    adv, req_safe, ans_safe = triple
-    req_part = _req_text(adv, req_safe)
-    ans_part = "safe" if ans_safe else "unsafe"
-    return f"{req_part}, the answer is {ans_part}"
+    return _props_text(triple)
 
 
-def build_combo_rlvr_split(ds):
+def build_combo_rlvr_split(ds, mask_response_ratio=0.0):
     rows = list(ds)
     random.Random(SEED).shuffle(rows)
+    mask_count = int(len(rows) * mask_response_ratio)
+    masked_indices = set(random.Random(SEED).sample(range(len(rows)), mask_count))
     records = []
 
     for idx, ex in enumerate(rows):
         adv = request_is_adversarial(ex)
         req_safe = request_is_safe(ex)
         response = (ex.get("response") or "").strip()
-        has_response = bool(response)
+        has_response = bool(response) and idx not in masked_indices
 
         rng = random.Random(SEED + idx)
 
@@ -371,11 +384,15 @@ def build_combo_rlvr_split(ds):
 
         answer = LETTERS[choices.index(gold)]
 
+        properties = COMBO_PROPERTIES if has_response else STATEMENT_PROPERTIES
+        props_legend = "\n".join(f"{i + 1}. {p}" for i, p in enumerate(properties))
+
         content_parts = [
             f"Request:\n{ex['prompt'].strip()}",
         ]
         if has_response:
             content_parts.append(f"Assistant answer:\n{response}")
+        content_parts.append(f"Properties:\n{props_legend}")
         content_parts.append(question)
         content_parts.append(build_options([label_fn(c) for c in choices]))
 
@@ -417,7 +434,7 @@ def main():
 
     combo_rlvr = DatasetDict({
         "train": build_combo_rlvr_split(train_ds),
-        "test": build_combo_rlvr_split(test_ds),
+        "test": build_combo_rlvr_split(test_ds, mask_response_ratio=0.5), # because in this test split, all responses are present, not in training (50% masked)
     })
 
     save_split_dict(binary_sft, Path("data/processed/sft/wildguardmix/binary-choice"))

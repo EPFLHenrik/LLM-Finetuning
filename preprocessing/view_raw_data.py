@@ -5,19 +5,19 @@ from pathlib import Path
 from datasets import load_from_disk
 
 raw_dir = Path(
-    "data/processed/sft/safetybench/CoT"
+    "data/processed/rlvr/wildguardmix/analysis_combo_mcq/test"
 )  # Change this path to the specific dataset split you want to view
 dataset = load_from_disk(raw_dir)
 # shuffle the dataset to get a random sample of rows
-# dataset = dataset.shuffle(seed=42)
+dataset = dataset.shuffle(seed=42)
 
 print(f"Loaded: {raw_dir}")
 print(f"Rows: {len(dataset)}  |  Columns: {dataset.column_names}\n")
 
 SEP = "─" * 72
 
-start = 0
-N = 10
+start = 500
+N = 100
 
 end = start + N
 

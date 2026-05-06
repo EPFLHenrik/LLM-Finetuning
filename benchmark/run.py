@@ -9,7 +9,7 @@ import tqdm
 from evaluate.score import main as evaluate_score
 
 parser = argparse.ArgumentParser(
-    description="Generate short SafetyBench rationales with a teacher model."
+    description="Evaluate a model on a benchmark by generating outputs and then scoring them by extracting answers and comparing to references."
 )
 parser.add_argument("--benchmark", type=str, required=True, help="Name of the benchmark to run")
 parser.add_argument("--limit", type=int, default=None, help="Limit the number of examples to run (for testing)")
