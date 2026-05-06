@@ -16,9 +16,16 @@ print(f"Rows: {len(dataset)}  |  Columns: {dataset.column_names}\n")
 
 SEP = "─" * 72
 
-n = min(30, len(dataset))
+start = 45
+N = 1
 
-for i in range(n):
+end = start + N
+
+start = max(0, start)
+end = min(len(dataset), end)
+
+
+for i in range(start, end):
     row = dataset[i]
     print(f"{SEP}")
     print(f"  Row {i}")

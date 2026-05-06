@@ -1,22 +1,22 @@
 from pathlib import Path
 from datasets import Dataset, load_from_disk
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer
 import re
 import argparse
 import tqdm
 import sys
 import shutil
 import gc
+from vllm import LLM, SamplingParams
 
 ROOT = Path(__file__).resolve().parents[2]
 INPUT_DATASET_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "only_answers"
 DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "train"
+TEACHER_MODEL_PATH = str(ROOT.parent.parent.parent / "hf_cache" / "hub" / "models--Qwen--Qwen3-8B" / "snapshots" / "b968826d9c46dd6066d109eabc6255188de91218")
 
 parser = argparse.ArgumentParser(
     description="Generate short SafetyBench rationales with a teacher model."
 )
-parser.add_argument("--model", default="Qwen/Qwen3-8B", help="Teacher model name")
 parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Output directory")
 parser.add_argument("--max-new-tokens", type=int, default=150, help="Max tokens per rationale")
 parser.add_argument("--from_id", type=int, required=True, help="Start index (inclusive) in shuffled dataset")
@@ -115,20 +115,19 @@ print(
 )
 
 print("\n3. Loading tokenizer...")
-tokenizer = AutoTokenizer.from_pretrained(args.model)
+tokenizer = AutoTokenizer.from_pretrained(TEACHER_MODEL_PATH)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "left"
 print("   OK")
 
 print("\n4. Loading model...")
-model = AutoModelForCausalLM.from_pretrained(
-    args.model,
-    torch_dtype="auto",
-    device_map="cuda",
+model = LLM(
+    model=TEACHER_MODEL_PATH,
+    dtype="auto",
+    gpu_memory_utilization=0.9,
 )
-model.eval()
-print(f"   OK: Model on {model.device}")
+print(f"   OK: Model loaded")
 
 conclusion_sentences = [
     "Therefore, the correct answer is",
@@ -186,18 +185,14 @@ for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examp
     
     messages = [{"role": "user", "content": teacher_prompt}]
     text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
-    model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
     
-    with torch.no_grad():
-        generated = model.generate(
-            **model_inputs,
-            do_sample=False,
-            max_new_tokens=args.max_new_tokens,
-        )
+    sampling_params = SamplingParams(
+        temperature=0.0,
+        max_tokens=args.max_new_tokens,
+    )
     
-    prompt_length = model_inputs["input_ids"].shape[1]
-    generated_tokens = generated[0][prompt_length:]
-    rationale = tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+    outputs = model.generate([text], sampling_params)
+    rationale = outputs[0].outputs[0].text.strip()
     
     # Clean the rationale: remove <think> tags and answer mentions, add \boxed{ANSWER}
     cleaned_rationale = clean_rationale(rationale, answer_letter)
@@ -206,7 +201,7 @@ for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examp
         "prompt": example["prompt"],
         "target": cleaned_rationale,
         "expected_answer": answer_letter,
-        "teacher_model": args.model,
+        "teacher_model": TEACHER_MODEL_PATH,
     }
     
     if idx < len(existing_rows):

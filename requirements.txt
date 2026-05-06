@@ -1,0 +1,27 @@
+--extra-index-url https://download.pytorch.org/whl/cu128
+numpy
+pandas
+huggingface_hub
+datasets
+transformers
+torch
+pyarrow
+torchvision
+torchaudio
+tokenizers
+black
+ipykernel
+pyyaml
+sentencepiece
+orjson
+peft
+wandb
+hydra-core
+lightning
+accelerate
+tqdm
+openai
+pandas
+matplotlib
+seaborn
+vllm
