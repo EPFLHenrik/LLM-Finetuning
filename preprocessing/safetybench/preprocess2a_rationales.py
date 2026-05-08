@@ -159,7 +159,7 @@ def clean_rationale(text: str, expected_answer: str) -> str:
     
     # Add the correct boxed answer at the end
     random_conclusion = conclusion_sentences[hash(cleaned) % len(conclusion_sentences)]
-    cleaned = cleaned.rstrip('.') + f'. {random_conclusion} \\boxed{{{expected_answer}}}'
+    cleaned = f'<think>\n{cleaned} {random_conclusion} {expected_answer}.\n</think>\n \\boxed{{{expected_answer}}}'
     
     return cleaned
 
