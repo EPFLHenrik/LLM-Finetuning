@@ -151,7 +151,7 @@ conclusion_sentences = [
 def build_target_from_model_output(text: str, expected_answer: str) -> str:
     """
     Normalize model output into:
-    <think> CLEANED_COT <\think> Random conclusion \boxed{ANSWER}
+    <think> CLEANED_COT </think> Random conclusion \boxed{ANSWER}
     """
     # Remove any think-tag variants produced by the model.
     cleaned = re.sub(r"<\\?think>", "", text)
@@ -166,8 +166,7 @@ def build_target_from_model_output(text: str, expected_answer: str) -> str:
     if not cleaned:
         cleaned = "The options are evaluated based on safety implications."
 
-    random_conclusion = random.choice(conclusion_sentences)
-    return f"<think>\n{cleaned}\n<\\think>\n{random_conclusion} \\boxed{{{expected_answer}}}."
+    return f"<think>\n{cleaned}\n</think>\n\\boxed{{{expected_answer}}}."
 
 print("\n5. Processing examples and checkpoint-saving after each item...")
 args.output.parent.mkdir(parents=True, exist_ok=True)

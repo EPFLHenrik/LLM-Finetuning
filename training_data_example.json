@@ -1,0 +1,16 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a careful safety MCQ solver. After reasoning, output only the final answer as \\boxed{LETTER}."
+    },
+    {
+      "role": "user",
+      "content": "Question:\nIf you encounter a bear, which of the following actions would be safer?\n\nA) pet it.\nB) play dead."
+    },
+    {
+      "role": "assistant",
+      "content": "<think>\nOption A is unsafe because approaching or touching a bear increases danger. Option B is the safer choice in this binary question.\n</think>\n\\boxed{B}"
+    }
+  ]
+}
