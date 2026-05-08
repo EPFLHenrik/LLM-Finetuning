@@ -49,48 +49,48 @@ SUBCATEGORY_EVIDENCE = {
 }
 
 ADVERSARIAL_SAFE_TEMPLATES = [
-    "The request is phrased in a tricky or adversarial way, but {evidence}. \\boxed{{A}}",
-    "Although the wording is adversarial, {evidence}. It is still safe to answer directly. \\boxed{{A}}",
+    "<think>\nThe request is phrased in a tricky or adversarial way, but {evidence}.\n</think>\n\\boxed{{A}}",
+    "<think>\nAlthough the wording is adversarial, {evidence}. It is still safe to answer directly.\n</think>\n\\boxed{{A}}",
 ]
 
 ADVERSARIAL_UNSAFE_TEMPLATES = [
-    "The request appears adversarial and {evidence}. It is not safe to answer directly. \\boxed{{B}}",
-    "Even though the prompt may be framed to bypass safeguards, {evidence}. \\boxed{{B}}",
+    "<think>\nThe request appears adversarial and {evidence}. It is not safe to answer directly.\n</think>\n\\boxed{{B}}",
+    "<think>\nEven though the prompt may be framed to bypass safeguards, {evidence}.\n</think>\n\\boxed{{B}}",
 ]
 
 DIRECT_SAFE_TEMPLATES = [
-    "{evidence}. \\boxed{{A}}",
-    "The request is safe to answer directly because {evidence}. \\boxed{{A}}",
+    "<think>\n{evidence}.\n</think>\n\\boxed{{A}}",
+    "<think>\nThe request is safe to answer directly because {evidence}.\n</think>\n\\boxed{{A}}",
 ]
 
 DIRECT_UNSAFE_TEMPLATES = [
-    "{evidence}. Therefore it is not safe to answer directly. \\boxed{{B}}",
-    "The request is unsafe because {evidence}. \\boxed{{B}}",
+    "<think>\n{evidence}.\n</think>\n\\boxed{{B}}",
+    "<think>\nThe request is unsafe because {evidence}.\n</think>\n\\boxed{{B}}",
 ]
 
 OPEN_ADVERSARIAL_UNSAFE_TEMPLATES = [
     (
-        "The request appears adversarial or designed to bypass safeguards, and {evidence}.\n"
+        "<think>\nThe request appears adversarial or designed to bypass safeguards, and {evidence}.\n"
         f"{GENERIC_REFUSAL}\n"
-        "\\boxed{{Unsafe Request}}"
+        "</think>\n\\boxed{{Unsafe Request}}"
     ),
     (
-        "Even with adversarial framing, {evidence}.\n"
+        "<think>\nEven with adversarial framing, {evidence}.\n"
         f"{GENERIC_REFUSAL}\n"
-        "\\boxed{{Unsafe Request}}"
+        "</think>\n\\boxed{{Unsafe Request}}"
     ),
 ]
 
 OPEN_DIRECT_UNSAFE_TEMPLATES = [
     (
-        "The request is unsafe because {evidence}.\n"
+        "<think>\nThe request is unsafe because {evidence}.\n"
         f"{GENERIC_REFUSAL}\n"
-        "\\boxed{{Unsafe Request}}"
+        "</think>\n\\boxed{{Unsafe Request}}"
     ),
     (
-        "{evidence}.\n"
+        "<think>\n{evidence}.\n"
         f"{GENERIC_REFUSAL}\n"
-        "\\boxed{{Unsafe Request}}"
+        "</think>\n\\boxed{{Unsafe Request}}"
     ),
 ]
 
@@ -195,7 +195,7 @@ def make_open_form_target(example):
     else:
         template = _stable_choice(OPEN_DIRECT_UNSAFE_TEMPLATES, key + "|open_direct")
 
-    return template.format(evidence=evidence), "Unsafe Request"
+    return f"{template.format(evidence=evidence)}", "Unsafe Request"
 
 
 def _partition_sft_rows(rows):
@@ -238,6 +238,7 @@ def build_binary_sft_split(ds, keep_ratio=0.8):
             DatasetFieldNames.SFT_INPUT: content,
             DatasetFieldNames.SFT_TARGET: target,
             DatasetFieldNames.SFT_ANSWER: boxed,
+            "id_temp": ex["id_temp"],
             # DatasetFieldNames.SFT_SUBCATEGORY: ex.get("subcategory", "others"),
             # DatasetFieldNames.SFT_SUBCATEGORY_TEXT: _subcategory_text(ex),
             # DatasetFieldNames.SFT_ADVERSARIAL: request_is_adversarial(ex),
@@ -250,6 +251,7 @@ def build_binary_sft_split(ds, keep_ratio=0.8):
             DatasetFieldNames.SFT_INPUT: content,
             DatasetFieldNames.SFT_TARGET: target,
             DatasetFieldNames.SFT_ANSWER: boxed,
+            "id_temp": ex["id_temp"],
             # DatasetFieldNames.SFT_SUBCATEGORY: ex.get("subcategory", "others"),
             # DatasetFieldNames.SFT_SUBCATEGORY_TEXT: _subcategory_text(ex),
             # DatasetFieldNames.SFT_ADVERSARIAL: request_is_adversarial(ex),
@@ -278,6 +280,7 @@ def build_open_form_sft_split(ds, open_ratio=0.2):
             DatasetFieldNames.SFT_INPUT: content,
             DatasetFieldNames.SFT_TARGET: target,
             DatasetFieldNames.SFT_ANSWER: boxed,
+            "id_temp": ex["id_temp"],
             # DatasetFieldNames.SFT_SUBCATEGORY: ex.get("subcategory", "others"),
             # DatasetFieldNames.SFT_SUBCATEGORY_TEXT: _subcategory_text(ex),
             # DatasetFieldNames.SFT_ADVERSARIAL: request_is_adversarial(ex),
@@ -318,7 +321,7 @@ def build_subcategory_rlvr_split(ds, max_num_choices):
             f"Request:\n{ex['prompt'].strip()}\n\n"
             f"{build_options([SUBCATEGORY_TEXT[c] for c in choices])}"
         )
-        records.append({DatasetFieldNames.RLVR_INPUT: content, DatasetFieldNames.RLVR_ANSWER: answer})
+        records.append({DatasetFieldNames.RLVR_INPUT: content, DatasetFieldNames.RLVR_ANSWER: answer, "id_temp": ex["id_temp"]})
 
     return Dataset.from_list(records)
 
@@ -397,7 +400,7 @@ def build_combo_rlvr_split(ds, mask_response_ratio=0.0):
         content_parts.append(build_options([label_fn(c) for c in choices]))
 
         content = "\n\n".join(content_parts)
-        records.append({DatasetFieldNames.RLVR_INPUT: content, DatasetFieldNames.RLVR_ANSWER: answer})
+        records.append({DatasetFieldNames.RLVR_INPUT: content, DatasetFieldNames.RLVR_ANSWER: answer, "id_temp": ex["id_temp"]})
 
     return Dataset.from_list(records)
 
@@ -415,32 +418,54 @@ def main():
     args = parser.parse_args()
 
     train_ds = load_from_disk(args.train_path)
+    # add unique ids to each row
+    train_ds = train_ds.map(lambda x, i: {"id_temp": i}, with_indices=True)
     test_ds = load_from_disk(args.test_path)
+    # add unique ids to each row
+    test_ds = test_ds.map(lambda x, i: {"id_temp": i}, with_indices=True)
+    print(f"Loaded train dataset with {len(train_ds)} examples and test dataset with {len(test_ds)} examples.")
 
     binary_sft = DatasetDict({
         "train": build_binary_sft_split(train_ds),
         "test": build_binary_sft_split(test_ds),
     })
+    binary_kept_indices = {"train": binary_sft["train"]["id_temp"], "test": binary_sft["test"]["id_temp"]}
+    print(f"Binary SFT splits created with {len(binary_sft['train'])} training examples and {len(binary_sft['test'])} test examples.")
 
     open_form_sft = DatasetDict({
         "train": build_open_form_sft_split(train_ds),
         "test": build_open_form_sft_split(test_ds),
     })
+    open_form_kept_indices = {"train": open_form_sft["train"]["id_temp"], "test": open_form_sft["test"]["id_temp"]}
+    print(f"Open-form SFT splits created with {len(open_form_sft['train'])} training examples and {len(open_form_sft['test'])} test examples.")
+
+
+    excluded_train = set(binary_kept_indices["train"]) | set(open_form_kept_indices["train"])
+    excluded_test = set(binary_kept_indices["test"]) | set(open_form_kept_indices["test"])
+    filtered_train_ds = train_ds.filter(lambda ex: ex["id_temp"] not in excluded_train)
+    filtered_test_ds = test_ds.filter(lambda ex: ex["id_temp"] not in excluded_test)
+
+    half_train = len(filtered_train_ds) // 2
+    half_test = len(filtered_test_ds) // 2
+
+    print(f"Filtered datasets created with {len(filtered_train_ds)} training examples and {len(filtered_test_ds)} test examples after excluding SFT examples.")
 
     subcategory_rlvr = DatasetDict({
-        "train": build_subcategory_rlvr_split(train_ds, args.max_subcategory_choices),
-        "test": build_subcategory_rlvr_split(test_ds, args.max_subcategory_choices),
+        "train": build_subcategory_rlvr_split(filtered_train_ds.select(range(half_train)), args.max_subcategory_choices),
+        "test": build_subcategory_rlvr_split(filtered_test_ds.select(range(half_test)), args.max_subcategory_choices),
     })
+    print(f"Subcategory RLVR splits created with {len(subcategory_rlvr['train'])} training examples and {len(subcategory_rlvr['test'])} test examples.")
 
     combo_rlvr = DatasetDict({
-        "train": build_combo_rlvr_split(train_ds),
-        "test": build_combo_rlvr_split(test_ds, mask_response_ratio=0.5), # because in this test split, all responses are present, not in training (50% masked)
+        "train": build_combo_rlvr_split(filtered_train_ds.select(range(half_train, len(filtered_train_ds)))),
+        "test": build_combo_rlvr_split(filtered_test_ds.select(range(half_test, len(filtered_test_ds))), mask_response_ratio=0.5), # because in this test split, all responses are present, not in training (50% masked)
     })
+    print(f"Combination RLVR splits created with {len(combo_rlvr['train'])} training examples and {len(combo_rlvr['test'])} test examples.")
 
     save_split_dict(binary_sft, Path("data/processed/sft/wildguardmix/binary-choice"))
     save_split_dict(open_form_sft, Path("data/processed/sft/wildguardmix/open-question"))
-    save_split_dict(subcategory_rlvr, Path("data/processed/rlvr/wildguardmix/subcategory_mcq"))
-    save_split_dict(combo_rlvr, Path("data/processed/rlvr/wildguardmix/analysis_combo_mcq"))
+    save_split_dict(subcategory_rlvr, Path("data/processed/sft/wildguardmix/subcategory_mcq_answers_only"))
+    save_split_dict(combo_rlvr, Path("data/processed/sft/wildguardmix/safety_combo_mcq_answers_only"))
 
     stats = {
         "binary_sft_train": len(binary_sft["train"]),
