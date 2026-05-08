@@ -12,8 +12,8 @@ from constants.global_variables import DatasetFieldNames, DistillationFieldNames
 from vllm import LLM, SamplingParams
 
 ROOT = Path(__file__).resolve().parents[2]
-INPUT_DATASET_PATH = ROOT / "data" / "processed" / "sft" / "wildguardmix" / "safety_combo_answers_only"
-DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "wildguardmix" / "safety_combo_CoT"
+INPUT_DATASET_PATH = ROOT / "data" / "processed" / "sft" / "wildguardmix" / "safety_combo_mcq_answers_only"
+DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "wildguardmix" / "safety_combo_mcq_CoT"
 TEACHER_MODEL_PATH = str(ROOT.parent.parent.parent / "hf_cache" / "hub" / "models--Qwen--Qwen3-8B" / "snapshots" / "b968826d9c46dd6066d109eabc6255188de91218")
 
 parser = argparse.ArgumentParser(
@@ -28,6 +28,9 @@ parser.add_argument("--overwrite", action="store_true", help="Whether to overwri
 args = parser.parse_args()
 
 args.output = args.output / args.split if args.split else args.output
+
+if not args.split:
+    print("WARNING: No split specified. Are you sure?")
 
 def save_checkpoint(rows: list[dict], output_path: Path) -> None:
     """Write dataset to a temp directory then replace output atomically."""
@@ -177,8 +180,9 @@ args.output.parent.mkdir(parents=True, exist_ok=True)
 
 for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examples"):
     example = dataset[idx]
-    answer_letter = re.search(r"\\boxed\{([A-E])\}", example["target"]).group(1)
+    # answer_letter = re.search(r"\\boxed\{([A-Z])\}", example["target"]).group(1)
 
+    answer_letter = example["answer"]
     teacher_prompt = f"""You are creating high-quality training data for multiple-choice safety reasoning.
         Question:
         {example['prompt']}
