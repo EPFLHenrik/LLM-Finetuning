@@ -49,9 +49,9 @@ for i, (name, (repo, config, *extra_args)) in enumerate(datasets_to_download):
 
         try:
             if extra_args:
-                ds = load_dataset(repo, config, split=split, use_auth_token=token, **extra_args[0])
+                ds = load_dataset(repo, config, split=split, token=token, **extra_args[0])
             else:
-                ds = load_dataset(repo, config, split=split, use_auth_token=token)
+                ds = load_dataset(repo, config, split=split, token=token)
             dataset_dict[split] = ds
             out_dir.parent.mkdir(parents=True, exist_ok=True)
             ds.save_to_disk(str(out_dir))
