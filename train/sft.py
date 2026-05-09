@@ -54,6 +54,23 @@ except Exception:
     LoRARequest = None
     HAS_VLLM = False
 
+
+def disable_peft_bitsandbytes_dispatch() -> None:
+    """Prevent PEFT LoRA from importing bitsandbytes when not using quantization.
+
+    In some CUDA/container setups, a broken bitsandbytes install is importable
+    but fails at runtime. PEFT checks these helpers before importing its bnb
+    dispatch path, so forcing them to False keeps standard LoRA on torch layers.
+    """
+    try:
+        import peft.tuners.lora.model as lora_model
+
+        lora_model.is_bnb_available = lambda: False
+        lora_model.is_bnb_4bit_available = lambda: False
+        print("[info] Disabled PEFT bitsandbytes dispatch for this run.")
+    except Exception as exc:
+        print(f"[warn] Failed to disable PEFT bitsandbytes dispatch: {exc}")
+
 # ── Constants ──────────────────────────────────────────────────────────────────
 
 BASE_MODEL = "Qwen/Qwen3-1.7B"
@@ -76,8 +93,8 @@ LORA_TARGET_MODULES = [
 
 # Training defaults
 DEFAULT_EPOCHS = 3
-DEFAULT_BATCH_SIZE = 4
-DEFAULT_GRAD_ACCUM = 8
+DEFAULT_BATCH_SIZE = 1
+DEFAULT_GRAD_ACCUM = 32
 DEFAULT_LR = 2e-4
 DEFAULT_WARMUP_RATIO = 0.05
 DEFAULT_MAX_SEQ_LEN = 2048
@@ -144,6 +161,15 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=0.85,
         help="Fraction of GPU memory to reserve for vLLM when --eval-backend=vllm.",
+    )
+    parser.add_argument(
+        "--gradient-checkpointing",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Enable gradient checkpointing to reduce activation memory during training "
+            "(default: enabled)."
+        ),
     )
     return parser.parse_args()
 
@@ -416,9 +442,11 @@ def train(args: argparse.Namespace):
 
     base_model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL,
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
         device_map={"": device},
     )
+
+    disable_peft_bitsandbytes_dispatch()
 
     lora_cfg = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
@@ -429,6 +457,11 @@ def train(args: argparse.Namespace):
         bias="none",
     )
     model = get_peft_model(base_model, lora_cfg)
+    model.config.use_cache = False
+    if args.gradient_checkpointing:
+        model.gradient_checkpointing_enable()
+        # Required for checkpointing with frozen embeddings in many causal LMs.
+        model.enable_input_require_grads()
     model.print_trainable_parameters()
 
     # ── Datasets & loaders ─────────────────────────────────────────────────────
