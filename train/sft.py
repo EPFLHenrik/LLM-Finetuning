@@ -20,79 +20,136 @@ Checkpoint layout:
 """
 
 import argparse
+import importlib
 import json
+import shutil
 from datetime import datetime
 from functools import partial
 from pathlib import Path
+from typing import Any
 
 import torch
 from datasets import concatenate_datasets, load_from_disk
 from peft import LoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
-from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    get_cosine_schedule_with_warmup,
+)
 
 from constants.global_variables import DatasetFieldNames
 
+try:
+    _vllm_mod = importlib.import_module("vllm")
+    _vllm_lora_mod = importlib.import_module("vllm.lora.request")
+    LLM = _vllm_mod.LLM
+    SamplingParams = _vllm_mod.SamplingParams
+    LoRARequest = _vllm_lora_mod.LoRARequest
+    HAS_VLLM = True
+except Exception:
+    LLM = None
+    SamplingParams = None
+    LoRARequest = None
+    HAS_VLLM = False
+
 # ── Constants ──────────────────────────────────────────────────────────────────
 
-BASE_MODEL   = "Qwen/Qwen3-1.7B"
-DATA_DIR     = Path("data/processed/sft")
+BASE_MODEL = "Qwen/Qwen3-1.7B"
+DATA_DIR = Path("data/processed/sft")
 CHECKPOINT_DIR = Path("checkpoints")
 
 # LoRA
-LORA_R              = 16
-LORA_ALPHA          = 32
-LORA_DROPOUT        = 0.05
+LORA_R = 16
+LORA_ALPHA = 32
+LORA_DROPOUT = 0.05
 LORA_TARGET_MODULES = [
-    "q_proj", "k_proj", "v_proj", "o_proj",
-    "gate_proj", "up_proj", "down_proj",
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj",
 ]
 
 # Training defaults
-DEFAULT_EPOCHS      = 3
-DEFAULT_BATCH_SIZE  = 4
-DEFAULT_GRAD_ACCUM  = 8
-DEFAULT_LR          = 2e-4
+DEFAULT_EPOCHS = 3
+DEFAULT_BATCH_SIZE = 4
+DEFAULT_GRAD_ACCUM = 8
+DEFAULT_LR = 2e-4
 DEFAULT_WARMUP_RATIO = 0.05
 DEFAULT_MAX_SEQ_LEN = 2048
-DEFAULT_SAVE_STEPS  = 100
+DEFAULT_SAVE_STEPS = 100
+DEFAULT_MAX_EVAL_SAMPLES = 256
 
 
 # ── Argument parsing ───────────────────────────────────────────────────────────
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="SFT with LoRA on Qwen3-1.7B")
     parser.add_argument(
-        "--datasets", nargs="+", required=True,
+        "--datasets",
+        nargs="+",
+        required=True,
         help=(
             "Dataset names to train on (e.g. safetybench wildguardmix). "
             "Each must exist under data/processed/sft/<name>/train and .../test."
         ),
     )
     parser.add_argument(
-        "--run-id", type=str, default=None,
+        "--run-id",
+        type=str,
+        default=None,
         help="Run identifier used as the checkpoint folder name (default: timestamp).",
     )
     parser.add_argument(
-        "--resume", type=str, default=None,
+        "--resume",
+        type=str,
+        default=None,
         help="Path to a specific step checkpoint to resume from (e.g. checkpoints/run/step-200). "
-             "If omitted, the latest checkpoint in the run folder is used automatically.",
+        "If omitted, the latest checkpoint in the run folder is used automatically.",
     )
-    parser.add_argument("--epochs",        type=int,   default=DEFAULT_EPOCHS)
-    parser.add_argument("--batch-size",    type=int,   default=DEFAULT_BATCH_SIZE)
-    parser.add_argument("--grad-accum",    type=int,   default=DEFAULT_GRAD_ACCUM)
-    parser.add_argument("--lr",            type=float, default=DEFAULT_LR)
-    parser.add_argument("--warmup-ratio",  type=float, default=DEFAULT_WARMUP_RATIO)
-    parser.add_argument("--max-seq-len",   type=int,   default=DEFAULT_MAX_SEQ_LEN)
+    parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
+    parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+    parser.add_argument("--grad-accum", type=int, default=DEFAULT_GRAD_ACCUM)
+    parser.add_argument("--lr", type=float, default=DEFAULT_LR)
+    parser.add_argument("--warmup-ratio", type=float, default=DEFAULT_WARMUP_RATIO)
+    parser.add_argument("--max-seq-len", type=int, default=DEFAULT_MAX_SEQ_LEN)
     parser.add_argument(
-        "--save-steps", type=int, default=DEFAULT_SAVE_STEPS,
+        "--save-steps",
+        type=int,
+        default=DEFAULT_SAVE_STEPS,
         help="Save a checkpoint every N optimizer steps.",
+    )
+    parser.add_argument(
+        "--eval-backend",
+        choices=["torch", "vllm"],
+        default="vllm",
+        help=(
+            "Evaluation backend. 'vllm' is generally faster for inference-style evaluation, "
+            "but SFT training still uses Transformers/PEFT. Falls back to torch on errors."
+        ),
+    )
+    parser.add_argument(
+        "--max-eval-samples",
+        type=int,
+        default=DEFAULT_MAX_EVAL_SAMPLES,
+        help="Maximum number of test examples to use for periodic/final evaluation.",
+    )
+    parser.add_argument(
+        "--vllm-gpu-memory-utilization",
+        type=float,
+        default=0.85,
+        help="Fraction of GPU memory to reserve for vLLM when --eval-backend=vllm.",
     )
     return parser.parse_args()
 
 
 # ── Data ───────────────────────────────────────────────────────────────────────
+
 
 def load_split(dataset_names: list[str], split: str):
     """Load and concatenate one split across all requested datasets."""
@@ -105,23 +162,36 @@ def load_split(dataset_names: list[str], split: str):
     return concatenate_datasets(parts) if len(parts) > 1 else parts[0]
 
 
+def maybe_limit_dataset(hf_dataset, max_examples: int):
+    if max_examples <= 0 or len(hf_dataset) <= max_examples:
+        return hf_dataset
+    return hf_dataset.select(range(max_examples))
+
+
 def encode_example(tokenizer, max_seq_len: int, prompt: str, target: str) -> dict:
     """
     Build input_ids and labels for one (prompt, target) pair.
     The prompt portion is masked with -100 so the loss is computed on the
     assistant response only.
     """
-    messages_full   = [{"role": "user", "content": prompt}, {"role": "assistant", "content": target}]
+    messages_full = [
+        {"role": "user", "content": prompt},
+        {"role": "assistant", "content": target},
+    ]
     messages_prompt = [{"role": "user", "content": prompt}]
 
-    full_text   = tokenizer.apply_chat_template(messages_full,   tokenize=False, add_generation_prompt=False)
-    prompt_text = tokenizer.apply_chat_template(messages_prompt, tokenize=False, add_generation_prompt=True)
+    full_text = tokenizer.apply_chat_template(
+        messages_full, tokenize=False, add_generation_prompt=False
+    )
+    prompt_text = tokenizer.apply_chat_template(
+        messages_prompt, tokenize=False, add_generation_prompt=True
+    )
 
-    full_ids   = tokenizer(full_text,   add_special_tokens=False)["input_ids"]
+    full_ids = tokenizer(full_text, add_special_tokens=False)["input_ids"]
     prompt_len = len(tokenizer(prompt_text, add_special_tokens=False)["input_ids"])
 
     input_ids = full_ids[:max_seq_len]
-    labels    = ([-100] * prompt_len + full_ids[prompt_len:])[:max_seq_len]
+    labels = ([-100] * prompt_len + full_ids[prompt_len:])[:max_seq_len]
 
     return {"input_ids": input_ids, "labels": labels}
 
@@ -130,7 +200,8 @@ class SFTDataset(torch.utils.data.Dataset):
     def __init__(self, hf_dataset, tokenizer, max_seq_len: int):
         self.examples = [
             encode_example(
-                tokenizer, max_seq_len,
+                tokenizer,
+                max_seq_len,
                 row[DatasetFieldNames.SFT_INPUT],
                 row[DatasetFieldNames.SFT_TARGET],
             )
@@ -150,23 +221,24 @@ def collate_fn(batch: list[dict], pad_token_id: int) -> dict:
     input_ids, labels, attention_mask = [], [], []
     for x in batch:
         pad_len = max_len - len(x["input_ids"])
-        input_ids.append(     [pad_token_id] * pad_len + x["input_ids"])
-        labels.append(        [-100]         * pad_len + x["labels"])
-        attention_mask.append([0]            * pad_len + [1] * len(x["input_ids"]))
+        input_ids.append([pad_token_id] * pad_len + x["input_ids"])
+        labels.append([-100] * pad_len + x["labels"])
+        attention_mask.append([0] * pad_len + [1] * len(x["input_ids"]))
     return {
-        "input_ids":      torch.tensor(input_ids,      dtype=torch.long),
-        "labels":         torch.tensor(labels,         dtype=torch.long),
+        "input_ids": torch.tensor(input_ids, dtype=torch.long),
+        "labels": torch.tensor(labels, dtype=torch.long),
         "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
     }
 
 
 # ── Checkpointing ──────────────────────────────────────────────────────────────
 
+
 def save_checkpoint(run_dir: Path, step: int, model, optimizer, scheduler, state: dict):
     ckpt_dir = run_dir / f"step-{step}"
     ckpt_dir.mkdir(parents=True, exist_ok=True)
 
-    model.save_pretrained(ckpt_dir / "adapter")                          # LoRA adapter
+    model.save_pretrained(ckpt_dir / "adapter")  # LoRA adapter
     torch.save(optimizer.state_dict(), ckpt_dir / "optimizer.pt")
     torch.save(scheduler.state_dict(), ckpt_dir / "scheduler.pt")
     with open(ckpt_dir / "state.json", "w") as f:
@@ -198,28 +270,127 @@ def latest_checkpoint(run_dir: Path) -> Path | None:
 
 # ── Evaluation ─────────────────────────────────────────────────────────────────
 
+
 def evaluate(model, loader: DataLoader, device) -> float:
     model.eval()
     total_loss, n_batches = 0.0, 0
     with torch.no_grad():
         for batch in loader:
             outputs = model(
-                input_ids=      batch["input_ids"].to(device),
-                attention_mask= batch["attention_mask"].to(device),
-                labels=         batch["labels"].to(device),
+                input_ids=batch["input_ids"].to(device),
+                attention_mask=batch["attention_mask"].to(device),
+                labels=batch["labels"].to(device),
             )
             total_loss += outputs.loss.item()
-            n_batches  += 1
+            n_batches += 1
     model.train()
     return total_loss / n_batches if n_batches else float("inf")
 
 
+def _extract_token_logprob(
+    logprob_dict: dict[int, Any] | None, token_id: int
+) -> float | None:
+    if not logprob_dict or token_id not in logprob_dict:
+        return None
+    entry = logprob_dict[token_id]
+    if hasattr(entry, "logprob"):
+        return float(entry.logprob)
+    try:
+        return float(entry)
+    except (TypeError, ValueError):
+        return None
+
+
+def evaluate_with_vllm(
+    tokenizer,
+    hf_dataset,
+    max_seq_len: int,
+    base_model: str,
+    adapter_path: Path,
+    gpu_memory_utilization: float,
+) -> float:
+    if not HAS_VLLM:
+        raise RuntimeError("vLLM is not available in this environment.")
+
+    eval_records = []
+    for row in hf_dataset:
+        prompt = row[DatasetFieldNames.SFT_INPUT]
+        target = row[DatasetFieldNames.SFT_TARGET]
+        messages_full = [
+            {"role": "user", "content": prompt},
+            {"role": "assistant", "content": target},
+        ]
+        messages_prompt = [{"role": "user", "content": prompt}]
+
+        full_text = tokenizer.apply_chat_template(
+            messages_full, tokenize=False, add_generation_prompt=False
+        )
+        prompt_text = tokenizer.apply_chat_template(
+            messages_prompt, tokenize=False, add_generation_prompt=True
+        )
+
+        full_ids = tokenizer(full_text, add_special_tokens=False)["input_ids"]
+        prompt_len = len(tokenizer(prompt_text, add_special_tokens=False)["input_ids"])
+
+        full_ids = full_ids[:max_seq_len]
+        if len(full_ids) <= 1:
+            continue
+
+        prompt_len = min(prompt_len, len(full_ids) - 1)
+        truncated_text = tokenizer.decode(full_ids, skip_special_tokens=False)
+        eval_records.append((truncated_text, prompt_len))
+
+    if not eval_records:
+        return float("inf")
+
+    llm = LLM(
+        model=base_model,
+        enable_lora=True,
+        dtype="auto",
+        gpu_memory_utilization=gpu_memory_utilization,
+        max_model_len=max_seq_len,
+    )
+    sampling_params = SamplingParams(
+        temperature=0.0,
+        max_tokens=1,
+        prompt_logprobs=1,
+    )
+    lora_request = LoRARequest("sft_adapter", 1, str(adapter_path))
+
+    prompts = [record[0] for record in eval_records]
+    outputs = llm.generate(
+        prompts,
+        sampling_params,
+        lora_request=lora_request,
+        use_tqdm=False,
+    )
+
+    total_nll = 0.0
+    total_tokens = 0
+    for output, (_, prompt_len) in zip(outputs, eval_records):
+        token_ids = output.prompt_token_ids
+        token_logprobs = output.prompt_logprobs or []
+
+        usable = min(len(token_ids), len(token_logprobs))
+        for pos in range(prompt_len, usable):
+            logprob = _extract_token_logprob(token_logprobs[pos], token_ids[pos])
+            if logprob is None:
+                continue
+            total_nll -= logprob
+            total_tokens += 1
+
+    if total_tokens == 0:
+        return float("inf")
+    return total_nll / total_tokens
+
+
 # ── Training loop ──────────────────────────────────────────────────────────────
+
 
 def train(args: argparse.Namespace):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    run_id  = args.run_id or datetime.now().strftime("%Y%m%d-%H%M%S")
+    run_id = args.run_id or datetime.now().strftime("%Y%m%d-%H%M%S")
     run_dir = CHECKPOINT_DIR / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -228,7 +399,15 @@ def train(args: argparse.Namespace):
     print(f"  Base model : {BASE_MODEL}")
     print(f"  Run dir    : {run_dir}")
     print(f"  Device     : {device}")
+    print(f"  Eval mode  : {args.eval_backend}")
     print("=" * 56)
+
+    if args.eval_backend == "vllm" and not HAS_VLLM:
+        print("[warn] vLLM not installed/available; falling back to torch evaluation.")
+        args.eval_backend = "torch"
+    if args.eval_backend == "vllm" and device.type != "cuda":
+        print("[warn] vLLM evaluation requires CUDA; falling back to torch evaluation.")
+        args.eval_backend = "torch"
 
     # ── Tokenizer & model ──────────────────────────────────────────────────────
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
@@ -254,33 +433,46 @@ def train(args: argparse.Namespace):
 
     # ── Datasets & loaders ─────────────────────────────────────────────────────
     print("\nLoading datasets...")
-    train_ds = SFTDataset(load_split(args.datasets, "train"), tokenizer, args.max_seq_len)
-    test_ds  = SFTDataset(load_split(args.datasets, "test"),  tokenizer, args.max_seq_len)
+    train_hf = load_split(args.datasets, "train")
+    test_hf = load_split(args.datasets, "test")
+    test_eval_hf = maybe_limit_dataset(test_hf, args.max_eval_samples)
+
+    train_ds = SFTDataset(train_hf, tokenizer, args.max_seq_len)
+    test_ds = SFTDataset(test_eval_hf, tokenizer, args.max_seq_len)
     print(f"  Train examples : {len(train_ds)}")
-    print(f"  Test  examples : {len(test_ds)}\n")
+    print(f"  Test  examples : {len(test_hf)}")
+    if len(test_eval_hf) != len(test_hf):
+        print(f"  Eval subset   : {len(test_eval_hf)}")
+    print()
 
     _collate = partial(collate_fn, pad_token_id=tokenizer.pad_token_id)
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True,  collate_fn=_collate)
-    test_loader  = DataLoader(test_ds,  batch_size=args.batch_size, shuffle=False, collate_fn=_collate)
+    train_loader = DataLoader(
+        train_ds, batch_size=args.batch_size, shuffle=True, collate_fn=_collate
+    )
+    test_loader = DataLoader(
+        test_ds, batch_size=args.batch_size, shuffle=False, collate_fn=_collate
+    )
 
     # ── Optimizer & scheduler ──────────────────────────────────────────────────
-    optimizer    = AdamW(model.parameters(), lr=args.lr)
-    total_steps  = (len(train_loader) // args.grad_accum) * args.epochs
+    optimizer = AdamW(model.parameters(), lr=args.lr)
+    total_steps = (len(train_loader) // args.grad_accum) * args.epochs
     warmup_steps = int(total_steps * args.warmup_ratio)
-    scheduler    = get_cosine_schedule_with_warmup(
-        optimizer, num_warmup_steps=warmup_steps, num_training_steps=total_steps,
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=warmup_steps,
+        num_training_steps=total_steps,
     )
 
     # ── Resume from checkpoint if available ────────────────────────────────────
-    global_step    = 0
-    start_epoch    = 0
+    global_step = 0
+    start_epoch = 0
     best_eval_loss = float("inf")
 
     resume_path = Path(args.resume) if args.resume else latest_checkpoint(run_dir)
     if resume_path and resume_path.exists():
-        saved          = load_checkpoint(resume_path, model, optimizer, scheduler)
-        global_step    = saved["global_step"]
-        start_epoch    = saved["epoch"]
+        saved = load_checkpoint(resume_path, model, optimizer, scheduler)
+        global_step = saved["global_step"]
+        start_epoch = saved["epoch"]
         best_eval_loss = saved.get("best_eval_loss", float("inf"))
         print(f"Resumed at global_step={global_step}, epoch={start_epoch}\n")
 
@@ -294,9 +486,9 @@ def train(args: argparse.Namespace):
 
         for batch_idx, batch in enumerate(train_loader):
             outputs = model(
-                input_ids=      batch["input_ids"].to(device),
-                attention_mask= batch["attention_mask"].to(device),
-                labels=         batch["labels"].to(device),
+                input_ids=batch["input_ids"].to(device),
+                attention_mask=batch["attention_mask"].to(device),
+                labels=batch["labels"].to(device),
             )
             loss = outputs.loss / args.grad_accum
             loss.backward()
@@ -318,30 +510,65 @@ def train(args: argparse.Namespace):
                     accum_loss = 0.0
 
                 if global_step % args.save_steps == 0:
-                    eval_loss  = evaluate(model, test_loader, device)
-                    is_best    = eval_loss < best_eval_loss
+                    eval_loss = evaluate(model, test_loader, device)
+                    is_best = eval_loss < best_eval_loss
                     best_eval_loss = min(best_eval_loss, eval_loss)
-                    print(f"  [eval]  loss {eval_loss:.4f}{' ← best' if is_best else ''}")
+                    print(
+                        f"  [eval]  loss {eval_loss:.4f}{' ← best' if is_best else ''}"
+                    )
                     save_checkpoint(
-                        run_dir, global_step, model, optimizer, scheduler,
+                        run_dir,
+                        global_step,
+                        model,
+                        optimizer,
+                        scheduler,
                         state={
-                            "global_step":    global_step,
-                            "epoch":          epoch,
+                            "global_step": global_step,
+                            "epoch": epoch,
                             "best_eval_loss": best_eval_loss,
-                            "args":           vars(args),
+                            "args": vars(args),
                         },
                     )
 
     # ── Final checkpoint ───────────────────────────────────────────────────────
-    eval_loss = evaluate(model, test_loader, device)
-    print(f"\nFinal eval loss: {eval_loss:.4f}")
+    final_eval_loss = evaluate(model, test_loader, device)
+    eval_metric_name = "torch_nll"
+
+    if args.eval_backend == "vllm":
+        final_eval_adapter_dir = run_dir / ".final_eval_adapter"
+        try:
+            if final_eval_adapter_dir.exists():
+                shutil.rmtree(final_eval_adapter_dir)
+            model.save_pretrained(final_eval_adapter_dir)
+
+            vllm_eval = evaluate_with_vllm(
+                tokenizer=tokenizer,
+                hf_dataset=test_eval_hf,
+                max_seq_len=args.max_seq_len,
+                base_model=BASE_MODEL,
+                adapter_path=final_eval_adapter_dir,
+                gpu_memory_utilization=args.vllm_gpu_memory_utilization,
+            )
+            final_eval_loss = vllm_eval
+            eval_metric_name = "vllm_nll"
+        except Exception as exc:
+            print(f"[warn] vLLM evaluation failed ({exc}); keeping torch final eval.")
+        finally:
+            if final_eval_adapter_dir.exists():
+                shutil.rmtree(final_eval_adapter_dir, ignore_errors=True)
+
+    print(f"\nFinal eval ({eval_metric_name}): {final_eval_loss:.4f}")
     save_checkpoint(
-        run_dir, global_step, model, optimizer, scheduler,
+        run_dir,
+        global_step,
+        model,
+        optimizer,
+        scheduler,
         state={
-            "global_step":    global_step,
-            "epoch":          args.epochs,
-            "best_eval_loss": min(best_eval_loss, eval_loss),
-            "args":           vars(args),
+            "global_step": global_step,
+            "epoch": args.epochs,
+            "best_eval_loss": min(best_eval_loss, final_eval_loss),
+            "args": vars(args),
         },
     )
     print("Training complete.")
