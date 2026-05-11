@@ -114,7 +114,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--use_vllm",
-    action="store_true",
+    type=bool,
+    default=True,
     help="Use vLLM for generation. If not set, uses Transformers generate().",
 )
 parser.add_argument(

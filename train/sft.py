@@ -1,83 +1,63 @@
-"""Supervised Fine-Tuning (SFT) with LoRA for Qwen3-1.7B.
+"""Simple SFT entry point with per-dataset metrics, W&B logging, and benchmark hooks.
 
-Usage:
-    uv run train/sft.py \\
-        --datasets safetybench wildguardmix \\
-        [--run-id my_run] \\
-        [--resume checkpoints/20260506-143022/step-200]
+This script keeps training orchestration readable while delegating details to:
+- train/sft_data.py
+- train/sft_benchmark.py
+- train/sft_export.py
 
-Dependencies (add to pyproject.toml if missing):
-    peft>=0.14
-
-Checkpoint layout:
-    checkpoints/
-      <run-id>/              # e.g. 20260506-143022  or  --run-id value
-        step-<N>/
-          adapter/           # LoRA adapter weights (adapter_model.safetensors + config)
-          optimizer.pt       # AdamW state
-          scheduler.pt       # LR-scheduler state
-          state.json         # {global_step, epoch, best_eval_loss, args}
+Usage example:
+  uv run train/sft.py \
+    --datasets safetybench \
+    --benchmarks safety \
+    --epochs 1
 """
+
+from __future__ import annotations
 
 import argparse
 import importlib
-import json
-import shutil
+import random
+import sys
 from datetime import datetime
-from functools import partial
 from pathlib import Path
-from typing import Any
 
 import torch
-from datasets import concatenate_datasets, load_from_disk
 from peft import LoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
-from torch.utils.data import DataLoader
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    get_cosine_schedule_with_warmup,
-)
+from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 
-from constants.global_variables import DatasetFieldNames
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from constants.global_variables import Random
+from prompts.system_prompt import SYSTEM_PROMPT_MCQ
+from train.sft_benchmark import run_benchmark_eval
+from train.sft_data import DatasetBundle, load_dataset_bundles
+from train.sft_export import export_merged_checkpoint
 
 try:
-    _vllm_mod = importlib.import_module("vllm")
-    _vllm_lora_mod = importlib.import_module("vllm.lora.request")
-    LLM = _vllm_mod.LLM
-    SamplingParams = _vllm_mod.SamplingParams
-    LoRARequest = _vllm_lora_mod.LoRARequest
-    HAS_VLLM = True
+    import wandb
+
+    HAS_WANDB = True
 except Exception:
-    LLM = None
-    SamplingParams = None
-    LoRARequest = None
-    HAS_VLLM = False
+    wandb = None
+    HAS_WANDB = False
 
-
-def disable_peft_bitsandbytes_dispatch() -> None:
-    """Prevent PEFT LoRA from importing bitsandbytes when not using quantization.
-
-    In some CUDA/container setups, a broken bitsandbytes install is importable
-    but fails at runtime. PEFT checks these helpers before importing its bnb
-    dispatch path, so forcing them to False keeps standard LoRA on torch layers.
-    """
-    try:
-        import peft.tuners.lora.model as lora_model
-
-        lora_model.is_bnb_available = lambda: False
-        lora_model.is_bnb_4bit_available = lambda: False
-        print("[info] Disabled PEFT bitsandbytes dispatch for this run.")
-    except Exception as exc:
-        print(f"[warn] Failed to disable PEFT bitsandbytes dispatch: {exc}")
-
-# ── Constants ──────────────────────────────────────────────────────────────────
 
 BASE_MODEL = "Qwen/Qwen3-1.7B"
-DATA_DIR = Path("data/processed/sft")
-CHECKPOINT_DIR = Path("checkpoints")
 
-# LoRA
+# Simple, conservative defaults.
+DEFAULT_EPOCHS = 3
+DEFAULT_BATCH_SIZE = 1
+DEFAULT_GRAD_ACCUM = 16
+DEFAULT_LR = 2e-4
+DEFAULT_WARMUP_RATIO = 0.05
+DEFAULT_MAX_SEQ_LEN = 2048
+DEFAULT_BENCHMARK_INTERVAL = 1
+DEFAULT_BENCHMARK_LIMIT = None
+
+# LoRA defaults (gold-standard starter values for 1-2B models).
 LORA_R = 16
 LORA_ALPHA = 32
 LORA_DROPOUT = 0.05
@@ -91,44 +71,34 @@ LORA_TARGET_MODULES = [
     "down_proj",
 ]
 
-# Training defaults
-DEFAULT_EPOCHS = 3
-DEFAULT_BATCH_SIZE = 1
-DEFAULT_GRAD_ACCUM = 32
-DEFAULT_LR = 2e-4
-DEFAULT_WARMUP_RATIO = 0.05
-DEFAULT_MAX_SEQ_LEN = 2048
-DEFAULT_SAVE_STEPS = 100
-DEFAULT_MAX_EVAL_SAMPLES = 256
 
+def disable_peft_bitsandbytes_dispatch() -> None:
+    """Avoid accidental PEFT bitsandbytes path when not quantizing."""
+    try:
+        import peft.tuners.lora.model as lora_model
 
-# ── Argument parsing ───────────────────────────────────────────────────────────
+        lora_model.is_bnb_available = lambda: False
+        lora_model.is_bnb_4bit_available = lambda: False
+        print("[info] Disabled PEFT bitsandbytes dispatch for this run.")
+    except Exception as exc:
+        print(f"[warn] Failed to disable PEFT bitsandbytes dispatch: {exc}")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="SFT with LoRA on Qwen3-1.7B")
+    parser = argparse.ArgumentParser(description="Simple SFT with LoRA on Qwen3-1.7B")
     parser.add_argument(
         "--datasets",
         nargs="+",
         required=True,
-        help=(
-            "Dataset names to train on (e.g. safetybench wildguardmix). "
-            "Each must exist under data/processed/sft/<name>/train and .../test."
-        ),
+        help="Dataset names under data/processed/sft/<name> with train and test splits.",
     )
     parser.add_argument(
-        "--run-id",
-        type=str,
-        default=None,
-        help="Run identifier used as the checkpoint folder name (default: timestamp).",
+        "--benchmarks",
+        nargs="*",
+        default=[],
+        help="Benchmark names under data/processed/benchmark/<name>.",
     )
-    parser.add_argument(
-        "--resume",
-        type=str,
-        default=None,
-        help="Path to a specific step checkpoint to resume from (e.g. checkpoints/run/step-200). "
-        "If omitted, the latest checkpoint in the run folder is used automatically.",
-    )
+    parser.add_argument("--run-id", type=str, default=None)
     parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--grad-accum", type=int, default=DEFAULT_GRAD_ACCUM)
@@ -136,170 +106,91 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--warmup-ratio", type=float, default=DEFAULT_WARMUP_RATIO)
     parser.add_argument("--max-seq-len", type=int, default=DEFAULT_MAX_SEQ_LEN)
     parser.add_argument(
-        "--save-steps",
+        "--benchmark-interval",
         type=int,
-        default=DEFAULT_SAVE_STEPS,
-        help="Save a checkpoint every N optimizer steps.",
+        default=DEFAULT_BENCHMARK_INTERVAL,
+        help="Run benchmark evaluation every N epochs.",
     )
     parser.add_argument(
-        "--eval-backend",
-        choices=["torch", "vllm"],
-        default="vllm",
-        help=(
-            "Evaluation backend. 'vllm' is generally faster for inference-style evaluation, "
-            "but SFT training still uses Transformers/PEFT. Falls back to torch on errors."
-        ),
-    )
-    parser.add_argument(
-        "--max-eval-samples",
+        "--benchmark-limit",
         type=int,
-        default=DEFAULT_MAX_EVAL_SAMPLES,
-        help="Maximum number of test examples to use for periodic/final evaluation.",
+        default=DEFAULT_BENCHMARK_LIMIT,
+        help="Optional benchmark subset size for faster eval.",
     )
     parser.add_argument(
-        "--vllm-gpu-memory-utilization",
-        type=float,
-        default=0.85,
-        help="Fraction of GPU memory to reserve for vLLM when --eval-backend=vllm.",
+        "--benchmark-use-vllm",
+        action="store_true",
+        help="Use vLLM inside benchmark evaluation.",
+    )
+    parser.add_argument(
+        "--benchmark-think",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Enable thinking mode during benchmark evaluation.",
     )
     parser.add_argument(
         "--gradient-checkpointing",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help=(
-            "Enable gradient checkpointing to reduce activation memory during training "
-            "(default: enabled)."
-        ),
+    )
+    parser.add_argument(
+        "--best-checkpoint-dir",
+        type=Path,
+        default=Path("checkpoints/sft-test-best"),
+        help="Export path for best CI-compatible checkpoint.",
+    )
+    parser.add_argument(
+        "--export-temperature",
+        type=float,
+        default=0.7,
+        help="temperature to store in exported generation_config.json",
+    )
+    parser.add_argument(
+        "--export-top-p",
+        type=float,
+        default=0.95,
+        help="top_p to store in exported generation_config.json",
+    )
+    parser.add_argument(
+        "--export-top-k",
+        type=int,
+        default=50,
+        help="top_k to store in exported generation_config.json",
+    )
+    parser.add_argument(
+        "--skip_wandb",
+        action="store_true",
+        help="Disable W&B logging.",
+    )
+    parser.add_argument(
+        "--wandb_project",
+        type=str,
+        default="MNLP-Safety",
+    )
+    parser.add_argument(
+        "--wandb_entity",
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
+        "--wandb_run_name",
+        type=str,
+        default=None,
     )
     return parser.parse_args()
 
 
-# ── Data ───────────────────────────────────────────────────────────────────────
+def set_seeds(seed: int) -> None:
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
-def load_split(dataset_names: list[str], split: str):
-    """Load and concatenate one split across all requested datasets."""
-    parts = []
-    for name in dataset_names:
-        path = DATA_DIR / name / split
-        if not path.exists():
-            raise FileNotFoundError(f"Dataset split not found: {path}")
-        parts.append(load_from_disk(str(path)))
-    return concatenate_datasets(parts) if len(parts) > 1 else parts[0]
-
-
-def maybe_limit_dataset(hf_dataset, max_examples: int):
-    if max_examples <= 0 or len(hf_dataset) <= max_examples:
-        return hf_dataset
-    return hf_dataset.select(range(max_examples))
-
-
-def encode_example(tokenizer, max_seq_len: int, prompt: str, target: str) -> dict:
-    """
-    Build input_ids and labels for one (prompt, target) pair.
-    The prompt portion is masked with -100 so the loss is computed on the
-    assistant response only.
-    """
-    messages_full = [
-        {"role": "user", "content": prompt},
-        {"role": "assistant", "content": target},
-    ]
-    messages_prompt = [{"role": "user", "content": prompt}]
-
-    full_text = tokenizer.apply_chat_template(
-        messages_full, tokenize=False, add_generation_prompt=False
-    )
-    prompt_text = tokenizer.apply_chat_template(
-        messages_prompt, tokenize=False, add_generation_prompt=True
-    )
-
-    full_ids = tokenizer(full_text, add_special_tokens=False)["input_ids"]
-    prompt_len = len(tokenizer(prompt_text, add_special_tokens=False)["input_ids"])
-
-    input_ids = full_ids[:max_seq_len]
-    labels = ([-100] * prompt_len + full_ids[prompt_len:])[:max_seq_len]
-
-    return {"input_ids": input_ids, "labels": labels}
-
-
-class SFTDataset(torch.utils.data.Dataset):
-    def __init__(self, hf_dataset, tokenizer, max_seq_len: int):
-        self.examples = [
-            encode_example(
-                tokenizer,
-                max_seq_len,
-                row[DatasetFieldNames.SFT_INPUT],
-                row[DatasetFieldNames.SFT_TARGET],
-            )
-            for row in hf_dataset
-        ]
-
-    def __len__(self):
-        return len(self.examples)
-
-    def __getitem__(self, idx):
-        return self.examples[idx]
-
-
-def collate_fn(batch: list[dict], pad_token_id: int) -> dict:
-    """Right-align sequences (left-pad) so attention is on real tokens."""
-    max_len = max(len(x["input_ids"]) for x in batch)
-    input_ids, labels, attention_mask = [], [], []
-    for x in batch:
-        pad_len = max_len - len(x["input_ids"])
-        input_ids.append([pad_token_id] * pad_len + x["input_ids"])
-        labels.append([-100] * pad_len + x["labels"])
-        attention_mask.append([0] * pad_len + [1] * len(x["input_ids"]))
-    return {
-        "input_ids": torch.tensor(input_ids, dtype=torch.long),
-        "labels": torch.tensor(labels, dtype=torch.long),
-        "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
-    }
-
-
-# ── Checkpointing ──────────────────────────────────────────────────────────────
-
-
-def save_checkpoint(run_dir: Path, step: int, model, optimizer, scheduler, state: dict):
-    ckpt_dir = run_dir / f"step-{step}"
-    ckpt_dir.mkdir(parents=True, exist_ok=True)
-
-    model.save_pretrained(ckpt_dir / "adapter")  # LoRA adapter
-    torch.save(optimizer.state_dict(), ckpt_dir / "optimizer.pt")
-    torch.save(scheduler.state_dict(), ckpt_dir / "scheduler.pt")
-    with open(ckpt_dir / "state.json", "w") as f:
-        json.dump(state, f, indent=2)
-
-    print(f"  [checkpoint] saved → {ckpt_dir}")
-
-
-def load_checkpoint(ckpt_path: Path, model, optimizer, scheduler) -> dict:
-    """Restore adapter weights and training state from a checkpoint folder."""
-    print(f"Resuming from: {ckpt_path}")
-    model.load_adapter(str(ckpt_path / "adapter"), adapter_name="default")
-    optimizer.load_state_dict(torch.load(ckpt_path / "optimizer.pt", weights_only=True))
-    scheduler.load_state_dict(torch.load(ckpt_path / "scheduler.pt", weights_only=True))
-    with open(ckpt_path / "state.json") as f:
-        return json.load(f)
-
-
-def latest_checkpoint(run_dir: Path) -> Path | None:
-    """Return the step folder with the highest step number inside run_dir, or None."""
-    if not run_dir.exists():
-        return None
-    candidates = sorted(
-        [d for d in run_dir.iterdir() if d.is_dir() and d.name.startswith("step-")],
-        key=lambda d: int(d.name.split("-")[1]),
-    )
-    return candidates[-1] if candidates else None
-
-
-# ── Evaluation ─────────────────────────────────────────────────────────────────
-
-
-def evaluate(model, loader: DataLoader, device) -> float:
+def evaluate_loss(model, loader, device: torch.device) -> float:
     model.eval()
-    total_loss, n_batches = 0.0, 0
+    total_loss = 0.0
+    n_batches = 0
     with torch.no_grad():
         for batch in loader:
             outputs = model(
@@ -307,135 +198,46 @@ def evaluate(model, loader: DataLoader, device) -> float:
                 attention_mask=batch["attention_mask"].to(device),
                 labels=batch["labels"].to(device),
             )
-            total_loss += outputs.loss.item()
+            total_loss += float(outputs.loss.item())
             n_batches += 1
     model.train()
     return total_loss / n_batches if n_batches else float("inf")
 
 
-def _extract_token_logprob(
-    logprob_dict: dict[int, Any] | None, token_id: int
-) -> float | None:
-    if not logprob_dict or token_id not in logprob_dict:
+def weighted_average(loss_by_name: dict[str, float], weight_by_name: dict[str, int]) -> float:
+    num = 0.0
+    den = 0
+    for name, loss in loss_by_name.items():
+        w = weight_by_name[name]
+        num += loss * w
+        den += w
+    return num / den if den else float("inf")
+
+
+def maybe_init_wandb(args: argparse.Namespace, run_id: str):
+    if args.skip_wandb:
         return None
-    entry = logprob_dict[token_id]
-    if hasattr(entry, "logprob"):
-        return float(entry.logprob)
-    try:
-        return float(entry)
-    except (TypeError, ValueError):
-        return None
+    if not HAS_WANDB:
+        raise RuntimeError("wandb is not installed but --skip_wandb was not provided.")
 
-
-def evaluate_with_vllm(
-    tokenizer,
-    hf_dataset,
-    max_seq_len: int,
-    base_model: str,
-    adapter_path: Path,
-    gpu_memory_utilization: float,
-) -> float:
-    if not HAS_VLLM:
-        raise RuntimeError("vLLM is not available in this environment.")
-
-    eval_records = []
-    for row in hf_dataset:
-        prompt = row[DatasetFieldNames.SFT_INPUT]
-        target = row[DatasetFieldNames.SFT_TARGET]
-        messages_full = [
-            {"role": "user", "content": prompt},
-            {"role": "assistant", "content": target},
-        ]
-        messages_prompt = [{"role": "user", "content": prompt}]
-
-        full_text = tokenizer.apply_chat_template(
-            messages_full, tokenize=False, add_generation_prompt=False
-        )
-        prompt_text = tokenizer.apply_chat_template(
-            messages_prompt, tokenize=False, add_generation_prompt=True
-        )
-
-        full_ids = tokenizer(full_text, add_special_tokens=False)["input_ids"]
-        prompt_len = len(tokenizer(prompt_text, add_special_tokens=False)["input_ids"])
-
-        full_ids = full_ids[:max_seq_len]
-        if len(full_ids) <= 1:
-            continue
-
-        prompt_len = min(prompt_len, len(full_ids) - 1)
-        truncated_text = tokenizer.decode(full_ids, skip_special_tokens=False)
-        eval_records.append((truncated_text, prompt_len))
-
-    if not eval_records:
-        return float("inf")
-
-    llm = LLM(
-        model=base_model,
-        enable_lora=True,
-        dtype="auto",
-        gpu_memory_utilization=gpu_memory_utilization,
-        max_model_len=max_seq_len,
-    )
-    sampling_params = SamplingParams(
-        temperature=0.0,
-        max_tokens=1,
-        prompt_logprobs=1,
-    )
-    lora_request = LoRARequest("sft_adapter", 1, str(adapter_path))
-
-    prompts = [record[0] for record in eval_records]
-    outputs = llm.generate(
-        prompts,
-        sampling_params,
-        lora_request=lora_request,
-        use_tqdm=False,
+    run_name = args.wandb_run_name or f"sft-{run_id}"
+    wb_run = wandb.init(
+        entity=args.wandb_entity,
+        project=args.wandb_project,
+        name=run_name,
+        group="sft",
+        job_type="training",
+        config=vars(args),
     )
 
-    total_nll = 0.0
-    total_tokens = 0
-    for output, (_, prompt_len) in zip(outputs, eval_records):
-        token_ids = output.prompt_token_ids
-        token_logprobs = output.prompt_logprobs or []
-
-        usable = min(len(token_ids), len(token_logprobs))
-        for pos in range(prompt_len, usable):
-            logprob = _extract_token_logprob(token_logprobs[pos], token_ids[pos])
-            if logprob is None:
-                continue
-            total_nll -= logprob
-            total_tokens += 1
-
-    if total_tokens == 0:
-        return float("inf")
-    return total_nll / total_tokens
+    wandb.define_metric("epoch")
+    wandb.define_metric("train/*", step_metric="epoch")
+    wandb.define_metric("test/*", step_metric="epoch")
+    wandb.define_metric("benchmark/*", step_metric="epoch")
+    return wb_run
 
 
-# ── Training loop ──────────────────────────────────────────────────────────────
-
-
-def train(args: argparse.Namespace):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    run_id = args.run_id or datetime.now().strftime("%Y%m%d-%H%M%S")
-    run_dir = CHECKPOINT_DIR / run_id
-    run_dir.mkdir(parents=True, exist_ok=True)
-
-    print("SFT TRAINING")
-    print(f"  Datasets   : {args.datasets}")
-    print(f"  Base model : {BASE_MODEL}")
-    print(f"  Run dir    : {run_dir}")
-    print(f"  Device     : {device}")
-    print(f"  Eval mode  : {args.eval_backend}")
-    print("=" * 56)
-
-    if args.eval_backend == "vllm" and not HAS_VLLM:
-        print("[warn] vLLM not installed/available; falling back to torch evaluation.")
-        args.eval_backend = "torch"
-    if args.eval_backend == "vllm" and device.type != "cuda":
-        print("[warn] vLLM evaluation requires CUDA; falling back to torch evaluation.")
-        args.eval_backend = "torch"
-
-    # ── Tokenizer & model ──────────────────────────────────────────────────────
+def build_model_and_tokenizer(args: argparse.Namespace, device: torch.device):
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -458,154 +260,230 @@ def train(args: argparse.Namespace):
     )
     model = get_peft_model(base_model, lora_cfg)
     model.config.use_cache = False
+
     if args.gradient_checkpointing:
         model.gradient_checkpointing_enable()
-        # Required for checkpointing with frozen embeddings in many causal LMs.
         model.enable_input_require_grads()
+
     model.print_trainable_parameters()
+    return model, tokenizer
 
-    # ── Datasets & loaders ─────────────────────────────────────────────────────
-    print("\nLoading datasets...")
-    train_hf = load_split(args.datasets, "train")
-    test_hf = load_split(args.datasets, "test")
-    test_eval_hf = maybe_limit_dataset(test_hf, args.max_eval_samples)
 
-    train_ds = SFTDataset(train_hf, tokenizer, args.max_seq_len)
-    test_ds = SFTDataset(test_eval_hf, tokenizer, args.max_seq_len)
-    print(f"  Train examples : {len(train_ds)}")
-    print(f"  Test  examples : {len(test_hf)}")
-    if len(test_eval_hf) != len(test_hf):
-        print(f"  Eval subset   : {len(test_eval_hf)}")
-    print()
+def run_benchmarks_for_epoch(
+    args: argparse.Namespace,
+    run_id: str,
+    epoch: int,
+    model,
+    tokenizer,
+) -> dict[str, dict]:
+    if not args.benchmarks:
+        return {}
 
-    _collate = partial(collate_fn, pad_token_id=tokenizer.pad_token_id)
-    train_loader = DataLoader(
-        train_ds, batch_size=args.batch_size, shuffle=True, collate_fn=_collate
+    temp_eval_ckpt = Path("checkpoints/.sft-current-benchmark-eval")
+    export_merged_checkpoint(
+        model=model,
+        tokenizer=tokenizer,
+        output_dir=temp_eval_ckpt,
+        base_model=BASE_MODEL,
+        system_prompt=SYSTEM_PROMPT_MCQ,
+        temperature=args.export_temperature,
+        top_p=args.export_top_p,
+        top_k=args.export_top_k,
     )
-    test_loader = DataLoader(
-        test_ds, batch_size=args.batch_size, shuffle=False, collate_fn=_collate
+
+    benchmark_payload: dict[str, dict] = {}
+    for benchmark in args.benchmarks:
+        payload = run_benchmark_eval(
+            checkpoint_path=temp_eval_ckpt,
+            benchmark=benchmark,
+            think_mode=args.benchmark_think,
+            use_vllm=args.benchmark_use_vllm,
+            limit=args.benchmark_limit,
+            run_name=run_id,
+            epoch=epoch,
+        )
+        benchmark_payload[benchmark] = payload
+
+    return benchmark_payload
+
+
+def train(args: argparse.Namespace) -> None:
+    if args.grad_accum <= 0:
+        raise ValueError("--grad-accum must be > 0")
+    if args.benchmark_interval <= 0:
+        raise ValueError("--benchmark-interval must be > 0")
+
+    set_seeds(Random.SEED)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    run_id = args.run_id or datetime.now().strftime("%Y%m%d-%H%M%S")
+    wb_run = maybe_init_wandb(args, run_id)
+
+    print("SFT TRAINING")
+    print(f"  Base model           : {BASE_MODEL}")
+    print(f"  Datasets             : {args.datasets}")
+    print(f"  Benchmarks           : {args.benchmarks}")
+    print(f"  Device               : {device}")
+    print(f"  Best checkpoint path : {args.best_checkpoint_dir}")
+    print("=" * 60)
+
+    model, tokenizer = build_model_and_tokenizer(args, device)
+
+    bundles: list[DatasetBundle] = load_dataset_bundles(
+        dataset_names=args.datasets,
+        tokenizer=tokenizer,
+        max_seq_len=args.max_seq_len,
+        batch_size=args.batch_size,
+        system_prompt=SYSTEM_PROMPT_MCQ,
     )
 
-    # ── Optimizer & scheduler ──────────────────────────────────────────────────
+    print("\nLoaded datasets:")
+    for bundle in bundles:
+        print(
+            f"  - {bundle.name}: train={bundle.train_size} test={bundle.test_size}"
+        )
+
+    total_micro_batches = sum(len(bundle.train_loader) for bundle in bundles) * args.epochs
+    total_optimizer_steps = max(1, total_micro_batches // args.grad_accum)
+
     optimizer = AdamW(model.parameters(), lr=args.lr)
-    total_steps = (len(train_loader) // args.grad_accum) * args.epochs
-    warmup_steps = int(total_steps * args.warmup_ratio)
     scheduler = get_cosine_schedule_with_warmup(
         optimizer,
-        num_warmup_steps=warmup_steps,
-        num_training_steps=total_steps,
+        num_warmup_steps=int(total_optimizer_steps * args.warmup_ratio),
+        num_training_steps=total_optimizer_steps,
     )
 
-    # ── Resume from checkpoint if available ────────────────────────────────────
+    best_weighted_test = float("inf")
+    best_epoch = -1
     global_step = 0
-    start_epoch = 0
-    best_eval_loss = float("inf")
+    grad_counter = 0
 
-    resume_path = Path(args.resume) if args.resume else latest_checkpoint(run_dir)
-    if resume_path and resume_path.exists():
-        saved = load_checkpoint(resume_path, model, optimizer, scheduler)
-        global_step = saved["global_step"]
-        start_epoch = saved["epoch"]
-        best_eval_loss = saved.get("best_eval_loss", float("inf"))
-        print(f"Resumed at global_step={global_step}, epoch={start_epoch}\n")
+    for epoch in range(1, args.epochs + 1):
+        print(f"\n=== Epoch {epoch}/{args.epochs} ===")
+        model.train()
 
-    # ── Main loop ──────────────────────────────────────────────────────────────
-    model.train()
-    optimizer.zero_grad()
+        train_loss_by_dataset: dict[str, float] = {}
+        test_loss_by_dataset: dict[str, float] = {}
+        train_weight_by_dataset: dict[str, int] = {}
+        test_weight_by_dataset: dict[str, int] = {}
 
-    for epoch in range(start_epoch, args.epochs):
-        print(f"── Epoch {epoch + 1}/{args.epochs} ──────────────────────────────")
-        accum_loss = 0.0
+        for bundle in bundles:
+            running_loss = 0.0
+            n_batches = 0
 
-        for batch_idx, batch in enumerate(train_loader):
-            outputs = model(
-                input_ids=batch["input_ids"].to(device),
-                attention_mask=batch["attention_mask"].to(device),
-                labels=batch["labels"].to(device),
+            for batch in bundle.train_loader:
+                outputs = model(
+                    input_ids=batch["input_ids"].to(device),
+                    attention_mask=batch["attention_mask"].to(device),
+                    labels=batch["labels"].to(device),
+                )
+                raw_loss = float(outputs.loss.item())
+                loss = outputs.loss / args.grad_accum
+                loss.backward()
+
+                running_loss += raw_loss
+                n_batches += 1
+                grad_counter += 1
+
+                if grad_counter % args.grad_accum == 0:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                    optimizer.step()
+                    scheduler.step()
+                    optimizer.zero_grad()
+                    global_step += 1
+
+            train_loss_by_dataset[bundle.name] = (
+                running_loss / n_batches if n_batches else float("inf")
             )
-            loss = outputs.loss / args.grad_accum
-            loss.backward()
-            accum_loss += loss.item()
+            train_weight_by_dataset[bundle.name] = bundle.train_size
 
-            if (batch_idx + 1) % args.grad_accum == 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                optimizer.step()
-                scheduler.step()
-                optimizer.zero_grad()
-                global_step += 1
+        if grad_counter % args.grad_accum != 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+            scheduler.step()
+            optimizer.zero_grad()
+            global_step += 1
 
-                if global_step % 10 == 0:
-                    print(
-                        f"  step {global_step:>6} | "
-                        f"train_loss {accum_loss:.4f} | "
-                        f"lr {scheduler.get_last_lr()[0]:.2e}"
-                    )
-                    accum_loss = 0.0
+        for bundle in bundles:
+            test_loss_by_dataset[bundle.name] = evaluate_loss(
+                model,
+                bundle.test_loader,
+                device,
+            )
+            test_weight_by_dataset[bundle.name] = bundle.test_size
 
-                if global_step % args.save_steps == 0:
-                    eval_loss = evaluate(model, test_loader, device)
-                    is_best = eval_loss < best_eval_loss
-                    best_eval_loss = min(best_eval_loss, eval_loss)
-                    print(
-                        f"  [eval]  loss {eval_loss:.4f}{' ← best' if is_best else ''}"
-                    )
-                    save_checkpoint(
-                        run_dir,
-                        global_step,
-                        model,
-                        optimizer,
-                        scheduler,
-                        state={
-                            "global_step": global_step,
-                            "epoch": epoch,
-                            "best_eval_loss": best_eval_loss,
-                            "args": vars(args),
-                        },
-                    )
+        train_weighted = weighted_average(train_loss_by_dataset, train_weight_by_dataset)
+        test_weighted = weighted_average(test_loss_by_dataset, test_weight_by_dataset)
 
-    # ── Final checkpoint ───────────────────────────────────────────────────────
-    final_eval_loss = evaluate(model, test_loader, device)
-    eval_metric_name = "torch_nll"
+        print(f"train_weighted_loss={train_weighted:.4f} test_weighted_loss={test_weighted:.4f}")
+        for name in args.datasets:
+            print(
+                f"  {name}: train={train_loss_by_dataset[name]:.4f} "
+                f"test={test_loss_by_dataset[name]:.4f}"
+            )
 
-    if args.eval_backend == "vllm":
-        final_eval_adapter_dir = run_dir / ".final_eval_adapter"
-        try:
-            if final_eval_adapter_dir.exists():
-                shutil.rmtree(final_eval_adapter_dir)
-            model.save_pretrained(final_eval_adapter_dir)
-
-            vllm_eval = evaluate_with_vllm(
+        if test_weighted < best_weighted_test:
+            best_weighted_test = test_weighted
+            best_epoch = epoch
+            print("[info] New best checkpoint. Exporting merged baseline-format model...")
+            export_merged_checkpoint(
+                model=model,
                 tokenizer=tokenizer,
-                hf_dataset=test_eval_hf,
-                max_seq_len=args.max_seq_len,
+                output_dir=args.best_checkpoint_dir,
                 base_model=BASE_MODEL,
-                adapter_path=final_eval_adapter_dir,
-                gpu_memory_utilization=args.vllm_gpu_memory_utilization,
+                system_prompt=SYSTEM_PROMPT_MCQ,
+                temperature=args.export_temperature,
+                top_p=args.export_top_p,
+                top_k=args.export_top_k,
             )
-            final_eval_loss = vllm_eval
-            eval_metric_name = "vllm_nll"
-        except Exception as exc:
-            print(f"[warn] vLLM evaluation failed ({exc}); keeping torch final eval.")
-        finally:
-            if final_eval_adapter_dir.exists():
-                shutil.rmtree(final_eval_adapter_dir, ignore_errors=True)
 
-    print(f"\nFinal eval ({eval_metric_name}): {final_eval_loss:.4f}")
-    save_checkpoint(
-        run_dir,
-        global_step,
-        model,
-        optimizer,
-        scheduler,
-        state={
-            "global_step": global_step,
-            "epoch": args.epochs,
-            "best_eval_loss": min(best_eval_loss, final_eval_loss),
-            "args": vars(args),
-        },
-    )
-    print("Training complete.")
+        benchmark_payload: dict[str, dict] = {}
+        if args.benchmarks and (epoch % args.benchmark_interval == 0):
+            print("[info] Running benchmark evaluation hook...")
+            benchmark_payload = run_benchmarks_for_epoch(
+                args=args,
+                run_id=run_id,
+                epoch=epoch,
+                model=model,
+                tokenizer=tokenizer,
+            )
+
+        if wb_run is not None:
+            log_payload = {
+                "epoch": epoch,
+                "train/weighted_loss": train_weighted,
+                "test/weighted_loss": test_weighted,
+                "train/learning_rate": scheduler.get_last_lr()[0],
+                "train/global_step": global_step,
+            }
+
+            for name in args.datasets:
+                log_payload[f"train/{name}_loss"] = train_loss_by_dataset[name]
+                log_payload[f"test/{name}_loss"] = test_loss_by_dataset[name]
+
+            for benchmark, payload in benchmark_payload.items():
+                metrics = payload["metrics"]
+                prefix = f"benchmark/{benchmark}"
+                log_payload[f"{prefix}/pass@1"] = metrics.get("pass@1")
+                log_payload[f"{prefix}/box_compliance_rate"] = metrics.get("box_compliance_rate")
+                log_payload[f"{prefix}/pass@1_among_extracted"] = metrics.get("pass@1_among_extracted")
+
+            wb_run.log(log_payload, commit=True)
+            wb_run.summary["best_test_weighted_loss"] = best_weighted_test
+            wb_run.summary["best_epoch"] = best_epoch
+            wb_run.summary["best_checkpoint_dir"] = str(args.best_checkpoint_dir)
+
+    print("\nTraining complete.")
+    print(f"Best checkpoint: {args.best_checkpoint_dir} (epoch {best_epoch})")
+
+    if wb_run is not None:
+        wb_run.summary["final_epoch"] = args.epochs
+        wb_run.finish()
+
+
+def main() -> None:
+    train(parse_args())
 
 
 if __name__ == "__main__":
-    train(parse_args())
+    main()
