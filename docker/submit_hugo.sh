@@ -66,7 +66,7 @@ SHARED_RW_PVC="course-cs-552-shared-rw"
 # Override these environment variables in your shell if you want to use
 # Hugging Face or Weights & Biases with authentication.
 HF_TOKEN="${HF_TOKEN:-<HF_TOKEN_REDACTED>}"
-WANDB_API_KEY="${WANDB_API_KEY:-}"
+WANDB_API_KEY="${WANDB_API_KEY:-<WANDB_API_KEY_REDACTED>}"
 
 # This script does not mount the personal home PVC, so it does not need
 # a hard-coded UID/GID. Use /scratch for course work and deliverables.

@@ -1,0 +1,56 @@
+_wandb:
+    value:
+        cli_version: 0.26.1
+        e:
+            4v5anmje43mwm63m5a0rchqunhhyeorn:
+                codePath: wandb_test.py
+                codePathLocal: wandb_test.py
+                cpu_count: 24
+                cpu_count_logical: 32
+                cudaVersion: "13.1"
+                disk:
+                    /:
+                        total: "1999376478208"
+                        used: "1239953453056"
+                email: hugo.demule@epfl.ch
+                executable: C:\Users\Hugo\Repositories\Desktop\EPFL\MA4\MNLP\standard-project-m2-mystery-machine\.venv\Scripts\python.exe
+                git:
+                    commit: 3caa6ec34e75ea51a3d9d8afa1458df8d40ed321
+                    remote: git@github.com:CS-552/standard-project-m2-mystery-machine.git
+                gpu: NVIDIA GeForce RTX 4070 SUPER
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 7168
+                      memoryTotal: "12878610432"
+                      name: NVIDIA GeForce RTX 4070 SUPER
+                      uuid: GPU-ac7378a3-44f0-3dac-ce88-60cabf9fca75
+                host: DESKTOP-GSQVS60
+                memory:
+                    total: "68523327488"
+                os: Windows-11-10.0.26200-SP0
+                program: C:\Users\Hugo\Repositories\Desktop\EPFL\MA4\MNLP\standard-project-m2-mystery-machine\wandb_test.py
+                python: CPython 3.12.12
+                root: C:\Users\Hugo\Repositories\Desktop\EPFL\MA4\MNLP\standard-project-m2-mystery-machine
+                startedAt: "2026-05-11T12:52:33.496902Z"
+                writerId: 4v5anmje43mwm63m5a0rchqunhhyeorn
+        m: []
+        python_version: 3.12.12
+        t:
+            "3":
+                - 2
+                - 16
+            "4": 3.12.12
+            "5": 0.26.1
+            "8":
+                - 3
+            "12": 0.26.1
+            "13": windows-amd64
+architecture:
+    value: CNN
+dataset:
+    value: CIFAR-100
+epochs:
+    value: 10
+learning_rate:
+    value: 0.02

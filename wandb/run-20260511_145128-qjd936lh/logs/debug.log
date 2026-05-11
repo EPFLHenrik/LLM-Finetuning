@@ -1,0 +1,13 @@
+2026-05-11 14:51:28,460 INFO    MainThread:3084 [wandb_setup.py:_flush():81] Current SDK version is 0.26.1
+2026-05-11 14:51:28,460 INFO    MainThread:3084 [wandb_setup.py:_flush():81] Configure stats pid to 3084
+2026-05-11 14:51:28,460 INFO    MainThread:3084 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-05-11 14:51:28,460 INFO    MainThread:3084 [wandb_init.py:setup_run_log_directory():723] Logging user logs to C:\Users\Hugo\Repositories\Desktop\EPFL\MA4\MNLP\standard-project-m2-mystery-machine\wandb\run-20260511_145128-qjd936lh\logs\debug.log
+2026-05-11 14:51:28,460 INFO    MainThread:3084 [wandb_init.py:setup_run_log_directory():724] Logging internal logs to C:\Users\Hugo\Repositories\Desktop\EPFL\MA4\MNLP\standard-project-m2-mystery-machine\wandb\run-20260511_145128-qjd936lh\logs\debug-internal.log
+2026-05-11 14:51:28,461 INFO    MainThread:3084 [wandb_init.py:init():850] calling init triggers
+2026-05-11 14:51:28,461 INFO    MainThread:3084 [wandb_init.py:init():855] wandb.init called with sweep_config: {}
+config: {'learning_rate': 0.02, 'architecture': 'CNN', 'dataset': 'CIFAR-100', 'epochs': 10, '_wandb': {}}
+2026-05-11 14:51:28,461 INFO    MainThread:3084 [wandb_init.py:init():898] starting backend
+2026-05-11 14:51:30,907 INFO    MainThread:3084 [wandb_init.py:init():913] sending inform_init request
+2026-05-11 14:51:31,594 INFO    MainThread:3084 [wandb_init.py:init():918] backend started and connected
+2026-05-11 14:51:31,622 INFO    MainThread:3084 [wandb_init.py:init():988] updated telemetry
+2026-05-11 14:51:31,646 INFO    MainThread:3084 [wandb_init.py:init():1011] communicating run to backend with 90.0 second timeout
