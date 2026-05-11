@@ -1,4 +1,4 @@
-from constants.global_variables import DatasetFieldNames
+from constants.global_variables import DatasetFieldNames, Random
 from datasets import load_from_disk
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import argparse
@@ -25,6 +25,8 @@ try:
 except Exception:
     wandb = None
     HAS_WANDB = False
+
+SEED = Random.SEED
 
 TABLE_COLUMNS = [
     "timestamp_utc",
@@ -146,6 +148,11 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+# Set seeds for reproducibility
+torch.manual_seed(SEED)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(SEED)
+
 CHECKPOINT_PATH = os.path.abspath(os.path.expanduser(args.checkpoint))
 if not os.path.isdir(CHECKPOINT_PATH):
     raise FileNotFoundError(f"Checkpoint path does not exist or is not a directory: {CHECKPOINT_PATH}")
@@ -158,6 +165,8 @@ JSONL_FILENAME = f"{args.name}_{'think' if THINK_MODE else 'no_think'}_{args.lim
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 OUTPUT_PATH = os.path.join(OUTPUT_DIR, JSONL_FILENAME)
 MAX_NEW_TOKENS = 16384  # max token defined in the report.
+TOP_P = 0.9
+TEMPERATURE = 0.7
 
 
 print("BENCHMARK EVALUATION")
@@ -183,10 +192,12 @@ sampling_params = None
 if args.use_vllm:
     if not HAS_VLLM:
         raise RuntimeError("--use_vllm was set but vLLM is not installed/importable in this environment.")
-    llm = LLM(model=CHECKPOINT_PATH, dtype="auto")
+    llm = LLM(model=CHECKPOINT_PATH, dtype="auto", seed=SEED)
     sampling_params = SamplingParams(
-        temperature=0.0,
+        top_p=TOP_P,
+        temperature=TEMPERATURE,
         max_tokens=MAX_NEW_TOKENS,
+        seed=SEED,
     )
     runtime_device = "vllm"
 else:

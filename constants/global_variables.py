@@ -12,3 +12,6 @@ class DatasetFieldNames:
 
 class DistillationFieldNames:
     TEACHER_MODEL = "teacher_model"
+
+class Random:
+    SEED = 42
