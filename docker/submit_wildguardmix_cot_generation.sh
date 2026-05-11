@@ -91,7 +91,7 @@ MSYS_NO_PATHCONV=1 runai submit \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
   --command -- /bin/bash -lc "\
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
-    cd /scratch/workspace/hugo/standard-project-m2-mystery-machine && python -m preprocessing.wildguardmix.preprocess3_safety_combo_CoT --from_id 0 --to_id 15000 --split train && python -m preprocessing.wildguardmix.preprocess3_safety_combo_CoT --split test && python -m preprocessing.wildguardmix.preprocess3_subcategory_CoT --from_id 0 --to_id 15000 --split train && python -m preprocessing.wildguardmix.preprocess3_subcategory_CoT --split test"
+    cd /scratch/workspace/hugo/standard-project-m2-mystery-machine && python -m preprocessing.wildguardmix.preprocess3_safety_combo_CoT --from_id 0 --to_id 15000 --split train && python -m preprocessing.wildguardmix.preprocess3_safety_combo_CoT --split test"
 
 cat <<EOF
 

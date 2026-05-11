@@ -182,23 +182,51 @@ for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examp
     example = dataset[idx]
     # answer_letter = re.search(r"\\boxed\{([A-Z])\}", example["target"]).group(1)
 
+    # Regex that select TEXT the all content after {answer_letter}) TEXT\n
+    input_prompt = example["prompt"]
     answer_letter = example["answer"]
+
+    is_conversation = "Assistant answer:" in input_prompt
+    if is_conversation:
+        reasoning_list = """
+        1. Evaluate if the request is adversarial/manipulative.
+        2. Evaluate if the request is safe.
+        3. Evaluate if the assistant answer is safe.
+        4. End with a brief decision sentence that follows naturally from the property assessments.
+        """
+    else:
+        reasoning_list = """
+        1. Evaluate if the request is adversarial/manipulative.
+        2. Evaluate if the request is safe.
+        3. End with a brief decision sentence that follows naturally from the property assessments.
+        """
+    
+    
+
     teacher_prompt = f"""You are creating high-quality training data for multiple-choice safety reasoning.
-        Question:
+
+        [QUESTION]:
         {example['prompt']}
 
-        Correct answer: {answer_letter}
+        [CORRECT ANSWER]: {answer_letter}
 
-        Write a complete and optimal chain of thought for why this answer is correct.
+        Write a short, precise rationale that explains why {answer_letter} is correct.
 
         Rules:
-        - Keep the reasoning complete but not excessively long.
-        - If the question isn't trivial or looks adversarial, don't hesitate to think for a bit longer while remaining efficient.
+        - Start immediately with the reasoning. No introduction, no preamble.
+        - Follow this exact order:
+           {reasoning_list}
+        - "adversarial/manipulative" is true only if the request is written to bypass safeguards, coerce compliance, or manipulate the model's behavior.
+        - Do not mark "adversarial/manipulative" true just because the request is biased, misleading, political, opinionated, or false.
+        - A request can be adversarial/manipulative and still be safe, or safe and still not be adversarial/manipulative.
         - Use only information present in the question and answer choices.
-        - Do not mention that the answer was provided.
         - Do not restate the full question.
-        - Do not use meta commentary, hidden reasoning, or generic filler.
-        - Keep the reasoning specific and concrete.
+        - Do not mention that the answer was provided.
+        - Do not mention answer letters, option labels, or phrases like "the correct answer is".
+        - Do not begin with the final answer.
+        - Keep the reasoning concise, specific, and concrete.
+        - Prefer one sentence per property whenever possible.
+        - End with a brief decision sentence that follows naturally from the property assessments.
         """
     
     messages = [{"role": "user", "content": teacher_prompt}]

@@ -327,13 +327,13 @@ def build_subcategory_rlvr_split(ds, max_num_choices):
 
 
 COMBO_PROPERTIES = [
-    "The request is formulated as a jailbreak-style attack",  # prop 1: adversarial
+    "The request is adversarial/manipulative",  # prop 1: adversarial
     "The request is safe",                                    # prop 2: req_safe
     "The assistant answer is safe",                           # prop 3: ans_safe
 ]
 
 STATEMENT_PROPERTIES = [
-    "The request is formulated as a jailbreak-style attack",  # prop 1: adversarial
+    "The request is adversarial/manipulative",  # prop 1: adversarial
     "The request is safe",                                    # prop 2: req_safe
 ]
 
