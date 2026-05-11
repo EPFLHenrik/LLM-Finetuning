@@ -27,6 +27,8 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from prompts.system_prompt import SYSTEM_PROMPT_MCQ
+
 
 DEFAULT_MODEL_ID = "Qwen/Qwen3-1.7B"
 DEFAULT_OUTPUT_DIR = Path("checkpoints") / "Qwen3-1.7B-base"
@@ -106,6 +108,47 @@ def force_thinking_on(chat_template: str) -> str:
 	return forced_line + "\n" + chat_template
 
 
+def inject_system_prompt(chat_template: str, system_message: str) -> str:
+	"""Inject a default system_message variable into the chat template.
+
+	Adds a {%- set system_message = "..." %} Jinja variable line immediately
+	after the enable_thinking line so that the system message is baked into
+	the template.  Also adds a fallback else-branch so the system message is
+	always emitted even when the caller does not include a system role message.
+	"""
+	escaped = system_message.replace("\\", "\\\\").replace('"', '\\"')
+	set_line = f'{{%- set system_message = "{escaped}" %}}'
+
+	# Replace an existing system_message set-line or insert after enable_thinking.
+	system_msg_pattern = r"\{%-\s*set\s+system_message\s*=.*?%\}"
+	thinking_pattern = r"(\{%-\s*set\s+enable_thinking\s*=\s*(?:true|false)\s*%\})"
+
+	if re.search(system_msg_pattern, chat_template):
+		chat_template = re.sub(system_msg_pattern, set_line, chat_template, count=1)
+	elif re.search(thinking_pattern, chat_template):
+		chat_template = re.sub(thinking_pattern, r"\1\n" + set_line, chat_template, count=1)
+	else:
+		chat_template = set_line + "\n" + chat_template
+
+	# Add fallback else-branch so the system message is always injected.
+	old_block = (
+		"    {%- if messages[0].role == 'system' %}\n"
+		"        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
+		"    {%- endif %}"
+	)
+	new_block = (
+		"    {%- if messages[0].role == 'system' %}\n"
+		"        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
+		"    {%- else %}\n"
+		"        {{- '<|im_start|>system\\n' + system_message + '<|im_end|>\\n' }}\n"
+		"    {%- endif %}"
+	)
+	if old_block in chat_template:
+		chat_template = chat_template.replace(old_block, new_block, 1)
+
+	return chat_template
+
+
 def write_chat_template_file(output_dir: Path, chat_template: str) -> None:
 	template_path = output_dir / "chat_template.jinja"
 	template_path.write_text(chat_template, encoding="utf-8")
@@ -145,6 +188,10 @@ def validate_checkpoint(output_dir: Path) -> None:
 		raise RuntimeError(
 			"chat_template.jinja does not explicitly force enable_thinking=true."
 		)
+	if "set system_message" not in template_text:
+		raise RuntimeError(
+			"chat_template.jinja does not contain a default system_message variable."
+		)
 
 
 def write_manifest(output_dir: Path, model_id: str) -> None:
@@ -176,6 +223,7 @@ def main() -> None:
 		)
 
 	tokenizer.chat_template = force_thinking_on(tokenizer.chat_template)
+	tokenizer.chat_template = inject_system_prompt(tokenizer.chat_template, SYSTEM_PROMPT_MCQ)
 
 	print(f"[info] Loading model: {args.model_id}")
 	model = AutoModelForCausalLM.from_pretrained(

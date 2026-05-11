@@ -38,6 +38,19 @@
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.8,
       "results_path": "runs/benchmark/results/validation_samples/Qwen3-1.7B_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T16:07:24+00:00",
+      "model_name": "Qwen3-1.7B",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": false,
+      "limit": null,
+      "pass@1": 0.5,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.5,
+      "results_path": "runs/benchmark/results/validation_samples/70d244cc86ccca08cf5af4e1e306ecf908b1ad5e_no_think_full_results.json"
     }
   ]
 }
