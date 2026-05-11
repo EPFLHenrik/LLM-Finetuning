@@ -18,7 +18,7 @@ set -euo pipefail
 # ============== EDIT IF NEEDED ==============
 GASPAR="busato"
 GROUP="g02"
-REPO_DIR_IN_POD="/scratch/workspace/${GASPAR}/standard-project-m2-mystery-machine"
+REPO_DIR_IN_POD="/scratch/workspace/mattea/standard-project-m2-mystery-machine"
 # ============================================
 
 DATASET="${1:?usage: submit_eval.sh <dataset> [limit]}"
