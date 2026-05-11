@@ -2,6 +2,7 @@ from constants.global_variables import DatasetFieldNames
 from datasets import load_from_disk
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import argparse
+from datetime import datetime, timezone
 import json
 import os
 import torch
@@ -17,6 +18,74 @@ except Exception:
     LLM = None
     SamplingParams = None
     HAS_VLLM = False
+
+try:
+    import wandb
+    HAS_WANDB = True
+except Exception:
+    wandb = None
+    HAS_WANDB = False
+
+TABLE_COLUMNS = [
+    "timestamp_utc",
+    "model_name",
+    "benchmark",
+    "benchmark_subcategory",
+    "think_mode",
+    "use_vllm",
+    "limit",
+    "pass@1",
+    "box_compliance_rate",
+    "pass@1_among_extracted",
+    "results_path",
+]
+
+
+def infer_model_name(checkpoint_path: str, override_name: str | None = None) -> str:
+    if override_name:
+        return override_name
+
+    for part in Path(checkpoint_path).parts:
+        if part.startswith("models--"):
+            parts = part.split("--")
+            if len(parts) >= 3 and parts[-1]:
+                return parts[-1]
+
+    return os.path.basename(checkpoint_path.rstrip("/"))
+
+
+def split_benchmark_name(benchmark_name: str) -> tuple[str, str]:
+    normalized = benchmark_name.strip("/")
+    if "/" not in normalized:
+        return normalized, ""
+    suite, subcategory = normalized.split("/", 1)
+    return suite, subcategory
+
+
+def load_table_rows(table_path: Path) -> list[dict]:
+    if not table_path.exists():
+        return []
+
+    with open(table_path, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+
+    if isinstance(payload, dict) and isinstance(payload.get("rows"), list):
+        return payload["rows"]
+
+    if isinstance(payload, list):
+        return payload
+
+    raise ValueError(f"Unsupported table format in {table_path}")
+
+
+def save_table_rows(table_path: Path, rows: list[dict]) -> None:
+    table_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "columns": TABLE_COLUMNS,
+        "rows": rows,
+    }
+    with open(table_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
 
 parser = argparse.ArgumentParser(
     description="Evaluate a model on a benchmark by generating outputs and then scoring them by extracting answers and comparing to references."
@@ -45,6 +114,35 @@ parser.add_argument(
     "--use_vllm",
     action="store_true",
     help="Use vLLM for generation. If not set, uses Transformers generate().",
+)
+parser.add_argument(
+    "--skip_wandb",
+    action="store_true",
+    help="Skip logging benchmark metrics to Weights & Biases.",
+)
+parser.add_argument(
+    "--wandb_project",
+    type=str,
+    default="MNLP-Safety-Benchmarks",
+    help="W&B project name for benchmark table logging.",
+)
+parser.add_argument(
+    "--wandb_entity",
+    type=str,
+    default=None,
+    help="Optional W&B entity/team name.",
+)
+parser.add_argument(
+    "--wandb_run_name",
+    type=str,
+    default=None,
+    help="Optional W&B run name. Defaults to benchmark-<model>-<benchmark>.",
+)
+parser.add_argument(
+    "--wandb_table_path",
+    type=Path,
+    default=Path("runs/benchmark/results/wandb_benchmark_table.json"),
+    help="Local JSON file that stores cumulative benchmark rows before syncing to W&B.",
 )
 args = parser.parse_args()
 
@@ -160,3 +258,74 @@ eval_argv = [
     "--output", OUTPUT_PATH.replace("outputs", "results").replace(".jsonl", "_results.json"),
 ]
 evaluate_score(eval_argv)
+
+results_path = Path(eval_argv[-1])
+
+if not args.skip_wandb:
+    if not HAS_WANDB:
+        raise RuntimeError("--wandb was set but wandb is not installed/importable in this environment.")
+
+    with open(results_path, "r", encoding="utf-8") as f:
+        results_payload = json.load(f)
+
+    metrics = results_payload.get("metrics", {})
+    benchmark_suite, benchmark_subcategory = split_benchmark_name(args.benchmark)
+    model_name = infer_model_name(CHECKPOINT_PATH, args.name)
+
+    row = {
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "model_name": model_name,
+        "benchmark": benchmark_suite,
+        "benchmark_subcategory": benchmark_subcategory,
+        "think_mode": THINK_MODE,
+        "use_vllm": args.use_vllm,
+        "limit": args.limit,
+        "pass@1": metrics.get("pass@1"),
+        "box_compliance_rate": metrics.get("box_compliance_rate"),
+        "pass@1_among_extracted": metrics.get("pass@1_among_extracted"),
+        "results_path": str(results_path),
+    }
+
+    table_path = Path(args.wandb_table_path)
+    rows = load_table_rows(table_path)
+    rows.append(row)
+    rows = sorted(
+        rows,
+        key=lambda r: (
+            str(r.get("model_name", "")),
+            str(r.get("benchmark", "")),
+            str(r.get("benchmark_subcategory", "")),
+            str(r.get("timestamp_utc", "")),
+        ),
+    )
+    save_table_rows(table_path, rows)
+
+    run_name = args.wandb_run_name or f"benchmark-{model_name}-{args.benchmark.replace('/', '_')}"
+    wb_run = wandb.init(
+        entity=args.wandb_entity,
+        project=args.wandb_project,
+        name=run_name,
+        group=f"benchmark/{model_name}",
+        job_type="benchmark_eval",
+        config={
+            "benchmark": args.benchmark,
+            "model_name": model_name,
+            "checkpoint": CHECKPOINT_PATH,
+            "think_mode": THINK_MODE,
+            "use_vllm": args.use_vllm,
+            "limit": args.limit,
+            "results_path": str(results_path),
+        },
+    )
+
+    table = wandb.Table(columns=TABLE_COLUMNS)
+    for existing_row in rows:
+        table.add_data(*[existing_row.get(col) for col in TABLE_COLUMNS])
+
+    wb_run.log({"benchmark/results_table": table})
+    wb_run.summary["pass@1"] = row["pass@1"]
+    wb_run.summary["box_compliance_rate"] = row["box_compliance_rate"]
+    wb_run.summary["pass@1_among_extracted"] = row["pass@1_among_extracted"]
+    wb_run.finish()
+
+    print(f"W&B table updated with {len(rows)} rows: {table_path}")
