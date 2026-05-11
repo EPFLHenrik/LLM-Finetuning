@@ -34,7 +34,7 @@
 set -euo pipefail
 
 # ============== EDIT THESE LINES ==============
-GASPAR="hgrubr"              # <-- YOUR GASPAR EPFL username.
+GASPAR="hgruber"              # <-- YOUR GASPAR EPFL username.
 GROUP="g02"                  # <-- YOUR TEAM, e.g. g07.
 # ==============================================
 
