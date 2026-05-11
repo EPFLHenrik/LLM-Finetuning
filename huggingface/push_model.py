@@ -45,27 +45,27 @@ def parse_args() -> argparse.Namespace:
 	)
 	parser.add_argument(
 		"--org",
-		required=True,
+		default="cs-552-2026-mystery-machine",
 		help="Hugging Face organization/user namespace.",
 	)
 	parser.add_argument(
-		"--model-name",
+		"--model_name",
 		default=DEFAULT_MODEL_NAME,
 		help="Repository name inside org (default: safety_model).",
 	)
 	parser.add_argument(
-		"--checkpoint-dir",
+		"--checkpoint_dir",
 		type=Path,
-		default=DEFAULT_CHECKPOINT_DIR,
+		required=True,
 		help="Local checkpoint directory to validate/upload.",
 	)
 	parser.add_argument(
-		"--expected-base-model",
+		"--expected_base_model",
 		default=EXPECTED_BASE_MODEL,
 		help="Expected upstream base model identity.",
 	)
 	parser.add_argument(
-		"--strict-vllm",
+		"--strict_vllm",
 		action=argparse.BooleanOptionalAction,
 		default=True,
 		help=(
@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
 		),
 	)
 	parser.add_argument(
-		"--check-only",
+		"--check_only",
 		action="store_true",
 		help="Run checks only, do not upload.",
 	)
