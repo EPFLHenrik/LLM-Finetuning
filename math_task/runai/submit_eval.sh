@@ -12,7 +12,6 @@
 #
 # NOTE: course quota is 1 A100 per GROUP. If a teammate has a job running,
 # yours queues (state: Pending) until they release it.
-
 set -euo pipefail
 
 # ============== EDIT IF NEEDED ==============
@@ -56,6 +55,7 @@ runai submit \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
   --command -- /bin/bash -lc "\
     set -euo pipefail; \
+    git config --global --add safe.directory '*'; \
     mkdir -p /scratch/hf_cache; \
     cd ${REPO_DIR_IN_POD}; \
     git pull --ff-only || echo 'WARN: git pull failed; using on-disk code'; \
