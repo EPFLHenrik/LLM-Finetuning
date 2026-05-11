@@ -3,13 +3,13 @@ import shutil
 
 SUBCAT_MCQ_DS = "data/processed/sft/wildguardmix/subcategory_mcq_answers_only/test"
 COMBO_DS = "data/processed/sft/wildguardmix/safety_combo_mcq_answers_only/test"
-BINARY_SFT = "data/processed/sft/wildguardmix/binary-choice/test"
+BINARY_SFT = "data/processed/sft/wildguardmix/binary_choice/test"
 TEMP = SUBCAT_MCQ_DS + "_temp"
 TEMP2 = COMBO_DS + "_temp"
 TEMP3 = BINARY_SFT + "_temp"
 BENCH_OUTPUT = "data/processed/benchmark/wildguardmix/subcategory_mcq"
 BENCH_OUTPUT_COMBO = "data/processed/benchmark/wildguardmix/safety_combo_mcq"
-BENCH_OUTPUT_BINARY = "data/processed/benchmark/wildguardmix/binary-choice"
+BENCH_OUTPUT_BINARY = "data/processed/benchmark/wildguardmix/binary_choice"
 
 # Datasets are already shuffled, so we can just split by index.
 ds = load_from_disk(SUBCAT_MCQ_DS)

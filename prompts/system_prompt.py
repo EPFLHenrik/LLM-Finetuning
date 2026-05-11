@@ -1,0 +1,1 @@
+SYSTEM_PROMPT_MCQ = "You are a helpful assistant solving MCQ problems. At the end of your reasoning, you must include your answer in \\boxed{LETTER}. For example, if the answer is A, you must end your response with \\boxed{A}."
