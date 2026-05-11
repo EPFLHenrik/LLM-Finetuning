@@ -8,6 +8,7 @@ This script keeps training orchestration readable while delegating details to:
 Usage example:
   uv run train/sft.py \
     --datasets safetybench \
+    --run_name safetybench_cot \
     --benchmarks safety \
     --epochs 1
 """
@@ -98,6 +99,15 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="Benchmark names under data/processed/benchmark/<name>.",
     )
+    parser.add_argument(
+        "--run_name",
+        type=str,
+        default=None,
+        help=(
+            "Human-readable run name. Also used as default checkpoint folder name "
+            "under checkpoints/<run_name>."
+        ),
+    )
     parser.add_argument("--run-id", type=str, default=None)
     parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
@@ -136,8 +146,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--best-checkpoint-dir",
         type=Path,
-        default=Path("checkpoints/sft-test-best"),
-        help="Export path for best CI-compatible checkpoint.",
+        default=None,
+        help=(
+            "Export path for best checkpoint. Defaults to checkpoints/<run_name> "
+            "(or checkpoints/<run-id> when --run_name is not set)."
+        ),
     )
     parser.add_argument(
         "--export-temperature",
@@ -187,7 +200,15 @@ def set_seeds(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-def evaluate_loss(model, loader, device: torch.device) -> float:
+def evaluate_loss(
+    model,
+    loader,
+    device: torch.device,
+    wb_run=None,
+    epoch: int | None = None,
+    dataset_name: str | None = None,
+    eval_step: int = 0,
+) -> tuple[float, int]:
     model.eval()
     total_loss = 0.0
     n_batches = 0
@@ -198,10 +219,25 @@ def evaluate_loss(model, loader, device: torch.device) -> float:
                 attention_mask=batch["attention_mask"].to(device),
                 labels=batch["labels"].to(device),
             )
-            total_loss += float(outputs.loss.item())
+            batch_loss = float(outputs.loss.item())
+            total_loss += batch_loss
             n_batches += 1
+
+            if wb_run is not None and epoch is not None and dataset_name is not None:
+                eval_step += 1
+                wb_run.log(
+                    {
+                        "epoch": epoch,
+                        "eval_step": eval_step,
+                        "batch/test_loss": batch_loss,
+                        "batch/test_running_loss": total_loss / n_batches,
+                        f"batch/test_loss/{dataset_name}": batch_loss,
+                        f"batch/test_running_loss/{dataset_name}": total_loss / n_batches,
+                    },
+                    commit=True,
+                )
     model.train()
-    return total_loss / n_batches if n_batches else float("inf")
+    return (total_loss / n_batches if n_batches else float("inf"), eval_step)
 
 
 def weighted_average(loss_by_name: dict[str, float], weight_by_name: dict[str, int]) -> float:
@@ -214,13 +250,25 @@ def weighted_average(loss_by_name: dict[str, float], weight_by_name: dict[str, i
     return num / den if den else float("inf")
 
 
-def maybe_init_wandb(args: argparse.Namespace, run_id: str):
+def resolve_run_configuration(args: argparse.Namespace) -> tuple[str, str, Path]:
+    run_id = args.run_id or args.run_name or datetime.now().strftime("%Y%m%d-%H%M%S")
+    run_name = args.run_name or args.wandb_run_name or f"sft-{run_id}"
+
+    if args.best_checkpoint_dir is not None:
+        best_checkpoint_dir = args.best_checkpoint_dir
+    else:
+        default_dir_name = args.run_name or run_id
+        best_checkpoint_dir = Path("checkpoints") / default_dir_name
+
+    return run_id, run_name, best_checkpoint_dir
+
+
+def maybe_init_wandb(args: argparse.Namespace, run_id: str, run_name: str):
     if args.skip_wandb:
         return None
     if not HAS_WANDB:
         raise RuntimeError("wandb is not installed but --skip_wandb was not provided.")
 
-    run_name = args.wandb_run_name or f"sft-{run_id}"
     wb_run = wandb.init(
         entity=args.wandb_entity,
         project=args.wandb_project,
@@ -234,6 +282,10 @@ def maybe_init_wandb(args: argparse.Namespace, run_id: str):
     wandb.define_metric("train/*", step_metric="epoch")
     wandb.define_metric("test/*", step_metric="epoch")
     wandb.define_metric("benchmark/*", step_metric="epoch")
+    wandb.define_metric("train_step")
+    wandb.define_metric("eval_step")
+    wandb.define_metric("batch/train*", step_metric="train_step")
+    wandb.define_metric("batch/test*", step_metric="eval_step")
     return wb_run
 
 
@@ -316,15 +368,16 @@ def train(args: argparse.Namespace) -> None:
     set_seeds(Random.SEED)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    run_id = args.run_id or datetime.now().strftime("%Y%m%d-%H%M%S")
-    wb_run = maybe_init_wandb(args, run_id)
+    run_id, run_name, best_checkpoint_dir = resolve_run_configuration(args)
+    wb_run = maybe_init_wandb(args, run_id, run_name)
 
     print("SFT TRAINING")
     print(f"  Base model           : {BASE_MODEL}")
     print(f"  Datasets             : {args.datasets}")
     print(f"  Benchmarks           : {args.benchmarks}")
     print(f"  Device               : {device}")
-    print(f"  Best checkpoint path : {args.best_checkpoint_dir}")
+    print(f"  Run name             : {run_name}")
+    print(f"  Best checkpoint path : {best_checkpoint_dir}")
     print("=" * 60)
 
     model, tokenizer = build_model_and_tokenizer(args, device)
@@ -357,6 +410,8 @@ def train(args: argparse.Namespace) -> None:
     best_epoch = -1
     global_step = 0
     grad_counter = 0
+    train_step = 0
+    eval_step = 0
 
     for epoch in range(1, args.epochs + 1):
         print(f"\n=== Epoch {epoch}/{args.epochs} ===")
@@ -384,6 +439,22 @@ def train(args: argparse.Namespace) -> None:
                 running_loss += raw_loss
                 n_batches += 1
                 grad_counter += 1
+                train_step += 1
+
+                if wb_run is not None:
+                    wb_run.log(
+                        {
+                            "epoch": epoch,
+                            "train_step": train_step,
+                            "batch/train_loss": raw_loss,
+                            "batch/train_running_loss": running_loss / n_batches,
+                            f"batch/train_loss/{bundle.name}": raw_loss,
+                            f"batch/train_running_loss/{bundle.name}": running_loss / n_batches,
+                            "train/global_step": global_step,
+                            "train/learning_rate": scheduler.get_last_lr()[0],
+                        },
+                        commit=True,
+                    )
 
                 if grad_counter % args.grad_accum == 0:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -405,11 +476,16 @@ def train(args: argparse.Namespace) -> None:
             global_step += 1
 
         for bundle in bundles:
-            test_loss_by_dataset[bundle.name] = evaluate_loss(
+            test_avg_loss, eval_step = evaluate_loss(
                 model,
                 bundle.test_loader,
                 device,
+                wb_run=wb_run,
+                epoch=epoch,
+                dataset_name=bundle.name,
+                eval_step=eval_step,
             )
+            test_loss_by_dataset[bundle.name] = test_avg_loss
             test_weight_by_dataset[bundle.name] = bundle.test_size
 
         train_weighted = weighted_average(train_loss_by_dataset, train_weight_by_dataset)
@@ -429,7 +505,7 @@ def train(args: argparse.Namespace) -> None:
             export_merged_checkpoint(
                 model=model,
                 tokenizer=tokenizer,
-                output_dir=args.best_checkpoint_dir,
+                output_dir=best_checkpoint_dir,
                 base_model=BASE_MODEL,
                 system_prompt=SYSTEM_PROMPT_MCQ,
                 temperature=args.export_temperature,
@@ -471,10 +547,10 @@ def train(args: argparse.Namespace) -> None:
             wb_run.log(log_payload, commit=True)
             wb_run.summary["best_test_weighted_loss"] = best_weighted_test
             wb_run.summary["best_epoch"] = best_epoch
-            wb_run.summary["best_checkpoint_dir"] = str(args.best_checkpoint_dir)
+            wb_run.summary["best_checkpoint_dir"] = str(best_checkpoint_dir)
 
     print("\nTraining complete.")
-    print(f"Best checkpoint: {args.best_checkpoint_dir} (epoch {best_epoch})")
+    print(f"Best checkpoint: {best_checkpoint_dir} (epoch {best_epoch})")
 
     if wb_run is not None:
         wb_run.summary["final_epoch"] = args.epochs
