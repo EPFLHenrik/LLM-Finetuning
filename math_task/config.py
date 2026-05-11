@@ -3,7 +3,7 @@
 Defaults mirror the CI evaluation contract from README.md:
   - max_model_len = 4096
   - n = 8 completions per problem
-  - apply_chat_template with add_generation_prompt=True, nothing else
+  - apply_chat_template(messages, add_generation_prompt=True), nothing else
 so local numbers are directly comparable to the leaderboard.
 """
 from dataclasses import dataclass, field
@@ -16,9 +16,9 @@ class EvalConfig:
     model_id: str = "Qwen/Qwen3-1.7B"
     dtype: str = "float16"
 
-    # --- inference (match CI exactly) ---
+    # --- inference (must match CI exactly) ---
     max_model_len: int = 4096
-    max_new_tokens: int = 4096   # vLLM caps this at max_model_len - prompt_len
+    max_new_tokens: int = 4096   # vLLM caps at max_model_len - prompt_len
     n_samples: int = 8
 
     # --- sampling — diverse for pass@8, not greedy ---
@@ -38,4 +38,4 @@ class EvalConfig:
 
     @property
     def results_dir(self) -> Path:
-        return self.repo_root / "math" / "results"
+        return self.repo_root / "math_task" / "results"

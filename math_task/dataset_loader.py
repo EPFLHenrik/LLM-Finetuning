@@ -10,7 +10,7 @@ from typing import List, Dict, Optional
 
 
 def load_jsonl(path: Path) -> List[Dict]:
-    items = []
+    items: List[Dict] = []
     with open(path) as f:
         for line in f:
             line = line.strip()
@@ -29,7 +29,7 @@ def load_gsm8k(split: str = "test", limit: Optional[int] = None) -> List[Dict]:
     from datasets import load_dataset
 
     ds = load_dataset("openai/gsm8k", "main", split=split)
-    items = []
+    items: List[Dict] = []
     for ex in ds:
         # GSM8K answer format: "<reasoning>\n#### 42"  — keep only the number.
         gold = ex["answer"].split("####")[-1].strip().replace(",", "")
@@ -38,7 +38,7 @@ def load_gsm8k(split: str = "test", limit: Optional[int] = None) -> List[Dict]:
 
 
 def load_math500(limit: Optional[int] = None) -> List[Dict]:
-    """MATH-500 — Hendrycks' MATH test set, 500 problems. Hard. Standard benchmark."""
+    """MATH-500 — Hendrycks' MATH test set, 500 problems. Standard hard benchmark."""
     from datasets import load_dataset
 
     ds = load_dataset("HuggingFaceH4/MATH-500", split="test")

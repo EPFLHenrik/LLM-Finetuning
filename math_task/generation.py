@@ -6,10 +6,8 @@ No system prompt, no extra instructions. Anything custom must live inside
 the chat_template.jinja itself — that's the only signal CI honors.
 """
 from typing import List, Dict
-from vllm import LLM, SamplingParams
-from transformers import AutoTokenizer
 
-from math_task.config import EvalConfig
+from .config import EvalConfig
 
 
 def build_prompts(items: List[Dict], tokenizer) -> List[str]:
@@ -25,9 +23,22 @@ def build_prompts(items: List[Dict], tokenizer) -> List[str]:
 
 
 def run_generation(items: List[Dict], config: EvalConfig) -> List[Dict]:
-    """Generate n=8 completions per problem with vLLM. Returns one dict per
-    problem with the gold answer and all 8 completions (text + finish_reason
-    + token count) preserved for downstream analysis."""
+    """Generate n completions per problem with vLLM.
+
+    Returns one dict per problem:
+        {
+          "prompt": ...,
+          "answer": ...,
+          "completions": [{"text", "finish_reason", "n_tokens"}, ...]
+        }
+
+    `finish_reason` and `n_tokens` are kept so we can compute truncation_rate
+    and average reasoning length downstream.
+    """
+    # Lazy imports — keep the rest of the package importable without GPU/vllm.
+    from vllm import LLM, SamplingParams
+    from transformers import AutoTokenizer
+
     tokenizer = AutoTokenizer.from_pretrained(config.model_id)
     llm = LLM(
         model=config.model_id,
@@ -46,7 +57,7 @@ def run_generation(items: List[Dict], config: EvalConfig) -> List[Dict]:
     prompts = build_prompts(items, tokenizer)
     outputs = llm.generate(prompts, sp)
 
-    results = []
+    results: List[Dict] = []
     for item, output in zip(items, outputs):
         completions = [
             {
@@ -58,7 +69,7 @@ def run_generation(items: List[Dict], config: EvalConfig) -> List[Dict]:
         ]
         results.append({
             "prompt": item["prompt"],
-            "gold": item["answer"],
+            "answer": item["answer"],
             "completions": completions,
         })
     return results
