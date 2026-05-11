@@ -21,4 +21,6 @@ data/processed/sft/*
 data/processed/benchmark/*
 !data/processed/benchmark/safetybench/
 
+checkpoints/*
+
 # In data, only keep the folder processed/safetybench, which cannot be regenerated quickly (teacher model)
