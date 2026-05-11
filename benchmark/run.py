@@ -113,9 +113,8 @@ parser.add_argument(
     help="Path to a local model checkpoint/snapshot directory to evaluate. Defaults to the cached Qwen3-1.7B snapshot under HF_HOME.",
 )
 parser.add_argument(
-    "--use_vllm",
-    type=bool,
-    default=True,
+    "--use_transformers",
+    action="store_true",
     help="Use vLLM for generation. If not set, uses Transformers generate().",
 )
 parser.add_argument(
@@ -148,6 +147,7 @@ parser.add_argument(
     help="Local JSON file that stores cumulative benchmark rows before syncing to W&B.",
 )
 args = parser.parse_args()
+args.use_vllm = not args.use_transformers
 
 # Set seeds for reproducibility
 torch.manual_seed(SEED)
