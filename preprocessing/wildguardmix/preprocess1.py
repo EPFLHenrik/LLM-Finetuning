@@ -462,8 +462,8 @@ def main():
     })
     print(f"Combination RLVR splits created with {len(combo_rlvr['train'])} training examples and {len(combo_rlvr['test'])} test examples.")
 
-    save_split_dict(binary_sft, Path("data/processed/sft/wildguardmix/binary-choice"))
-    save_split_dict(open_form_sft, Path("data/processed/sft/wildguardmix/open-question"))
+    save_split_dict(binary_sft, Path("data/processed/sft/wildguardmix/binary_choice"))
+    save_split_dict(open_form_sft, Path("data/processed/sft/wildguardmix/open_question"))
     save_split_dict(subcategory_rlvr, Path("data/processed/sft/wildguardmix/subcategory_mcq_answers_only"))
     save_split_dict(combo_rlvr, Path("data/processed/sft/wildguardmix/safety_combo_mcq_answers_only"))
 

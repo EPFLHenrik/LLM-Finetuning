@@ -1,0 +1,43 @@
+{
+  "columns": [
+    "timestamp_utc",
+    "model_name",
+    "benchmark",
+    "benchmark_subcategory",
+    "think_mode",
+    "use_vllm",
+    "limit",
+    "pass@1",
+    "box_compliance_rate",
+    "pass@1_among_extracted",
+    "results_path"
+  ],
+  "rows": [
+    {
+      "timestamp_utc": "2026-05-11T14:53:15+00:00",
+      "model_name": "Qwen3-1.7B",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.5,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.5,
+      "results_path": "runs/benchmark/results/validation_samples/Qwen3-1.7B_no_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T14:57:05+00:00",
+      "model_name": "Qwen3-1.7B",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8,
+      "results_path": "runs/benchmark/results/validation_samples/Qwen3-1.7B_think_full_results.json"
+    }
+  ]
+}
