@@ -216,47 +216,64 @@ else:
 print(f"Runtime device: {runtime_device}")
 print(f"Saving outputs to: {OUTPUT_PATH}\n")
 
-with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-    for i, row in enumerate(tqdm.tqdm(dataset, desc="Generating outputs")):  # type: ignore
-        row_dict = dict(row)
-        PROMPT = row_dict[DatasetFieldNames.BENCHMARK_INPUT]
-        ANSWER = row_dict[DatasetFieldNames.BENCHMARK_ANSWER]
+# Collect all prompts and metadata
+print("Preparing prompts for batch generation...")
+prompts_list = []
+metadata_list = []
 
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT_MCQ},
-            {"role": "user", "content": PROMPT}
-            ]
-        text = tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=THINK_MODE,
+for row in tqdm.tqdm(dataset, desc="Preparing prompts"):  # type: ignore
+    row_dict = dict(row)
+    prompt_text = row_dict[DatasetFieldNames.BENCHMARK_INPUT]
+    answer_text = row_dict[DatasetFieldNames.BENCHMARK_ANSWER]
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT_MCQ},
+        {"role": "user", "content": prompt_text}
+    ]
+    formatted_prompt = tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+        enable_thinking=THINK_MODE,
+    )
+    
+    prompts_list.append(formatted_prompt)
+    metadata_list.append({
+        "input": prompt_text,
+        "answer": answer_text,
+    })
+
+# Generate all outputs at once
+print(f"Generating outputs for {len(prompts_list)} examples...")
+if args.use_vllm:
+    outputs = llm.generate(prompts_list, sampling_params, use_tqdm=True)  # type: ignore[arg-type]
+    completions = [output.outputs[0].text.strip() for output in outputs]
+else:
+    model_inputs = tokenizer(prompts_list, return_tensors="pt", padding=True)
+    model_inputs = model_inputs.to(model.device)  # type: ignore[union-attr]
+
+    with torch.no_grad():
+        generated_ids = model.generate(  # type: ignore[union-attr]
+            **model_inputs,
+            max_new_tokens=MAX_NEW_TOKENS,
         )
 
-        if args.use_vllm:
-            outputs = llm.generate([text], sampling_params, use_tqdm=False)  # type: ignore[arg-type]
-            completion = outputs[0].outputs[0].text.strip()
-        else:
-            model_inputs = tokenizer([text], return_tensors="pt")
-            model_inputs = model_inputs.to(model.device)  # type: ignore[union-attr]
+    prompt_lengths = model_inputs["input_ids"].shape[-1]
+    completion_ids = generated_ids[:, prompt_lengths:]
+    completions = tokenizer.batch_decode(
+        completion_ids,
+        skip_special_tokens=True,
+    )
+    completions = [c.strip() for c in completions]
 
-            with torch.no_grad():
-                generated_ids = model.generate(  # type: ignore[union-attr]
-                    **model_inputs,
-                    max_new_tokens=MAX_NEW_TOKENS,
-                )
-
-            prompt_length = model_inputs["input_ids"].shape[-1]
-            completion_ids = generated_ids[:, prompt_length:]
-            completion = tokenizer.batch_decode(
-                completion_ids,
-                skip_special_tokens=True,
-            )[0].strip()
-
+# Write all outputs
+print("Writing results to file...")
+with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+    for metadata, completion in tqdm.tqdm(zip(metadata_list, completions), desc="Writing outputs", total=len(metadata_list)):
         output_row = {
-            DatasetFieldNames.BENCHMARK_INPUT: PROMPT,
+            DatasetFieldNames.BENCHMARK_INPUT: metadata["input"],
             DatasetFieldNames.BENCHMARK_COMPLETIONS: [completion],
-            DatasetFieldNames.BENCHMARK_ANSWER: ANSWER,
+            DatasetFieldNames.BENCHMARK_ANSWER: metadata["answer"],
         }
         f.write(json.dumps(output_row, ensure_ascii=False) + "\n")
 

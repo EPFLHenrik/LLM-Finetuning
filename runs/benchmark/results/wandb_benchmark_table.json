@@ -53,6 +53,97 @@
       "results_path": "runs/benchmark/results/validation_samples/70d244cc86ccca08cf5af4e1e306ecf908b1ad5e_no_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-11T21:32:11+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.799,
+      "box_compliance_rate": 0.999,
+      "pass@1_among_extracted": 0.7997997997997998,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_no_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T21:37:18+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.799,
+      "box_compliance_rate": 0.999,
+      "pass@1_among_extracted": 0.7997997997997998,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T21:42:13+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": 10,
+      "pass@1": 0.8,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_no_think_10_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T21:43:59+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": 10,
+      "pass@1": 0.8,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_no_think_10_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T21:45:19+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": 10,
+      "pass@1": 0.5,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.5,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_no_think_10_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T21:48:24+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.762,
+      "box_compliance_rate": 0.993,
+      "pass@1_among_extracted": 0.7673716012084593,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_no_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T21:53:23+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.762,
+      "box_compliance_rate": 0.993,
+      "pass@1_among_extracted": 0.7673716012084593,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_no_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-11T19:54:56+00:00",
       "model_name": "sft-test-best",
       "benchmark": "safetybench",
@@ -64,6 +155,32 @@
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.788,
       "results_path": "runs/benchmark/results/safetybench/sft-test-best_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T21:33:51+00:00",
+      "model_name": "sft-test-best",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.785,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.785,
+      "results_path": "runs/benchmark/results/safetybench/sft-test-best_no_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-11T21:50:57+00:00",
+      "model_name": "sft-test-best",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": false,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.76,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.76,
+      "results_path": "runs/benchmark/results/safetybench/sft-test-best_no_think_full_results.json"
     }
   ]
 }
