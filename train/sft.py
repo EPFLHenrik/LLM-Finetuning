@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import random
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -25,6 +26,7 @@ from pathlib import Path
 import torch
 from peft import LoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
+from torch.utils.data import DataLoader, Subset
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -98,6 +100,16 @@ def parse_args() -> argparse.Namespace:
         nargs="*",
         default=[],
         help="Benchmark names under data/processed/benchmark/<name>.",
+    )
+    parser.add_argument(
+        "--train-sizes",
+        nargs="+",
+        type=int,
+        default=None,
+        help=(
+            "Optional per-dataset train sample caps aligned with --datasets order. "
+            "Use -1 for full dataset. Values above dataset size are clamped to full dataset."
+        ),
     )
     parser.add_argument(
         "--run_name",
@@ -263,6 +275,63 @@ def resolve_run_configuration(args: argparse.Namespace) -> tuple[str, str, Path]
     return run_id, run_name, best_checkpoint_dir
 
 
+def resolve_checkpoint_subdirs(checkpoint_root: Path) -> tuple[Path, Path]:
+    hf_model_dir = checkpoint_root / "hf_model"
+    lora_dir = checkpoint_root / "LoRA"
+    return hf_model_dir, lora_dir
+
+
+def resolve_effective_train_size(requested_size: int, available_size: int) -> int:
+    if requested_size < -1:
+        raise ValueError("Each --train-sizes value must be -1 or a non-negative integer.")
+    if requested_size == -1:
+        return available_size
+    return min(requested_size, available_size)
+
+
+def apply_train_size_caps(
+    bundles: list[DatasetBundle],
+    train_sizes: list[int] | None,
+    seed: int,
+) -> list[DatasetBundle]:
+    if train_sizes is None:
+        return bundles
+
+    if len(train_sizes) != len(bundles):
+        raise ValueError(
+            "--train-sizes must provide exactly one integer per dataset in --datasets. "
+            f"Received {len(train_sizes)} sizes for {len(bundles)} datasets."
+        )
+
+    resized_bundles: list[DatasetBundle] = []
+    for idx, (bundle, requested_size) in enumerate(zip(bundles, train_sizes)):
+        target_train_size = resolve_effective_train_size(requested_size, bundle.train_size)
+        train_dataset = bundle.train_loader.dataset
+
+        if target_train_size < len(train_dataset):
+            indices = list(range(len(train_dataset)))
+            rng = random.Random(seed + idx)
+            rng.shuffle(indices)
+            train_dataset = Subset(train_dataset, indices[:target_train_size])
+
+        resized_bundles.append(
+            DatasetBundle(
+                name=bundle.name,
+                train_loader=DataLoader(
+                    train_dataset,
+                    batch_size=bundle.train_loader.batch_size,
+                    shuffle=True,
+                    collate_fn=bundle.train_loader.collate_fn,
+                ),
+                test_loader=bundle.test_loader,
+                train_size=target_train_size,
+                test_size=bundle.test_size,
+            )
+        )
+
+    return resized_bundles
+
+
 def maybe_init_wandb(args: argparse.Namespace, run_id: str, run_name: str):
     if args.skip_wandb:
         return None
@@ -364,20 +433,28 @@ def train(args: argparse.Namespace) -> None:
         raise ValueError("--grad-accum must be > 0")
     if args.benchmark_interval <= 0:
         raise ValueError("--benchmark-interval must be > 0")
+    if args.train_sizes is not None and len(args.train_sizes) != len(args.datasets):
+        raise ValueError(
+            "--train-sizes must have the same number of values as --datasets."
+        )
 
     set_seeds(Random.SEED)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     run_id, run_name, best_checkpoint_dir = resolve_run_configuration(args)
+    best_hf_model_dir, best_lora_dir = resolve_checkpoint_subdirs(best_checkpoint_dir)
     wb_run = maybe_init_wandb(args, run_id, run_name)
 
     print("SFT TRAINING")
     print(f"  Base model           : {BASE_MODEL}")
     print(f"  Datasets             : {args.datasets}")
+    print(f"  Train sizes          : {args.train_sizes}")
     print(f"  Benchmarks           : {args.benchmarks}")
     print(f"  Device               : {device}")
     print(f"  Run name             : {run_name}")
     print(f"  Best checkpoint path : {best_checkpoint_dir}")
+    print(f"  - HF merged model    : {best_hf_model_dir}")
+    print(f"  - LoRA adapter       : {best_lora_dir}")
     print("=" * 60)
 
     model, tokenizer = build_model_and_tokenizer(args, device)
@@ -389,11 +466,22 @@ def train(args: argparse.Namespace) -> None:
         batch_size=args.batch_size,
         system_prompt=SYSTEM_PROMPT_MCQ,
     )
+    bundles = apply_train_size_caps(
+        bundles=bundles,
+        train_sizes=args.train_sizes,
+        seed=Random.SEED,
+    )
 
     print("\nLoaded datasets:")
     for bundle in bundles:
         print(
             f"  - {bundle.name}: train={bundle.train_size} test={bundle.test_size}"
+        )
+
+    if wb_run is not None:
+        wb_run.config.update(
+            {"effective_train_sizes": {b.name: b.train_size for b in bundles}},
+            allow_val_change=True,
         )
 
     total_micro_batches = sum(len(bundle.train_loader) for bundle in bundles) * args.epochs
@@ -501,17 +589,21 @@ def train(args: argparse.Namespace) -> None:
         if test_weighted < best_weighted_test:
             best_weighted_test = test_weighted
             best_epoch = epoch
-            print("[info] New best checkpoint. Exporting merged baseline-format model...")
+            print("[info] New best checkpoint. Exporting merged model + LoRA adapter...")
             export_merged_checkpoint(
                 model=model,
                 tokenizer=tokenizer,
-                output_dir=best_checkpoint_dir,
+                output_dir=best_hf_model_dir,
                 base_model=BASE_MODEL,
                 system_prompt=SYSTEM_PROMPT_MCQ,
                 temperature=args.export_temperature,
                 top_p=args.export_top_p,
                 top_k=args.export_top_k,
             )
+
+            if best_lora_dir.exists():
+                shutil.rmtree(best_lora_dir)
+            model.save_pretrained(best_lora_dir)
 
         benchmark_payload: dict[str, dict] = {}
         if args.benchmarks and (epoch % args.benchmark_interval == 0):
@@ -548,9 +640,13 @@ def train(args: argparse.Namespace) -> None:
             wb_run.summary["best_test_weighted_loss"] = best_weighted_test
             wb_run.summary["best_epoch"] = best_epoch
             wb_run.summary["best_checkpoint_dir"] = str(best_checkpoint_dir)
+            wb_run.summary["best_hf_model_dir"] = str(best_hf_model_dir)
+            wb_run.summary["best_lora_dir"] = str(best_lora_dir)
 
     print("\nTraining complete.")
-    print(f"Best checkpoint: {best_checkpoint_dir} (epoch {best_epoch})")
+    print(f"Best checkpoint root: {best_checkpoint_dir} (epoch {best_epoch})")
+    print(f"  HF merged model: {best_hf_model_dir}")
+    print(f"  LoRA adapter   : {best_lora_dir}")
 
     if wb_run is not None:
         wb_run.summary["final_epoch"] = args.epochs
