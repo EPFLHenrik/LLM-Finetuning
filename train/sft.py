@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import math
 import random
 import shutil
 import sys
@@ -26,7 +27,7 @@ from pathlib import Path
 import torch
 from peft import LoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, Subset
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -73,6 +74,20 @@ LORA_TARGET_MODULES = [
     "up_proj",
     "down_proj",
 ]
+
+
+class NamedTrainDataset(Dataset):
+    def __init__(self, dataset: Dataset, dataset_name: str):
+        self.dataset = dataset
+        self.dataset_name = dataset_name
+
+    def __len__(self) -> int:
+        return len(self.dataset)
+
+    def __getitem__(self, idx: int) -> dict:
+        example = dict(self.dataset[idx])
+        example["dataset_name"] = self.dataset_name
+        return example
 
 
 def disable_peft_bitsandbytes_dispatch() -> None:
@@ -332,6 +347,37 @@ def apply_train_size_caps(
     return resized_bundles
 
 
+def build_mixed_train_loader(bundles: list[DatasetBundle]) -> DataLoader:
+    if not bundles:
+        raise ValueError("At least one dataset bundle is required for training.")
+
+    train_datasets = [
+        NamedTrainDataset(bundle.train_loader.dataset, bundle.name) for bundle in bundles
+    ]
+    mixed_dataset = ConcatDataset(train_datasets)
+
+    def mixed_collate_fn(batch: list[dict]) -> dict:
+        dataset_names = [example["dataset_name"] for example in batch]
+        model_batch = bundles[0].train_loader.collate_fn(
+            [
+                {
+                    "input_ids": example["input_ids"],
+                    "labels": example["labels"],
+                }
+                for example in batch
+            ]
+        )
+        model_batch["dataset_name"] = dataset_names
+        return model_batch
+
+    return DataLoader(
+        mixed_dataset,
+        batch_size=bundles[0].train_loader.batch_size,
+        shuffle=True,
+        collate_fn=mixed_collate_fn,
+    )
+
+
 def maybe_init_wandb(args: argparse.Namespace, run_id: str, run_name: str):
     if args.skip_wandb:
         return None
@@ -484,7 +530,9 @@ def train(args: argparse.Namespace) -> None:
             allow_val_change=True,
         )
 
-    total_micro_batches = sum(len(bundle.train_loader) for bundle in bundles) * args.epochs
+    mixed_train_loader = build_mixed_train_loader(bundles)
+
+    total_micro_batches = len(mixed_train_loader) * args.epochs
     total_optimizer_steps = max(1, total_micro_batches // args.grad_accum)
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
@@ -505,56 +553,67 @@ def train(args: argparse.Namespace) -> None:
         print(f"\n=== Epoch {epoch}/{args.epochs} ===")
         model.train()
 
+        train_loss_sums_by_dataset = {bundle.name: 0.0 for bundle in bundles}
+        train_batches_by_dataset = {bundle.name: 0 for bundle in bundles}
         train_loss_by_dataset: dict[str, float] = {}
         test_loss_by_dataset: dict[str, float] = {}
-        train_weight_by_dataset: dict[str, int] = {}
         test_weight_by_dataset: dict[str, int] = {}
+        running_loss = 0.0
+        n_batches = 0
+
+        for batch in mixed_train_loader:
+            outputs = model(
+                input_ids=batch["input_ids"].to(device),
+                attention_mask=batch["attention_mask"].to(device),
+                labels=batch["labels"].to(device),
+            )
+            raw_loss = float(outputs.loss.item())
+            loss = outputs.loss / args.grad_accum
+            loss.backward()
+
+            batch_dataset_names = set(batch["dataset_name"])
+            if len(batch_dataset_names) == 1:
+                batch_dataset_name = next(iter(batch_dataset_names))
+                train_loss_sums_by_dataset[batch_dataset_name] += raw_loss
+                train_batches_by_dataset[batch_dataset_name] += 1
+
+            running_loss += raw_loss
+            n_batches += 1
+            grad_counter += 1
+            train_step += 1
+
+            if wb_run is not None:
+                log_payload = {
+                    "epoch": epoch,
+                    "train_step": train_step,
+                    "batch/train_loss": raw_loss,
+                    "batch/train_running_loss": running_loss / n_batches,
+                    "train/global_step": global_step,
+                    "train/learning_rate": scheduler.get_last_lr()[0],
+                }
+                if len(batch_dataset_names) == 1:
+                    log_payload[f"batch/train_loss/{batch_dataset_name}"] = raw_loss
+                    log_payload[
+                        f"batch/train_running_loss/{batch_dataset_name}"
+                    ] = (
+                        train_loss_sums_by_dataset[batch_dataset_name]
+                        / train_batches_by_dataset[batch_dataset_name]
+                    )
+                wb_run.log(log_payload, commit=True)
+
+            if grad_counter % args.grad_accum == 0:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+                scheduler.step()
+                optimizer.zero_grad()
+                global_step += 1
 
         for bundle in bundles:
-            running_loss = 0.0
-            n_batches = 0
-
-            for batch in bundle.train_loader:
-                outputs = model(
-                    input_ids=batch["input_ids"].to(device),
-                    attention_mask=batch["attention_mask"].to(device),
-                    labels=batch["labels"].to(device),
-                )
-                raw_loss = float(outputs.loss.item())
-                loss = outputs.loss / args.grad_accum
-                loss.backward()
-
-                running_loss += raw_loss
-                n_batches += 1
-                grad_counter += 1
-                train_step += 1
-
-                if wb_run is not None:
-                    wb_run.log(
-                        {
-                            "epoch": epoch,
-                            "train_step": train_step,
-                            "batch/train_loss": raw_loss,
-                            "batch/train_running_loss": running_loss / n_batches,
-                            f"batch/train_loss/{bundle.name}": raw_loss,
-                            f"batch/train_running_loss/{bundle.name}": running_loss / n_batches,
-                            "train/global_step": global_step,
-                            "train/learning_rate": scheduler.get_last_lr()[0],
-                        },
-                        commit=True,
-                    )
-
-                if grad_counter % args.grad_accum == 0:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                    optimizer.step()
-                    scheduler.step()
-                    optimizer.zero_grad()
-                    global_step += 1
-
             train_loss_by_dataset[bundle.name] = (
-                running_loss / n_batches if n_batches else float("inf")
+                train_loss_sums_by_dataset[bundle.name] / train_batches_by_dataset[bundle.name]
+                if train_batches_by_dataset[bundle.name]
+                else float("nan")
             )
-            train_weight_by_dataset[bundle.name] = bundle.train_size
 
         if grad_counter % args.grad_accum != 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -576,15 +635,16 @@ def train(args: argparse.Namespace) -> None:
             test_loss_by_dataset[bundle.name] = test_avg_loss
             test_weight_by_dataset[bundle.name] = bundle.test_size
 
-        train_weighted = weighted_average(train_loss_by_dataset, train_weight_by_dataset)
+        train_weighted = running_loss / n_batches if n_batches else float("inf")
         test_weighted = weighted_average(test_loss_by_dataset, test_weight_by_dataset)
 
         print(f"train_weighted_loss={train_weighted:.4f} test_weighted_loss={test_weighted:.4f}")
         for name in args.datasets:
-            print(
-                f"  {name}: train={train_loss_by_dataset[name]:.4f} "
-                f"test={test_loss_by_dataset[name]:.4f}"
+            dataset_train_loss = train_loss_by_dataset[name]
+            train_fragment = (
+                f"train={dataset_train_loss:.4f} " if math.isfinite(dataset_train_loss) else ""
             )
+            print(f"  {name}: {train_fragment}test={test_loss_by_dataset[name]:.4f}")
 
         if test_weighted < best_weighted_test:
             best_weighted_test = test_weighted
@@ -626,7 +686,8 @@ def train(args: argparse.Namespace) -> None:
             }
 
             for name in args.datasets:
-                log_payload[f"train/{name}_loss"] = train_loss_by_dataset[name]
+                if math.isfinite(train_loss_by_dataset[name]):
+                    log_payload[f"train/{name}_loss"] = train_loss_by_dataset[name]
                 log_payload[f"test/{name}_loss"] = test_loss_by_dataset[name]
 
             for benchmark, payload in benchmark_payload.items():
