@@ -10,7 +10,7 @@
       "dtype": "string",
       "_type": "Value"
     },
-    "expected_boxed_answer": {
+    "answer": {
       "dtype": "string",
       "_type": "Value"
     }

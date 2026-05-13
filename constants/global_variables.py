@@ -15,3 +15,6 @@ class DistillationFieldNames:
 
 class Random:
     SEED = 42
+
+class TrainingConstants:
+    MAX_NEW_TOKENS = 16384

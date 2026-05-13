@@ -11,7 +11,7 @@ from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 
 from constants.global_variables import DatasetFieldNames, DistillationFieldNames, Random
-from prompts.system_prompt import SYSTEM_PROMPT_MCQ, TEACHER_MODEL_SYSTEM_PROMPT
+from prompts.system_prompt import SYSTEM_PROMPT_MCQ, TEACHER_MODEL_SYSTEM_PROMPT, TEACHER_MODEL_SYSTEM_PROMPT_FALLBACK
 
 ROOT = Path(__file__).resolve().parents[2]
 INPUT_DATASET_PATH = (
@@ -73,9 +73,9 @@ def save_checkpoint(rows: list[dict], output_path: Path) -> None:
 
 
 def extract_reasoning_from_output(text: str) -> str:
-    """Extract reasoning, prioritizing content inside <think>...</think> tags."""
+    """Extract reasoning, prioritizing content inside ◣...◢ tags."""
     think_matches = re.findall(
-        r"<think>(.*?)</think>", text, flags=re.IGNORECASE | re.DOTALL
+        r"◣(.*?)◢", text, flags=re.IGNORECASE | re.DOTALL
     )
     if think_matches:
         reasoning = think_matches[-1]
@@ -84,7 +84,7 @@ def extract_reasoning_from_output(text: str) -> str:
 
     # Remove residual tags and boxed answers from reasoning content.
     reasoning = re.sub(r"<\\?think>", "", reasoning)
-    reasoning = re.sub(r"</think>", "", reasoning)
+    reasoning = re.sub(r"◣", "", reasoning)
     reasoning = re.sub(r"<\\think>", "", reasoning)
     reasoning = re.sub(r"\\boxed\{[^}]*\}", "", reasoning)
 
@@ -107,7 +107,9 @@ def extract_reasoning_from_output(text: str) -> str:
 def build_target_from_reasoning(reasoning: str, final_answer: str) -> str:
     """
     Normalize output into:
-    <think> REASONING </think>
+    <think> 
+    REASONING 
+    </think>
     \boxed{ANSWER}.
     """
     cleaned = re.sub(r"\s+", " ", reasoning).strip()
@@ -232,7 +234,7 @@ print("   OK: Model loaded")
 
 print("\n5. Processing examples and checkpoint-saving after each item...")
 args.output.parent.mkdir(parents=True, exist_ok=True)
-failed_log_path = args.output.parent / "failed.log"
+failed_log_path = args.output.parent / "failed_CoT_hidden.log"
 failed_log_path.write_text(
     (
         "# Failed answer attempts during preprocess2b_CoT_hidden.py\n"
@@ -245,15 +247,22 @@ print(f"   Failure log path: {failed_log_path}")
 
 max_distinct_tries = 5
 max_total_generations = 20
+indices = list(range(effective_from, effective_to))
+batch_size = 500
+num_batches = (len(indices) + batch_size - 1) // batch_size
 
-for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examples"):
+print(f"Processing {num_batches} batches...")
+
+state: dict[int, dict] = {}
+
+print("   Building prompt list...")
+for idx in indices:
     example = dataset[idx]
-    # answer_letter = example[DatasetFieldNames.SFT_ANSWER] # GOOD LINE, but ds not updated
-    answer_letter = example["expected_boxed_answer"]
-
+    answer_letter = example[DatasetFieldNames.SFT_ANSWER]
+    prompt_text = example[DatasetFieldNames.SFT_INPUT]
     hidden_messages = [
         {"role": "system", "content": TEACHER_MODEL_SYSTEM_PROMPT},
-        {"role": "user", "content": example[DatasetFieldNames.SFT_INPUT]},
+        {"role": "user", "content": prompt_text},
     ]
     hidden_text = tokenizer.apply_chat_template(
         hidden_messages,
@@ -261,112 +270,146 @@ for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examp
         add_generation_prompt=True,
         enable_thinking=False,
     )
-
-    distinct_try_count = 0
-    total_generation_calls = 0
-    seen_generations: set[str] = set()
-    chosen_rationale = ""
-    chosen_answer = None
-
-    while (
-        distinct_try_count < max_distinct_tries
-        and total_generation_calls < max_total_generations
-    ):
-        # Recommended params for thinking mode at https://huggingface.co/Qwen/Qwen3-1.7B
-        sampling_params = SamplingParams(
-            temperature=0.6,
-            top_p=0.95,
-            max_tokens=args.max_new_tokens,
-            seed=idx * 1000 + total_generation_calls + 1,
-        )
-
-        outputs = model.generate([hidden_text], sampling_params)
-        rationale = outputs[0].outputs[0].text.strip()
-        total_generation_calls += 1
-
-        # Duplicate generations are ignored so retries are actually diverse.
-        if rationale in seen_generations:
-            message = (
-                f"[id={idx}] Duplicate generation ignored "
-                f"(call={total_generation_calls}, distinct={distinct_try_count})."
-            )
-            print(f"FAIL: {message}")
-            append_failure_log(failed_log_path, f"FAIL: {message}")
-            continue
-
-        seen_generations.add(rationale)
-        distinct_try_count += 1
-
-        predicted_answer = extract_boxed_answer(rationale)
-        if predicted_answer == answer_letter:
-            chosen_rationale = extract_reasoning_from_output(rationale)
-            chosen_answer = predicted_answer
-            break
-
-        preview = rationale.replace("\n", " ")[:220]
-        message = (
-            f"[id={idx}] Wrong answer on distinct_try={distinct_try_count}/"
-            f"{max_distinct_tries}: predicted={predicted_answer!r}, expected={answer_letter!r}. "
-            f"Preview: {preview}"
-        )
-        print(f"FAIL: {message}")
-        append_failure_log(failed_log_path, f"FAIL: {message}")
-
-    if chosen_answer != answer_letter:
-        fallback_prompt = f"""{example[DatasetFieldNames.SFT_INPUT]}
-
-            Use this target answer: {answer_letter}.
-            Reason to that answer naturally and do not mention that any target answer was provided.
-            """
-
-        fallback_messages = [
-            {"role": "system", "content": TEACHER_MODEL_SYSTEM_PROMPT},
-            {"role": "user", "content": fallback_prompt},
-        ]
-        fallback_text = tokenizer.apply_chat_template(
-            fallback_messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False,
-        )
-        fallback_sampling_params = SamplingParams(
-            temperature=0.2,
-            top_p=0.95,
-            max_tokens=args.max_new_tokens,
-            seed=idx * 1000 + 777,
-        )
-        fallback_outputs = model.generate([fallback_text], fallback_sampling_params)
-        chosen_rationale = extract_reasoning_from_output(
-            fallback_outputs[0].outputs[0].text.strip()
-        )
-        chosen_answer = answer_letter
-        fallback_message = (
-            f"[id={idx}] Fallback used after {distinct_try_count} distinct failed tries "
-            f"({total_generation_calls} total generations)."
-        )
-        print(f"FAIL: {fallback_message}")
-        append_failure_log(failed_log_path, f"FAIL: {fallback_message}")
-
-    target_text = build_target_from_reasoning(chosen_rationale, chosen_answer)
-
-    new_row = {
-        DatasetFieldNames.SFT_INPUT: example[DatasetFieldNames.SFT_INPUT],
-        DatasetFieldNames.SFT_TARGET: target_text,
-        DatasetFieldNames.SFT_ANSWER: answer_letter,
-        DistillationFieldNames.TEACHER_MODEL: TEACHER_MODEL,
+    state[idx] = {
+        "input": prompt_text,
+        "answer": answer_letter,
+        "hidden_text": hidden_text,
+        "distinct_try_count": 0,
+        "total_generation_calls": 0,
+        "seen_generations": set(),
+        "chosen_rationale": "",
+        "chosen_answer": None,
     }
 
-    if idx < len(existing_rows):
-        # Update existing row (in case of overwrite or resuming with from_id < existing_count)
-        existing_rows[idx] = new_row
-    else:
-        existing_rows.append(new_row)
+for batch_idx in range(num_batches):
+    batch_start = batch_idx * batch_size
+    batch_end = min((batch_idx + 1) * batch_size, len(indices))
+    batch_indices = indices[batch_start:batch_end]
 
-    if (idx + 1) % 10 == 0 or idx == effective_to - 1:
-        save_checkpoint(existing_rows, args.output)
-        print(
-            f"   Saved checkpoint: {len(existing_rows)} total rows (last processed id={idx})"
+    print(f"Processing batch {batch_idx + 1}/{num_batches}: indices [{batch_start}, {batch_end})")
+
+    pending = batch_indices[:]
+    round_id = 0
+
+    while pending:
+        round_id += 1
+        sampling_params = SamplingParams(
+            temperature=0.7,
+            top_p=0.8,
+            max_tokens=args.max_new_tokens,
+            seed=Random.SEED + round_id,
         )
+
+        prompts = [state[idx]["hidden_text"] for idx in pending]
+        outputs = model.generate(prompts, sampling_params)
+
+        next_pending: list[int] = []
+        for idx, output in zip(pending, outputs):
+            sample = state[idx]
+            rationale = output.outputs[0].text.strip()
+            sample["total_generation_calls"] += 1
+
+            if rationale in sample["seen_generations"]:
+                message = (
+                    f"[id={idx}] Duplicate generation ignored "
+                    f"(call={sample['total_generation_calls']}, distinct={sample['distinct_try_count']})."
+                )
+                print(f"FAIL: {message}")
+                append_failure_log(failed_log_path, f"FAIL: {message}")
+            else:
+                sample["seen_generations"].add(rationale)
+                sample["distinct_try_count"] += 1
+                predicted_answer = extract_boxed_answer(rationale)
+
+                if predicted_answer == sample["answer"]:
+                    sample["chosen_rationale"] = extract_reasoning_from_output(rationale)
+                    sample["chosen_answer"] = predicted_answer
+                else:
+                    preview = rationale.replace("\n", " ")[:220]
+                    message = (
+                        f"[id={idx}] Wrong answer on distinct_try={sample['distinct_try_count']}/"
+                        f"{max_distinct_tries}: predicted={predicted_answer!r}, expected={sample['answer']!r}. "
+                        f"Preview: {preview}"
+                    )
+                    print(f"FAIL: {message}")
+                    append_failure_log(failed_log_path, f"FAIL: {message}")
+
+            if sample["chosen_answer"] != sample["answer"] and (
+                sample["distinct_try_count"] < max_distinct_tries
+                and sample["total_generation_calls"] < max_total_generations
+            ):
+                next_pending.append(idx)
+
+        pending = next_pending
+
+    fallback_indices = [idx for idx in batch_indices if state[idx]["chosen_answer"] != state[idx]["answer"]]
+    if fallback_indices:
+        fallback_prompts: list[str] = []
+        for idx in fallback_indices:
+            sample = state[idx]
+            fallback_messages = [
+                {
+                    "role": "system",
+                    "content": TEACHER_MODEL_SYSTEM_PROMPT_FALLBACK(sample["answer"]),
+                },
+                {"role": "user", "content": sample["input"]},
+            ]
+            fallback_prompts.append(
+                tokenizer.apply_chat_template(
+                    fallback_messages,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    enable_thinking=False,
+                )
+            )
+
+        fallback_sampling_params = SamplingParams(
+            temperature=0.7,
+            top_p=0.8,
+            max_tokens=args.max_new_tokens,
+            seed=Random.SEED + 777,
+        )
+        fallback_outputs = model.generate(fallback_prompts, fallback_sampling_params)
+
+        for idx, output in zip(fallback_indices, fallback_outputs):
+            sample = state[idx]
+            sample["chosen_rationale"] = extract_reasoning_from_output(output.outputs[0].text.strip())
+            sample["chosen_answer"] = sample["answer"]
+            fallback_message = (
+                f"[id={idx}] Fallback used after {sample['distinct_try_count']} distinct failed tries "
+                f"({sample['total_generation_calls']} total generations)."
+            )
+            print(f"FAIL: {fallback_message}")
+            append_failure_log(failed_log_path, f"FAIL: {fallback_message}")
+
+    for idx in tqdm.tqdm(batch_indices, desc=f"Writing rows for batch {batch_idx + 1}"):
+        sample = state[idx]
+        target_text = build_target_from_reasoning(sample["chosen_rationale"], sample["chosen_answer"])
+
+        new_row = {
+            DatasetFieldNames.SFT_INPUT: sample["input"],
+            DatasetFieldNames.SFT_TARGET: target_text,
+            DatasetFieldNames.SFT_ANSWER: sample["answer"],
+            DistillationFieldNames.TEACHER_MODEL: TEACHER_MODEL,
+        }
+
+        if idx < len(existing_rows):
+            existing_rows[idx] = new_row
+        elif idx == len(existing_rows):
+            existing_rows.append(new_row)
+        else:
+            raise RuntimeError(
+                "Non-contiguous write detected: cannot write source index "
+                f"{idx} when output has only {len(existing_rows)} rows. "
+                "Run earlier indices first to keep ordering consistent."
+            )
+
+        if (idx + 1) % 10 == 0 or idx == effective_to - 1:
+            save_checkpoint(existing_rows, args.output)
+            print(
+                f"   Saved checkpoint: {len(existing_rows)} total rows "
+                f"(last processed id={idx})"
+            )
 
 print(
     f"SUCCESS: Done! Output now has {len(existing_rows)} rows at {args.output}. "

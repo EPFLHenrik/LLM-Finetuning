@@ -52,15 +52,15 @@ def emit(text: str, file_text: str | None = None) -> None:
 raw_dir = Path(args.ds)
 dataset = load_from_disk(raw_dir)
 # shuffle the dataset to get a random sample of rows
-dataset = dataset.shuffle(seed=42)
+# dataset = dataset.shuffle(seed=42)
 
 emit(f"Loaded: {raw_dir}")
 emit(f"Rows: {len(dataset)}  |  Columns: {dataset.column_names}\n")
 
 SEP = "─" * 72
 
-start = 0
-N = 10
+start = 23
+N = 5
 
 end = start + N
 

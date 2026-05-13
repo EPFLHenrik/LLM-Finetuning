@@ -16,10 +16,12 @@ Usage:
 
 from __future__ import annotations
 
+
 import argparse
 import json
 import os
 import sys
+import datetime
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -52,6 +54,10 @@ def parse_args() -> argparse.Namespace:
 		"--model_name",
 		default=DEFAULT_MODEL_NAME,
 		help="Repository name inside org (default: safety_model).",
+	)
+	parser.add_argument(
+		"--commit_message",
+		help="Commit message for the upload commit.",
 	)
 	parser.add_argument(
 		"--checkpoint_dir",
@@ -236,7 +242,7 @@ def print_checks(results: list[CheckResult]) -> None:
 	print(f"\n[Summary] {passed}/{len(results)} checks passed")
 
 
-def upload_folder(repo_id: str, checkpoint_dir: Path, private: bool) -> None:
+def upload_folder(repo_id: str, checkpoint_dir: Path, private: bool, commit_message: str) -> None:
 	token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
 	if not token:
 		raise RuntimeError(
@@ -252,7 +258,7 @@ def upload_folder(repo_id: str, checkpoint_dir: Path, private: bool) -> None:
 		repo_id=repo_id,
 		folder_path=str(checkpoint_dir),
 		path_in_repo=".",
-		commit_message="Upload base model checkpoint",
+		commit_message=commit_message,
 	)
 	print(f"[Upload] Done: https://huggingface.co/{repo_id}")
 
@@ -261,6 +267,20 @@ def main() -> None:
 	args = parse_args()
 	checkpoint_dir = args.checkpoint_dir.resolve()
 	repo_id = f"{args.org}/{args.model_name}"
+
+	if not args.commit_message:
+		# Example Commit: "Upload checkpoint from Qwen3-1.7B-base. Date of creation: 2024-06-01 12:34:56"
+
+		   date_format = "%Y-%m-%d %H:%M:%S"
+		   # Get the creation time of the checkpoint directory (best-effort, fallback to mtime if ctime is unavailable)
+		   stat = checkpoint_dir.stat()
+		   # On Unix, st_ctime is the inode change time, but often used as creation time if available
+		   creation_time = getattr(stat, 'st_birthtime', None)
+		   if creation_time is None:
+			   # Fallback: use st_ctime (inode change time) or st_mtime (modification time)
+			   creation_time = getattr(stat, 'st_ctime', stat.st_mtime)
+		   date = datetime.datetime.fromtimestamp(creation_time).strftime(date_format)
+		   args.commit_message = f"Upload checkpoint from {args.checkpoint_dir}. Date of creation: {date}"
 
 	print(f"[Info] Checkpoint dir: {checkpoint_dir}")
 	print(f"[Info] Target repo: {repo_id}")
@@ -286,7 +306,7 @@ def main() -> None:
 		print("\n[Done] Validation passed. check-only mode, no upload performed.")
 		return
 
-	upload_folder(repo_id=repo_id, checkpoint_dir=checkpoint_dir, private=args.private)
+	upload_folder(repo_id=repo_id, checkpoint_dir=checkpoint_dir, private=args.private, commit_message=args.commit_message)
 
 
 if __name__ == "__main__":
