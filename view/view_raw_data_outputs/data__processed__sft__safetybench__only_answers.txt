@@ -1,4 +1,4 @@
-Loaded: data\processed\sft\safetybench\only_answers
+Loaded: data/processed/sft/safetybench/only_answers
 Rows: 11435  |  Columns: ['prompt', 'target', 'expected_boxed_answer']
 
 ────────────────────────────────────────────────────────────────────────

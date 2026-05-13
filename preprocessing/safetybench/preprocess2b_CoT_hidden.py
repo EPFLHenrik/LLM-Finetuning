@@ -11,13 +11,13 @@ from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 
 from constants.global_variables import DatasetFieldNames, DistillationFieldNames, Random
-from prompts.system_prompt import SYSTEM_PROMPT_MCQ
+from prompts.system_prompt import SYSTEM_PROMPT_MCQ, TEACHER_MODEL_SYSTEM_PROMPT
 
 ROOT = Path(__file__).resolve().parents[2]
 INPUT_DATASET_PATH = (
     ROOT / "data" / "processed" / "sft" / "safetybench" / "only_answers"
 )
-DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "CoT"
+DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "CoT_hidden"
 TEACHER_MODEL_PATH = str(
     ROOT.parent.parent.parent
     / "hf_cache"
@@ -27,7 +27,7 @@ TEACHER_MODEL_PATH = str(
     / "b968826d9c46dd6066d109eabc6255188de91218"
 )
 
-TEACHER_MODEL = "Qwen/Qwen3Guard-Gen-8B"
+TEACHER_MODEL = "Qwen/Qwen3-32B-AWQ"
 
 parser = argparse.ArgumentParser(
     description="Generate short SafetyBench rationales with a teacher model."
@@ -248,10 +248,11 @@ max_total_generations = 20
 
 for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examples"):
     example = dataset[idx]
-    answer_letter = example[DatasetFieldNames.SFT_ANSWER]
+    # answer_letter = example[DatasetFieldNames.SFT_ANSWER] # GOOD LINE, but ds not updated
+    answer_letter = example["expected_boxed_answer"]
 
     hidden_messages = [
-        {"role": "system", "content": SYSTEM_PROMPT_MCQ},
+        {"role": "system", "content": TEACHER_MODEL_SYSTEM_PROMPT},
         {"role": "user", "content": example[DatasetFieldNames.SFT_INPUT]},
     ]
     hidden_text = tokenizer.apply_chat_template(
@@ -319,7 +320,7 @@ for idx in tqdm.tqdm(range(effective_from, effective_to), desc="Processing examp
             """
 
         fallback_messages = [
-            {"role": "system", "content": SYSTEM_PROMPT_MCQ},
+            {"role": "system", "content": TEACHER_MODEL_SYSTEM_PROMPT},
             {"role": "user", "content": fallback_prompt},
         ]
         fallback_text = tokenizer.apply_chat_template(
