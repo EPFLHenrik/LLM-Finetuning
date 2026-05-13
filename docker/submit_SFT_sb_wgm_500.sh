@@ -120,7 +120,7 @@ MSYS_NO_PATHCONV=1 runai submit \
     --benchmark advbench \
     --think \
     --checkpoint checkpoints/sf_wgm_500/hf_model \
-    --name sf_wgm_500 && \"
+    --name sf_wgm_500 && \
     python -m benchmark.run \
     --benchmark jbb-behaviors \
     --think \
