@@ -4,11 +4,16 @@ import json
 from pathlib import Path
 from datetime import datetime
 import re
+from constants.global_variables import DatasetFieldNames
 
 from datasets import load_from_disk
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--ds", required=True, help="Path to the dataset directory")
+parser.add_argument("--shuffle", action="store_true", help="Whether to shuffle the dataset before viewing")
+parser.add_argument("--start", type=int, default=0, help="Starting row index to view")
+parser.add_argument("--N", type=int, default=10, help="Number of rows to view")
+parser.add_argument("--key", type=str, default=DatasetFieldNames.SFT_ANSWER, help="Key to analyze for data type distribution")
 args = parser.parse_args()
 
 HISTORY_FILE = Path(__file__).with_name("view_raw_data_requests.txt")
@@ -52,15 +57,15 @@ def emit(text: str, file_text: str | None = None) -> None:
 raw_dir = Path(args.ds)
 dataset = load_from_disk(raw_dir)
 # shuffle the dataset to get a random sample of rows
-# dataset = dataset.shuffle(seed=42)
+if args.shuffle:
+    dataset = dataset.shuffle(seed=42)
 
 emit(f"Loaded: {raw_dir}")
 emit(f"Rows: {len(dataset)}  |  Columns: {dataset.column_names}\n")
 
 SEP = "─" * 72
-
-start = 23
-N = 5
+start = args.start
+N = args.N
 
 end = start + N
 
@@ -83,7 +88,7 @@ for i in range(start, end):
         emit(f"{value_str}\n\n")
 
 datatype_histogram = {}
-key = "data_type"
+key = args.key
 for row in dataset:
     dt = row.get(key, "UNKNOWN")
     datatype_histogram[dt] = datatype_histogram.get(dt, 0) + 1
