@@ -18,6 +18,7 @@ datasets_to_download = [
     ("wildguardmix", ("allenai/wildguardmix", "wildguardtrain")),
     ("wildguardmix", ("allenai/wildguardmix", "wildguardtest")),
     ("wildjailbreak", ("allenai/wildjailbreak", "train", {"delimiter": "\t", "keep_default_na": False})),
+    ("wildjailbreak_eval", ("allenai/wildjailbreak", "eval", {"delimiter": "\t", "keep_default_na": False})),
     ("safechain", ("UWNSL/SafeChain", None)),
     # DPO Datasets
     ("pku-safeRLHF", ("PKU-Alignment/PKU-SafeRLHF", "default")),

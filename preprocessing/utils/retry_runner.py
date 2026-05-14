@@ -128,17 +128,19 @@ class RetryGenerationRunner:
             for task in tasks
         ]
 
-    def build_primary_prompt(self, user_text: str, prompt_builder) -> str:
-        return prompt_builder.build(self.tokenizer, user_text)
+    def build_primary_prompt(self, user_text: str, prompt_builder, think: bool) -> str:
+        return prompt_builder.build(self.tokenizer, user_text, think)
 
     def build_fallback_prompt(
         self,
         user_text: str,
         expected_answer: str,
         fallback_prompt_builder,
+        think: bool,
     ) -> str:
         return fallback_prompt_builder.build(
             self.tokenizer,
             user_text,
             expected_answer,
+            think,
         )

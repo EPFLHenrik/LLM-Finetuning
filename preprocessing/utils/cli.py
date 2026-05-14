@@ -23,6 +23,11 @@ def parse_generation_args() -> argparse.Namespace:
         help="Which split to process (train/test). If None, the program considers --input as being the directory containing the data.",
     )
     parser.add_argument(
+        "--think",
+        action="store_true",
+        help="Whether to use think mode for the teacher model.",
+    )
+    parser.add_argument(
         "--max-new-tokens",
         type=int,
         default=TrainingConstants.MAX_NEW_TOKENS,
@@ -45,4 +50,6 @@ def parse_generation_args() -> argparse.Namespace:
         action="store_true",
         help="Whether to overwrite existing output dataset (if any)",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    print(args.think)
+    return args

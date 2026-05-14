@@ -14,10 +14,10 @@ LETTERS = [chr(ord("A") + i) for i in range(20)]
 
 # The 4 combo categories: (data_type key, human-readable label)
 COMBO_CATEGORIES = [
-    ("vanilla_benign", "Safe and not jailbreak-style formulated"),
-    ("vanilla_harmful", "Unsafe but not jailbreak-style formulated"),
-    ("adversarial_benign", "Safe but jailbreak-style formulated"),
-    ("adversarial_harmful", "Unsafe and jailbreak-style formulated"),
+    ("vanilla_benign", "Harmless and direct"),
+    ("vanilla_harmful", "Harmful and direct"),
+    ("adversarial_benign", "Harmless but jailbreak-style formulated"),
+    ("adversarial_harmful", "Harmful and jailbreak-style formulated"),
 ]
 COMBO_CAT_KEYS = [k for k, _ in COMBO_CATEGORIES]
 COMBO_CAT_TEXTS = {k: v for k, v in COMBO_CATEGORIES}

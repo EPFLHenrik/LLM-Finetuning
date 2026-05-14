@@ -32,6 +32,7 @@ def build_generation_tasks(
     runner: RetryGenerationRunner,
     hidden_prompt_builder: HiddenCotPromptBuilder,
     fallback_prompt_builder: FallbackPromptBuilder,
+    think: bool,
 ) -> list[GenerationTask]:
     tasks: list[GenerationTask] = []
 
@@ -40,11 +41,12 @@ def build_generation_tasks(
         answer_letter = example[DatasetFieldNames.SFT_ANSWER]
         prompt_text = example[DatasetFieldNames.SFT_INPUT]
 
-        primary_prompt = runner.build_primary_prompt(prompt_text, hidden_prompt_builder)
+        primary_prompt = runner.build_primary_prompt(prompt_text, hidden_prompt_builder, think)
         fallback_prompt = runner.build_fallback_prompt(
             prompt_text,
             answer_letter,
             fallback_prompt_builder,
+            think,
         )
 
         tasks.append(
@@ -184,6 +186,8 @@ def main() -> None:
     num_batches = (len(indices) + config.batch_size - 1) // config.batch_size
     print(f"\n5. Processing {num_batches} batches...")
 
+    processed_so_far: set[int] = set()
+
     for batch_idx in range(num_batches):
         batch_start = batch_idx * config.batch_size
         batch_end = min((batch_idx + 1) * config.batch_size, len(indices))
@@ -200,6 +204,7 @@ def main() -> None:
             runner=runner,
             hidden_prompt_builder=hidden_prompt_builder,
             fallback_prompt_builder=fallback_prompt_builder,
+            think=args.think,
         )
 
         results = runner.run_batch(
@@ -249,12 +254,9 @@ def main() -> None:
             f"(last processed id={last_processed_id})"
         )
 
+        processed_so_far.update(batch_indices)
         all_output_ids = set(train_rows_by_id.keys()) | set(fallback_rows_by_id.keys())
-        expected_ids = (
-            set(range(effective_from, effective_to))
-            if config.overwrite
-            else (processed_ids | set(indices))
-        )
+        expected_ids = processed_ids | processed_so_far
         if not expected_ids.issubset(all_output_ids):
             missing_ids = sorted(expected_ids - all_output_ids)[:10]
             raise RuntimeError(
