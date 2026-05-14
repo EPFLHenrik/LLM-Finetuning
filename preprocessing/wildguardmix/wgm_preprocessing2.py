@@ -252,6 +252,12 @@ def make_subcategory_record(ex, max_num_choices):
 
 def build_subcategory_split(ds: Dataset, max_num_choices):
     rows = [r for r in ds if subcategory(r) in SUBCATEGORY_TEXT]
+    rows = stratified_take(
+        rows,
+        key_fn=lambda x: (subcategory(x), request_is_adversarial(x), request_is_safe(x)),
+        ratio=1.0,
+        seed=SEED + 2,
+    )
     return Dataset.from_list(
         [rec for rec in (make_subcategory_record(ex, max_num_choices) for ex in rows) if rec is not None]
     )
