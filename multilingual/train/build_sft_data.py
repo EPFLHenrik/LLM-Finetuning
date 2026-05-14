@@ -29,6 +29,9 @@ from multilingual.loaders.include_loader import load_include_examples
 from multilingual.loaders.mgsm_loader import load_mgsm_examples
 from multilingual.loaders.milu_loader import load_milu_examples
 from multilingual.loaders.mmmlu_loader import load_mmmlu_examples
+from multilingual.loaders.cultsportqa_loader import load_cultsportqa_examples
+from multilingual.loaders.xcopa_loader import load_xcopa_examples
+from multilingual.loaders.belebele_loader import load_belebele_examples
 
 DEFAULT_MAX_PER_LANGUAGE = 1000
 DEFAULT_MAX_PER_DATASET  = 4000
@@ -47,6 +50,9 @@ DATASET_LANGUAGES = {
     "mmmlu":   ["spanish", "hindi", "italian", "chinese"],
     "milu":    ["hindi"],
     "ceval":   ["chinese"],
+    "cultsportqa": ["chinese", "hindi"],
+    "belebele": None,
+    "xcopa": ["italian", "chinese"],  # in DATASET_LANGUAGES
 }
 
 def hash_source_id(ex: Dict[str, Any]) -> str:
@@ -142,6 +148,12 @@ def _load_examples(
         return load_milu_examples(n=n, split=split, hf_token=hf_token)
     if dataset == "ceval":
         return load_ceval_examples(n=n, split=split)
+    if dataset == "cultsportqa":
+        return load_cultsportqa_examples(language, n=n, split=split)
+    if dataset == "belebele":
+        return load_belebele_examples(language, n=n, split=split)
+    if dataset == "xcopa":
+        return load_xcopa_examples(language, n=n, split=split)
     raise ValueError(f"Unknown dataset: {dataset}")
 
 
@@ -217,15 +229,12 @@ def build(
                 r["split"] = split
 
             out_path = per_dir / f"{dataset}_{language}_{split}.jsonl"
-            _write_jsonl(records, out_path, overwrite)
-
-            summary_rows.append({
-                "dataset": dataset,
-                "language": language,
-                "split": split,
-                "n": len(records),
-                "path": str(out_path),
-            })
+            written = _write_jsonl(records, out_path, overwrite)
+            if written:
+                summary_rows.append({
+                    "dataset": dataset, "language": language,
+                    "split": split, "n": len(records), "path": str(out_path),
+                })
 
     # Step 2: mixed files sampled from per-dataset files
     for split in ("train", "val"):
@@ -293,11 +302,12 @@ def build(
 
         rng.shuffle(mixed)
         mixed_path = mixed_dir / f"{split}_mixed.jsonl"
-        _write_jsonl(mixed, mixed_path, overwrite)
-        summary_rows.append({
-            "dataset": "mixed", "language": "all",
-            "split": split, "n": len(mixed), "path": str(mixed_path),
-        })
+        written = _write_jsonl(mixed, mixed_path, overwrite)
+        if written:
+            summary_rows.append({
+                "dataset": "mixed", "language": "all",
+                "split": split, "n": len(mixed), "path": str(mixed_path),
+            })
 
     # Step 3: summary CSV
     summary_path = SFT_DATA_DIR / "build_summary.csv"

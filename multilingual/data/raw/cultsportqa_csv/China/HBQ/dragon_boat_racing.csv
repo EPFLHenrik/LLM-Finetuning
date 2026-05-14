@@ -1,0 +1,130 @@
+country,group,sport,row_idx,question,option,answer
+China,HBQ,dragon boat racing,0,龙舟竞渡起源于哪个国家？,A) 日本，B) 中国，C) 泰国，D) 越南,B) 中国
+China,HBQ,dragon boat racing,1,龙舟竞渡传统上是为了纪念哪位中国古代诗人？,A) 李白，B) 屈原，C) 孔子，D) 王维,B) 屈原
+China,HBQ,dragon boat racing,2,龙舟赛与中国哪个节日有关？,A) 春节，B) 清明节，C) 端午节，D) 中秋节,C) 端午节
+China,HBQ,dragon boat racing,3,龙舟竞渡运动在中国哪个朝代开始流行？,"['A) 唐', 'B) 秦', 'C) 汉', 'D) 周']",D) 周
+China,HBQ,dragon boat racing,4,屈原以效忠哪个中国王国而闻名？,"['A) 楚', 'B) 秦', 'C) 汉', 'D) 魏']",A) 楚
+China,HBQ,dragon boat racing,5,龙舟运动在中国大约有多少年的历史？,"A) 1,000，B) 1,500，C) 2,000，D) 2,500","C) 2,000"
+China,HBQ,dragon boat racing,6,屈原投身于哪条河？,"['A) 长江', 'B) 黄河', 'C) 汨罗江', 'D) 珠江']",C) 汨罗江
+China,HBQ,dragon boat racing,7,村民们最初是为了保护屈原的遗体免受什么侵害？,"['A) 精灵', 'B) 河流', 'C) 鱼虾和邪灵', 'D) 其他王国']",C) 鱼虾和邪灵
+China,HBQ,dragon boat racing,8,端午节期间，人们为了纪念屈原，通常会吃些什么？,A) 饺子，B) 月饼，C) 粽子，D) 汤圆,C) 粽子
+China,HBQ,dragon boat racing,9,首届龙舟赛旨在象征以下哪一项？,A) 寻找失落的宝藏，B) 战争重演，C) 寻找屈原，D) 祭祀祖先,C) 寻找屈原
+China,HBQ,dragon boat racing,10,龙舟传统上会被装饰成哪种神话生物的模样？,A) 狮子，B) 凤凰，C) 龙，D) 老虎,C) 龙
+China,HBQ,dragon boat racing,11,为什么古代中国人会在端午节往河里扔米？,"['A) 喂鱼', 'B) 祭祀祖先', 'C) 安抚屈原的灵魂', 'D) 平息河流']",C) 安抚屈原的灵魂
+China,HBQ,dragon boat racing,12,龙舟竞渡运动何时开始在国际上流行起来？,A) 20世纪50年代，B) 20世纪60年代，C) 20世纪70年代，D) 20世纪80年代,C) 20世纪70年代
+China,HBQ,dragon boat racing,13,首届国际龙舟比赛是哪个主要城市举办的？,A) 香港，B) 北京，C) 上海，D) 台北,A) 香港
+China,HBQ,dragon boat racing,14,传统龙舟的典型长度是多少？,"['A) 12米', 'B) 15米', 'C) 18米', 'D) 20米']",C) 18米
+China,HBQ,dragon boat racing,15,哪位中国皇帝被认为将龙舟比赛推广为全国性赛事？,"['A) 唐太宗', 'B) 秦始皇', 'C) 汉武帝', 'D) 汉高祖']",A) 唐太宗
+China,HBQ,dragon boat racing,16,龙舟赛中击鼓的传统目的是什么？,A) 为了同步划桨，B) 为了庆祝胜利，C) 为了吓走鱼群，D) 为了祭祀祖先,A) 同步划桨
+China,HBQ,dragon boat racing,17,端午节期间人们传统上吃哪种口味的粽子？,"['A) 甜味', 'B) 咸味', 'C) 麻糬', 'D) 包子']",B) 咸味
+China,HBQ,dragon boat racing,18,古代中国举办龙舟赛最初是为了纪念谁？,"['A) 孔子', 'B) 屈原', 'C) 诸葛亮', 'D) 岳飞']",B) 屈原
+China,HBQ,dragon boat racing,19,谁被认为是现代龙舟赛的复兴者或奠基人？,"['A) 李凯', 'B) 杰弗里·邦德', 'C) 屈原', 'D) 朱达伦 (Donald Chu)']",D) 朱达伦 (Donald Chu)
+China,HBQ,dragon boat racing,20,端午节标志着屈原一生中的哪件重要事件？,"['A) 他的流放', 'B) 他的诗歌首秀', 'C) 他的去世', 'D) 他的晋升']",C) 他的去世
+China,HBQ,dragon boat racing,21,什么事件导致村民们到河边投粽子和划船以纪念屈原？,"['A) 自然灾害', 'B) 他的失踪', 'C) 他的溺水', 'D) 战争']",C) 他的溺水
+China,HBQ,dragon boat racing,22,这个节日是在农历几月的第五天举行的？,A) 第四，B) 第五，C) 第六，D) 第七,B）第五
+China,HBQ,dragon boat racing,23,在中国古代，端午节又被称为“双五”，原因是：,"['A) 双重节日地位', 'B) 为期两天的庆祝活动', 'C) 五月初五的日期', 'D) 双河祭祀仪式']",C) 五月初五的日期
+China,HBQ,dragon boat racing,24,1994年，龙舟比赛作为表演项目首次被列入哪项国际体育赛事？,"['A) 奥运会', 'B) 亚运会', 'C) 东南亚运动会', 'D) 世界锦标赛']",B) 亚运会
+China,HBQ,dragon boat racing,25,传统龙舟的主色调通常是什么？,A) 红色，B) 蓝色，C) 绿色，D) 金色,A) 红色
+China,HBQ,dragon boat racing,26,香港哪条河流举办一年一度的龙舟比赛？,"['A) 珠江', 'B) 城门河', 'C) 长江', 'D) 漓江']",B) 城门河
+China,HBQ,dragon boat racing,27,端午节是中国从哪一年开始成为法定公共假日的？,"['A) 1989年', 'B) 2001年', 'C) 2008年', 'D) 2015年']",C) 2008年
+China,HBQ,dragon boat racing,28,以下哪种食材并非粽子的传统配料？,A) 米饭，B) 竹叶，C) 肉，D) 面条,D) 面条
+China,HBQ,dragon boat racing,29,2009年，联合国教科文组织将端午节列为什么类型的非物质文化遗产？,"['A) 文化遗产', 'B) 非物质文化遗产', 'C) 宗教仪式', 'D) 节日仪式']",B) 非物质文化遗产
+China,HBQ,dragon boat racing,30,龙舟比赛中使用的桨传统上是用什么材料制成的？,A) 金属，B) 竹子，C) 木头，D) 塑料,C) 木材
+China,HBQ,dragon boat racing,31,在早期的龙舟比赛中，村民们为什么要奋力划船并敲鼓呢？,"['A) 吓唬敌人', 'B) 驱赶水中的鱼和邪灵，保护屈原的身体', 'C) 荣耀皇帝', 'D) 展示划船技巧']",B) 驱赶水中的鱼和邪灵，保护屈原的身体
+China,HBQ,dragon boat racing,32,屈原的故事最早记载于哪个朝代的历史文献中？,"['A) 周', 'B) 唐', 'C) 汉', 'D) 清']",C) 汉
+China,HBQ,dragon boat racing,33,人们普遍认为龙舟竞渡起源于哪个时期？,A) 公元前100年，B) 公元前221年，C) 公元前278年，D) 公元前500年,C) 公元前278年
+China,HBQ,dragon boat racing,34,为什么龙舟桨传统上都要涂上颜色？,"['A) 吸引鱼群', 'B) 象征团结', 'C) 召唤龙神', 'D) 吓走鬼魂']",C) 召唤龙神
+China,HBQ,dragon boat racing,35,是什么事件促使村民们开始了端午节划龙舟的传统？,"['A) 赢得一场战役', 'B) 救皇帝', 'C) 失去屈原', 'D) 收割稻米']",C) 失去屈原
+China,HBQ,dragon boat racing,36,以下哪种材料并非传统上用于建造龙舟的结构材料？,"['A) 竹子', 'B) 木头', 'C) 钢', 'D) 塑料']",D) 塑料
+China,HBQ,dragon boat racing,37,no correction needed,no correction needed,no answer needed
+China,HBQ,dragon boat racing,38,中国哪个城市举办历史最悠久的龙舟比赛？,"['A) 广州', 'B) 荆州', 'C) 香港', 'D) 苏州']",B) 荆州
+China,HBQ,dragon boat racing,39,端午节也是一个弘扬爱国主义精神的时刻？,"['爱国主义', '创造力', '创新', '物质主义']",爱国主义
+China,HBQ,dragon boat racing,40,哪条河与龙舟竞渡的起源有着著名的联系？,"['A) 长江', 'B) 漓江', 'C) 汨罗江', 'D) 黄河']",C) 汨罗江
+China,HBQ,dragon boat racing,41,端午节已有两千多年的历史，起源于中国哪个朝代？,"['A) 周', 'B) 汉', 'C) 秦', 'D) 唐']",A) 周
+China,HBQ,dragon boat racing,42,与龙舟竞渡相关的屈原传说象征着什么？,A) 反叛，B) 爱国主义，C) 财富，D) 浪漫,B）爱国主义
+China,HBQ,dragon boat racing,43,根据古代信仰，人们认为龙舟中蕴含着哪种灵魂或精神？,"['A) 水之精灵', 'B) 火之精灵', 'C) 龙之精灵', 'D) 土之精灵']",C) 龙之精灵
+China,HBQ,dragon boat racing,44,古代人们认为龙舟赛可以抵御什么？,A) 洪水，B) 邪灵，C) 瘟疫，D) 作物歉收,B）邪灵
+China,HBQ,dragon boat racing,45,在龙舟上，人们会进行哪种传统仪式来‘唤醒’龙？,"['A) 击鼓', 'B) 画眼睛', 'C) 吟唱', 'D) 供奉食物']",B) 画眼睛
+China,HBQ,dragon boat racing,46,端午节在中国古代历史上主要是为了纪念谁？,"['A) 屈原', 'B) 皇帝', 'C) 将军', 'D) 商人']",A) 屈原
+China,HBQ,dragon boat racing,47,哪个国家是亚洲以外最早开展龙舟运动的国家之一？,"['A) 澳大利亚', 'B) 美国', 'C) 加拿大', 'D) 英国']",B) 美国
+China,HBQ,dragon boat racing,48,船上龙头图案的主色调是什么？,"['A) 红色', 'B) 金色', 'C) 绿色', 'D) 蓝色']",B) 金色
+China,HBQ,dragon boat racing,49,哪个节日与龙舟比赛关系最为密切？,A) 中秋节，B) 春节，C) 端午节，D) 元宵节,C) 端午节
+China,HBQ,dragon boat racing,50,龙舟赛的象征意义是什么？,"['A) 庆祝丰收', 'B) 祭祀祖先', 'C) 纪念屈原', 'D) 庆祝夏至']",C
+China,HBQ,dragon boat racing,51,船上的龙尾在龙舟比赛中象征着什么？,"['A) 速度', 'B) 耐力', 'C) 力量', 'D) 团结']",D) 团结
+China,HBQ,dragon boat racing,52,龙舟桨手在传统比赛中通常穿什么样的服装？,"['A) 制服', 'B) T恤衫', 'C) 龙主题服装', 'D) 传统中国长袍']",C) 龙主题服装
+China,HBQ,dragon boat racing,53,龙舟龙头在传统上有什么象征意义？,"['A) 标记领地', 'B) 象征好运', 'C) 吸引注意力', 'D) 驱邪避凶']",D) 驱邪避凶
+China,HBQ,dragon boat racing,54,端午节期间的龙舟竞渡活动是为了纪念什么？,A) 夏至，B) 屈原逝世纪念日，C) 收获季节，D) 中国的建立,B）屈原逝世周年纪念日
+China,HBQ,dragon boat racing,55,传统上，龙舟比赛前会在船上放置什么东西以求好运和驱邪？,"['A) 大米', 'B) 鲜花', 'C) 红包', 'D) 香']",D) 香
+China,HBQ,dragon boat racing,56,龙舟竞渡起源于中国的哪个地区？,"['A) 中国北方', 'B) 华南地区', 'C) 中国中部', 'D) 中国东部']",B) 华南地区
+China,HBQ,dragon boat racing,57,龙舟上的装饰通常象征什么？,"['A) 好运', 'B) 历史意义', 'C) 团队精神', 'D) 政治权力']",B) 历史意义
+China,HBQ,dragon boat racing,58,龙舟上传统的划手排列方式是怎样的？,"['A) 划手围成一圈排列', 'B) 划手排成两列并排', 'C) 划手排成一列前后', 'D) 划手分散排列']",B) 划手排成两列并排
+China,HBQ,dragon boat racing,59,以下哪项是龙舟比赛后常见的传统习俗？,"['A) 桨手祈祷', 'B) 划桨者饮用仪式茶', 'C) 各队表演胜利之舞', 'D) 各队互赠礼物']",B) 划桨者饮用仪式茶
+China,HBQ,dragon boat racing,60,龙舟船头通常会放置什么来祈求好运？,A) 一块玉，B) 一个龙头，C) 一面旗帜，D) 一枚硬币,B) 龙头
+China,HBQ,dragon boat racing,61,龙舟竞渡起源于哪里？,A) 日本，B) 中国，C) 印度，D) 泰国,B) 中国
+China,HBQ,dragon boat racing,62,以下哪一项是端午节期间的传统食物？,A) 饺子，B) 年糕，C) 粽子，D) 面条,C) 粽子
+China,HBQ,dragon boat racing,63,龙舟比赛在中国有多久的历史了？,A) 超过1000年，B) 超过2000年，C) 超过3000年，D) 超过500年,B) 超过2000年
+China,HBQ,dragon boat racing,64,端午节期间人们传统上吃的“粽子”是什么？,A) 粽子，B) 鱼，C) 面条，D) 薄饼,A) 粽子
+China,HBQ,dragon boat racing,65,龙舟赛与哪位历史人物有关？,A) 孔子，B) 孙子，C) 屈原，D) 老子,C) 屈原
+China,HBQ,dragon boat racing,66,龙舟赛传统上与哪个节日相关？,A) 元宵节 B) 端午节 C) 中秋节 D) 春节,B) 端午节
+China,HBQ,dragon boat racing,67,端午节是为了纪念哪位历史人物？,A) 孔子 B) 屈原 C) 孙子 D) 老子,B) 屈原
+China,HBQ,dragon boat racing,68,龙舟竞渡最早的文字记载出现在哪个朝代？,A) 唐朝 B) 汉朝 C) 明朝 D) 清朝,B）汉朝
+China,HBQ,dragon boat racing,69,龙舟比赛用船都装饰着什么？,A) 动物头像 B) 龙头 C) 凤凰尾羽 D) 虎纹,B) 龙头
+China,HBQ,dragon boat racing,70,历史上，龙舟竞渡的目的是什么？,"['A) 宗教仪式', 'B) 军事训练', 'C) 社区凝聚力', 'D) 贸易']",A) 宗教仪式
+China,HBQ,dragon boat racing,71,传统龙舟的标准长度大约是多少？,A) 12米 B) 18米 C) 24米 D) 30米,C) 24米
+China,HBQ,dragon boat racing,72,龙舟队通常由多少名桨手组成？,"['A) 10', 'B) 20', 'C) 30', 'D) 40']",B) 20
+China,HBQ,dragon boat racing,73,中国哪个省份以龙舟竞渡传统而闻名？,"['A) 广东', 'B) 湖南', 'C) 湖北', 'D) 江苏']",A) 广东
+China,HBQ,dragon boat racing,74,龙舟比赛中的鼓手起什么作用？,"['A) 保持划桨节奏', 'B) 掌舵', 'C) 为队伍加油', 'D) 计时']",A) 保持划桨节奏
+China,HBQ,dragon boat racing,75,龙舟赛最初是为了纪念谁？,"['A) 地方统治者', 'B) 河神', 'C) 诗人', 'D) 农民']",C) 诗人
+China,HBQ,dragon boat racing,76,端午节是农历哪个月？,A) 第三 B) 第五 C) 第七 D) 第九,B）第五
+China,HBQ,dragon boat racing,77,龙舟比赛用什么工具推进？,"['A) 桨', 'B) 船', 'C) 撑杆', 'D) 手']",A) 桨
+China,HBQ,dragon boat racing,78,在中国文化中，龙舟竞渡被视为什么象征？,A) 勇气与团队合作 B) 财富 C) 艺术才能 D) 冥想,A) 勇气和团队合作
+China,HBQ,dragon boat racing,79,与龙舟竞渡相关的屈原，以什么职业闻名？,"['A) 诗人', 'B) 战士', 'C) 农民', 'D) 商人']",A) 诗人
+China,HBQ,dragon boat racing,80,龙舟竞渡起源于哪条河流？,"['A) 长江', 'B) 黄河', 'C) 湄公河', 'D) 珠江']",A) 长江
+China,HBQ,dragon boat racing,81,龙舟竞赛中，龙舟的龙头通常涂成什么颜色？,"['A) 红色', 'B) 蓝色', 'C) 绿色', 'D) 黄色']",A) 红色
+China,HBQ,dragon boat racing,82,从历史上看，龙舟竞渡是一种怎样的纪念仪式？,"['A) 纪念屈原', 'B) 庆祝丰收', 'C) 为战士祈祷', 'D) 促进贸易']",A) 纪念屈原
+China,HBQ,dragon boat racing,83,龙舟竞渡者必须以何种方式划桨？,A) 同步 B) 交替 C) 随机 D) 独奏,A) 同步
+China,HBQ,dragon boat racing,84,龙舟比赛中使用的传统鼓叫什么？,"['A) 塘沽', 'B) 大沽', 'C) 班鼓', 'D) 瑶古']",C) 班鼓
+China,HBQ,dragon boat racing,85,龙舟竞渡比赛最早于哪个世纪正式确立？,"['A) 第十二世纪', 'B) 第十五世纪', 'C) 第二十世纪', 'D) 第十八世纪']",C) 第二十世纪
+China,HBQ,dragon boat racing,86,龙舟赛中的龙图案象征着什么？,"['A) 力量与繁荣', 'B) 智慧', 'C) 和平', 'D) 生育力']",A) 力量与繁荣
+China,HBQ,dragon boat racing,87,受中国影响，哪个现代国家也广泛举办龙舟比赛？,"['A) 新加坡', 'B) 日本', 'C) 印度', 'D) 泰国']",D) 泰国
+China,HBQ,dragon boat racing,88,历史上，龙舟赛与哪种祭祀食物有关？,A) 饺子 B) 粽子 C) 面条 D) 年糕,B) 粽子
+China,HBQ,dragon boat racing,89,龙舟比赛中，船尾通常呈哪种形状？,A) 鱼 B) 龙 C) 虎 D) 凤凰,B) 龙
+China,HBQ,dragon boat racing,90,龙舟节通常包含以下哪些核心活动？,"['A) 划龙舟和吃粽子', 'B) 摔跤', 'C) 射箭', 'D) 赛马']",A) 划龙舟和吃粽子
+China,HBQ,dragon boat racing,91,有记载的第一次端午节习俗出现在哪个朝代？,"['A) 汉朝', 'B) 唐朝', 'C) 宋朝', 'D) 明朝']",A) 汉朝
+China,HBQ,dragon boat racing,92,龙舟竞渡选手传统上穿什么？,A) 队服 B) 盔甲 C) 长袍 D) 帽子,A) 队服
+China,HBQ,dragon boat racing,93,龙舟竞渡是为了纪念屈原的哪项壮举？,"['A) 投河自尽', 'B) 诗歌朗诵', 'C) 政治演讲', 'D) 军事胜利']",A) 投河自尽
+China,HBQ,dragon boat racing,94,现代龙舟比赛用船主要由什么材料制成？,"['A) 木材', 'B) 金属', 'C) 竹子', 'D) 玻璃纤维']",D) 玻璃纤维
+China,HBQ,dragon boat racing,95,船上的鼓手在指挥水手划桨时通常面向哪个方向？,"['A) 正面', 'B) 背面', 'C) 侧面', 'D) 上方']",A) 正面
+China,HBQ,dragon boat racing,96,龙舟竞渡体现了哪种社会价值观？,A) 团队合作 B) 个人主义 C) 冥想 D) 商业,A) 团队合作
+China,HBQ,dragon boat racing,97,龙舟赛旨在提高人们对什么的认识？,A) 文化遗产 B) 经济贸易 C) 军事力量 D) 教育,A) 文化遗产
+China,HBQ,dragon boat racing,98,传统的龙舟比赛是在哪些水域进行的？,A) 河流和湖泊 B) 海洋 C) 仅限池塘 D) 仅限水库,A) 河流和湖泊
+China,HBQ,dragon boat racing,99,鼓手在龙舟比赛中还扮演什么角色？,"['A) 动力和节奏', 'B) 控制', 'C) 食物计数', 'D) 装饰']",A) 动力和节奏
+China,HBQ,dragon boat racing,100,龙舟竞渡是一项竞技体育项目，属于哪项国际赛事的正式比赛项目？,"['A) 亚运会', 'B) 奥运会', 'C) 世界龙舟锦标赛', 'D) 英联邦运动会']",C) 世界龙舟锦标赛
+China,HBQ,dragon boat racing,101,龙舟竞渡象征着哪个传统节日？,"['A) 端午节', 'B) 春节', 'C) 中秋节', 'D) 清明节']",A) 端午节
+China,HBQ,dragon boat racing,102,龙舟比赛用船的长度各不相同，通常最长可达？,"['A) 20米', 'B) 10米', 'C) 30米', 'D) 50米']",A) 20米
+China,HBQ,dragon boat racing,103,龙舟竞渡需要以下哪些技能？,A) 协调性和耐力 B) 仅力量 C) 射箭 D) 骑马,A) 协调性和耐力
+China,HBQ,dragon boat racing,104,中国哪个城市以龙舟比赛闻名？,"['A) 武汉', 'B) 北京', 'C) 上海', 'D) 广州']",D) 广州
+China,HBQ,dragon boat racing,105,历史上，龙舟比赛是由谁赞助的？,A) 地方官员和皇帝 B) 仅限商人 C) 仅限农民 D) 仅限士兵,A) 地方官员和皇帝
+China,HBQ,dragon boat racing,106,传统的龙舟比赛用船每侧有多少名桨手？,"['A) 10', 'B) 5', 'C) 3', 'D) 20']",A) 10
+China,HBQ,dragon boat racing,107,龙舟竞渡被视为哪种国家价值观的象征？,"['A) 团结', 'B) 财富', 'C) 权力', 'D) 冥想']",A) 团结
+China,HBQ,dragon boat racing,108,端午节包含哪些传统活动？,"['A) 吃粽子', 'B) 只放烟花', 'C) 只放灯笼', 'D) 只听音乐']",A) 吃粽子
+China,HBQ,dragon boat racing,109,龙舟比赛用船有时会装饰什么？,A) 旗帜和横幅 B) 仅灯笼 C) 仅鲜花 D) 仅石头,A) 旗帜和横幅
+China,HBQ,dragon boat racing,110,龙舟竞渡有助于保护哪些文化习俗？,A) 民间传说和传统 B) 军事战略 C) 贸易 D) 商业,A) 民间传说和传统
+China,HBQ,dragon boat racing,111,人们认为龙舟竞渡最初是为了驱赶水中的邪灵，以保护屈原的身体不受伤害？,"['A) 邪灵', 'B) 干旱', 'C) 风暴', 'D) 疾病']",A) 邪灵
+China,HBQ,dragon boat racing,112,第一届国际龙舟锦标赛是在哪一年举行的？,"['A) 1976年', 'B) 1950年', 'C) 1985年', 'D) 1992年']",C) 1985年
+China,HBQ,dragon boat racing,113,龙舟赛是在农历哪一天举行的？,"['A) 五月五日', 'B) 五月一日', 'C) 七月十五日', 'D) 十月一日']",A) 五月五日
+China,HBQ,dragon boat racing,114,龙舟赛弘扬的是哪种精神？,"['A) 团队合作与毅力', 'B) 个人荣耀', 'C) 冥想', 'D) 放松']",A) 团队合作与毅力
+China,HBQ,dragon boat racing,115,龙舟竞渡主要起源于中国哪个地区？,"['A) 华南地区', 'B) 华北地区', 'C) 东南沿海', 'D) 西北地区']",A) 华南地区
+China,HBQ,dragon boat racing,116,龙舟竞渡与哪种农业活动有关？,A) 水资源管理 B) 水稻种植 C) 茶叶种植 D) 蚕桑养殖,B）水稻种植
+China,HBQ,dragon boat racing,117,龙舟比赛用船总共可以容纳多少名参赛者？,"['A) 18-22', 'B) 10-20', 'C) 40-60', 'D) 70-80']",A) 18-22
+China,HBQ,dragon boat racing,118,龙舟赛的鼓声是用来提示什么的？,"['A) 划桨计时', 'B) 船向', 'C) 仅庆祝', 'D) 仅开始比赛']",A) 划桨计时
+China,HBQ,dragon boat racing,119,龙舟竞渡运动受到哪个国际组织的认可？,A) 国际龙舟联合会 B) 国际足联 C) 国际奥委会 D) 国际泳联,A) 国际龙舟联合会
+China,HBQ,dragon boat racing,120,no correction needed,no correction needed,no answer needed
+China,HBQ,dragon boat racing,121,端午节包含哪些仪式活动？,"['A) 向河神献祭食物', 'B) 剑术比赛', 'C) 射箭', 'D) 骑马']",A) 向河神献祭食物
+China,HBQ,dragon boat racing,122,龙舟除了划桨手之外，船上还有哪个座位？,A) 舵手兼鼓手 B) 弓箭手 C) 诗人 D) 歌手,A) 舵手兼鼓手
+China,HBQ,dragon boat racing,123,龙舟竞渡比赛是哪个传统文化节日的重要组成部分？,"['A) 中国民歌', 'B) 端午节', 'C) 中秋节', 'D) 春节']",B) 端午节
+China,HBQ,dragon boat racing,124,龙舟竞渡运动能促进参与者的哪些方面发展？,A) 团队凝聚力 B) 个人表现 C) 冥想 D) 交易技能,A) 团队凝聚力
+China,HBQ,dragon boat racing,125,龙舟比赛采用哪种划桨方式？,A) 向前同步划桨 B) 仅向后划桨 C) 圆形划桨 D) 随机划桨,A) 向前同步划桨
+China,HBQ,dragon boat racing,126,传统上，龙舟比赛用船具有哪种结构特征？,"['A) 细长的船体', 'B) 宽而扁平的船体', 'C) 圆形船体', 'D) 短船体']",A) 细长的船体
+China,HBQ,dragon boat racing,127,龙舟竞渡象征着对什么的纪念？,A) 屈原的牺牲 B) 皇帝的诞生 C) 防洪 D) 军事胜利,A）屈原的牺牲
+China,HBQ,dragon boat racing,128,龙舟竞渡目前在哪些大洲流行？,A) 亚洲、欧洲、北美洲 B) 仅非洲 C) 仅澳大利亚 D) 仅南美洲,A) 亚洲、欧洲、北美洲

@@ -1,0 +1,139 @@
+country,group,sport,row_idx,question,option,answer
+China,RBQ,dragon boat racing,0,一艘龙舟通常有多少桨手划桨？,"['A) 8', 'B) 10', 'C) 12', 'D) 20']",D) 20
+China,RBQ,dragon boat racing,1,龙舟比赛中的鼓声象征着什么？,"['A) 计时', 'B) 发出开始信号', 'C) 震慑对手', 'D) 为球队加油']",D) 为球队加油
+China,RBQ,dragon boat racing,2,龙舟通常用什么材料制成？,A) 木材，B) 金属，C) 玻璃纤维，D) 塑料,A) 木材
+China,RBQ,dragon boat racing,3,一支完整的龙舟队通常由多少名 paddler（桨手）组成？,"['A) 10', 'B) 20', 'C) 30', 'D) 40']",B) 20
+China,RBQ,dragon boat racing,4,龙舟桨的桨叶长什么样？,"['A) 直的', 'B) 弯曲的', 'C) 扁平的', 'D) 圆形的']",C) 扁平的
+China,RBQ,dragon boat racing,5,比赛时，谁坐在龙舟的最前面？,"['A) 划桨手', 'B) 教练', 'C) 鼓手', 'D) 舵手']",C) 鼓手
+China,RBQ,dragon boat racing,6,龙舟比赛中最常见的比赛形式是什么？,"['A) 短跑', 'B) 马拉松', 'C) 接力赛', 'D) 团体赛']",D) 团体赛
+China,RBQ,dragon boat racing,7,龙舟比赛的典型赛程有多长？,A) 100米，B) 200米，C) 500米，D) 1000米,C) 500米
+China,RBQ,dragon boat racing,8,以下哪项是龙舟竞渡技术中的关键要素？,"['A) 同步性', 'B) 力量', 'C) 耐力', 'D) 速度']",A) 同步性
+China,RBQ,dragon boat racing,9,龙舟比赛开始时，各队通常如何发出信号？,A) 哨子，B) 鼓，C) 号角，D) 旗帜,B) 鼓
+China,RBQ,dragon boat racing,10,龙舟比赛中使用的小船叫什么？,A) 小艇，B) 舢板，C) 独木舟，D) 龙舟,D) 龙舟
+China,RBQ,dragon boat racing,11,龙舟舵手负责什么？,"['A) 划桨', 'B) 击鼓', 'C) 掌舵', 'D) 指导']",C) 掌舵
+China,RBQ,dragon boat racing,12,以下哪项是龙舟比赛成功的关键因素？,A) 速度，B) 耐力，C) 团队合作，D) 力量,C) 团队合作
+China,RBQ,dragon boat racing,13,龙舟比赛的结果通常是如何判定的？,A) 按时间，B) 按速度，C) 按技巧，D) 按耐力,A) 按时间
+China,RBQ,dragon boat racing,14,龙舟比赛最常在哪片水域举行？,"['A) 河流', 'B) 湖泊', 'C) 海洋', 'D) 水池']",A) 河流
+China,RBQ,dragon boat racing,15,龙舟比赛最初的目的是什么？,A) 庆祝丰收，B) 祭祀祖先，C) 寻找屈原的遗体，D) 争夺荣耀,C）寻找屈原的尸体
+China,RBQ,dragon boat racing,16,龙舟比赛中鼓手扮演什么角色？,A) 掌舵，B) 保持划桨手的节奏，C) 发出出发信号，D) 为船员加油,B) 保持划桨者的节奏
+China,RBQ,dragon boat racing,17,龙舟比赛中最常见的比赛类型是什么？,"['A) 短跑', 'B) 马拉松', 'C) 接力赛', 'D) 越野赛']",A) 短跑
+China,RBQ,dragon boat racing,18,一支标准龙舟队（22人）中有多少名桨手？,"['A) 10', 'B) 18', 'C) 20', 'D) 22']",C) 20
+China,RBQ,dragon boat racing,19,龙舟比赛的主要目标是什么？,"['A) 首先到达终点线', 'B) 尊重文化习俗', 'C) 展示力量', 'D) 娱乐观众']",A) 首先到达终点线
+China,RBQ,dragon boat racing,20,在龙舟比赛中，龙象征着什么？,"['A) 力量和权力', 'B) 好运', 'C) 速度', 'D) 团结']",A) 力量和权力
+China,RBQ,dragon boat racing,21,现代龙舟通常由什么材料制成？,"['A) 木材', 'B) 玻璃纤维', 'C) 塑料', 'D) 碳纤维']",B) 玻璃纤维
+China,RBQ,dragon boat racing,22,龙舟比赛中舵手的角色是什么？,A) 划桨，B) 发出出发信号，C) 保持节奏，D) 控制船的方向,D) 控制船的航向
+China,RBQ,dragon boat racing,23,一支完整的龙舟队（包括划手、鼓手和舵手）共有多少人？,"['A) 16', 'B) 20', 'C) 22', 'D) 24']",C) 22
+China,RBQ,dragon boat racing,24,龙舟队桨手人数会影响什么？,A) 船速，B) 船体稳定性，C) 同步性，D) 以上所有选项,D) 以上所有选项
+China,RBQ,dragon boat racing,25,龙舟比赛中使用的划桨技巧是什么？,"['A) 交替划桨', 'B) 双桨', 'C) 单桨', 'D) 连续划桨']",A) 交替划桨
+China,RBQ,dragon boat racing,26,龙舟比赛队伍之间的竞争象征着什么？,"['A) 冲突', 'B) 兄弟情谊', 'C) 生存', 'D) 庆祝']",B) 兄弟情谊
+China,RBQ,dragon boat racing,27,以下哪一项不是龙舟队的标准组成部分？,A) 划桨手，B) 鼓手，C) 舵手，D) 教练,D) 教练
+China,RBQ,dragon boat racing,28,龙舟队在比赛开始前必须做好哪些准备？,A) 念诵祷文，B) 进行仪式，C) 热身，D) 放火烧船,C）热身
+China,RBQ,dragon boat racing,29,龙舟比赛的开始通常包括哪些环节？,"['A) 游行', 'B) 船只祈福仪式', 'C) 鸣炮', 'D) 吹哨']",D) 吹哨
+China,RBQ,dragon boat racing,30,在龙舟比赛中，“划桨”一词指的是什么？,A) 划桨动作，B) 比赛中的船只数量，C) 比赛类型，D) 比赛距离,A) 划桨动作
+China,RBQ,dragon boat racing,31,以下哪项是龙舟竞渡的一项重要国际赛事？,A) 龙舟世界杯，B) 世界龙舟锦标赛，C) 国际划桨锦标赛，D) 亚洲龙舟运动会,B) 世界龙舟锦标赛
+China,RBQ,dragon boat racing,32,龙舟比赛通常是如何开始的？,"['A) 伴着哨声', 'B) 伴着旗帜', 'C) 伴着号角声', 'D) 伴着鼓声']",D) 伴着鼓声
+China,RBQ,dragon boat racing,33,如果一支队伍在龙舟比赛中抢跑会发生什么？,A) 该队获胜，B) 比赛重新开始，C) 该队被取消资格，D) 该队受到时间处罚。,C) 该队被取消参赛资格
+China,RBQ,dragon boat racing,34,一场龙舟比赛中通常有多少人掌舵？,A) 一，B) 二，C) 三，D) 四,A) 一
+China,RBQ,dragon boat racing,35,龙舟竞渡中，桨手最重要的素质是什么？,"['A) 力量', 'B) 耐力', 'C) 同步性', 'D) 速度']",C) 同步性
+China,RBQ,dragon boat racing,36,龙舟通常是如何前进的？,A) 通过桨手的划桨，B) 通过风力，C) 通过发动机，D) 通过鼓手的信号,A) 通过划桨者的划水动作
+China,RBQ,dragon boat racing,37,龙舟中“鼓手”的角色是什么？,"['A) 控制船的方向', 'B) 确保同步', 'C) 与桨手保持节奏', 'D) 与其他队伍比赛']",B) 确保同步
+China,RBQ,dragon boat racing,38,船上龙头图案的主色调是什么？,"['A) 红色', 'B) 金色', 'C) 绿色', 'D) 蓝色']",B) 金色
+China,RBQ,dragon boat racing,39,一支标准竞技龙舟队通常有多少名桨手？,"['A) 20', 'B) 10', 'C) 50', 'D) 5']",A) 20
+China,RBQ,dragon boat racing,40,龙舟比赛中如何控制船舵？,A) 使用舵或扫桨 B) 仅由划桨者操控 C) 由鼓手操控 D) 自动,A) 使用舵或扫桨
+China,RBQ,dragon boat racing,41,龙舟比赛通常赛程有多远？,A) 200-500米 B) 50米 C) 1000米 D) 5公里,A) 200–500 米
+China,RBQ,dragon boat racing,42,一艘正规的龙舟至少需要多少名桨手？,"['A) 10', 'B) 5', 'C) 20', 'D) 30']",C) 20
+China,RBQ,dragon boat racing,43,龙舟比赛中的“划桨频率”是什么？,A) 每分钟划桨次数 B) 心率 C) 船速 D) 转弯次数,A) 每分钟划桨次数
+China,RBQ,dragon boat racing,44,龙舟比赛中通常由谁发令？,"['A) 发令员', 'B) 鼓手', 'C) 队长', 'D) 第一桨手']",A) 发令员
+China,RBQ,dragon boat racing,45,如果赛艇越过赛道分道线会发生什么？,"['A) 处罚', 'B) 无影响', 'C) 重新开始', 'D) 取消资格']",D) 取消资格
+China,RBQ,dragon boat racing,46,船尾的那个人叫什么名字？,"['A) 舵手', 'B) 鼓手', 'C) 船首桨手', 'D) 船长']",A) 舵手
+China,RBQ,dragon boat racing,47,鼓手向划桨手发出信号：,"['A) 同步划桨', 'B) 停止划桨', 'C) 控制方向', 'D) 跳跃']",A) 同步划桨
+China,RBQ,dragon boat racing,48,龙舟竞渡起源于哪个国家？,A) 中国 B) 日本 C) 韩国 D) 越南,A) 中国
+China,RBQ,dragon boat racing,49,龙舟船头装饰有：,A) 龙头 B) 凤凰 C) 狮子 D) 鱼,A) 龙头
+China,RBQ,dragon boat racing,50,龙舟比赛传统上在以下时期举行：,A) 端午节 B) 农历新年 C) 中秋节 D) 冬至,A) 端午节
+China,RBQ,dragon boat racing,51,在某些队伍中，队长或“指挥者”负责：,A) 战略与协调 B) 击鼓 C) 掌舵 D) 烹饪,A) 战略与协调
+China,RBQ,dragon boat racing,52,龙舟比赛抢跑会导致：,A) 警告或重新开始 B) 立即取消比赛资格 C) 罚时 D) 加罚杆数,A) 警告或重启
+China,RBQ,dragon boat racing,53,通常情况下，划船时船桨的划动方式是？,"['A) 左右交替', 'B) 仅左桨', 'C) 仅右桨', 'D) 取决于风向']",A) 左右交替
+China,RBQ,dragon boat racing,54,标准龙舟的最大船员人数是多少？,A) 20–22 B) 10 C) 50 D) 5,A) 20–22
+China,RBQ,dragon boat racing,55,龙舟比赛中的“动力划桨”是什么？,"['A) 强劲有力的划桨动作', 'B) 轻柔的划桨动作', 'C) 鼓点式划桨动作', 'D) 转向式划桨动作']",A) 强劲有力的划桨动作
+China,RBQ,dragon boat racing,56,划桨者必须保持坐姿，因为：,A) 稳定性和安全性 B) 传统 C) 鼓手规则 D) 速度优势,A) 稳定性和安全性
+China,RBQ,dragon boat racing,57,什么是“冲刺起跑”？,"['A) 起步全力', 'B) 慢速起步', 'C) 只用一侧划桨', 'D) 鼓手划桨']",A) 起步全力
+China,RBQ,dragon boat racing,58,龙舟比赛期间禁止哪些行为？,"['A) 探出船外', 'B) 划桨', 'C) 击鼓', 'D) 掌舵']",A) 探出船外
+China,RBQ,dragon boat racing,59,如何提高船速？,"['A) 更快、更同步的划水动作', 'B) 身体前倾', 'C) 抬起船身', 'D) 跳入水中']",A) 更快、更同步的划水动作
+China,RBQ,dragon boat racing,60,在龙舟比赛中，鼓手在龙舟完全越过终点线前做什么？,"['A) 停止击鼓', 'B) 继续击鼓', 'C) 转向', 'D) 跳跃']",B) 继续击鼓
+China,RBQ,dragon boat racing,61,龙舟桨手通常使用哪种类型的桨？,"['A) 单叶桨', 'B) 双叶桨', 'C) 桨', 'D) 勺子']",A) 单叶桨
+China,RBQ,dragon boat racing,62,正确的划桨技巧包括：,"['A) 全程伸展，保持稳定的划水动作', 'B) 短促有力的划水', 'C) 仅用手划水', 'D) 随意划水']",A) 全程伸展，保持稳定的划水动作
+China,RBQ,dragon boat racing,63,龙舟比赛中的‘入水点’是什么？,"['A) 桨入水瞬间', 'B) 船只碰撞', 'C) 桨抬起', 'D) 终点线']",A) 桨入水瞬间
+China,RBQ,dragon boat racing,64,龙舟技术中的“释放”是什么？,A) 将桨从水中取出 B) 船只停止 C) 跳出 D) 转向,A) 将桨从水中取出
+China,RBQ,dragon boat racing,65,谁负责协调赛艇队伍的节奏？,"['A) 鼓手', 'B) 船长', 'C) 舵手', 'D) 首席桨手']",A) 鼓手
+China,RBQ,dragon boat racing,66,划桨运动的安全规则要求：,"['A) 所有划桨者都必须穿救生衣', 'B) 必须佩戴头盔', 'C) 只穿鞋子', 'D) 必须佩戴手套']",A) 所有划桨者都必须穿救生衣
+China,RBQ,dragon boat racing,67,船首桨手的职责包括：,A) 跟随鼓手的节奏 B) 掌舵 C) 打鼓 D) 教练助理,A) 跟随鼓手的节奏
+China,RBQ,dragon boat racing,68,龙舟比赛可能包括：,A) 预赛和决赛 B) 只有一场比赛 C) 计时赛 D) 仅练习赛,A) 预赛和决赛
+China,RBQ,dragon boat racing,69,因以下原因可能被取消参赛资格：,A) 干扰其他船只 B) 划桨缓慢 C) 敲鼓 D) 穿着错误的颜色,A) 干扰其他船只
+China,RBQ,dragon boat racing,70,龙舟比赛中的‘十强’指的是什么？,"['A) 十支最强的参赛队伍', 'B) 桨手人数', 'C) 十秒休息时间', 'D) 十个船身长度']",A) 十支最强的参赛队伍
+China,RBQ,dragon boat racing,71,舵手的职责包括：,A) 保持船身直线行驶 B) 击鼓 C) 喊划桨声 D) 仅划桨,A) 保持船身直线行驶
+China,RBQ,dragon boat racing,72,划桨者在划船时如何交替使用桨？,"['A) 左右交替', 'B) 全部在左侧', 'C) 全部在右侧', 'D) 随机']",A) 左右交替
+China,RBQ,dragon boat racing,73,终点线通常会用什么标记？,"['A) 横幅或胶带', 'B) 绳索', 'C) 海岸线', 'D) 鼓手']",A) 横幅或胶带
+China,RBQ,dragon boat racing,74,当出现以下情况时，将处以“车道违规”处罚：,"['A) 艇驶离指定航道', 'B) 桨落水', 'C) 鼓手停止击鼓', 'D) 艇倾斜']",A) 艇驶离指定航道
+China,RBQ,dragon boat racing,75,鼓手的主要职责是：,"['A) 划桨时机', 'B) 转向', 'C) 划桨', 'D) 指导']",A) 划桨时机
+China,RBQ,dragon boat racing,76,龙舟比赛可以是：,"['A) 短距离或长距离', 'B) 仅短距离', 'C) 仅长距离', 'D) 单人划桨']",A) 短距离或长距离
+China,RBQ,dragon boat racing,77,发动机同步会影响：,"['船速', '稳定性', '效率', '以上所有']",以上所有
+China,RBQ,dragon boat racing,78,船尾的中文名称是：,"['A) 船尾', 'B) 船首', 'C) 船中部', 'D) 鼓手位置']",A) 船尾
+China,RBQ,dragon boat racing,79,龙舟可以由以下材料制成：,A) 木材 B) 玻璃纤维 C) 碳纤维 D) 以上全部,D) 以上所有选项
+China,RBQ,dragon boat racing,80,比赛的出场顺序是如何确定的？,"['A) 随机抽签或种子排序', 'B) 船长决定', 'C) 鼓手决定', 'D) 船体颜色']",A) 随机抽签或种子排序
+China,RBQ,dragon boat racing,81,桨手的划桨节奏受以下因素指导：,A) 鼓手 B) 舵手 C) 船长 D) 首席桨手,A）鼓手
+China,RBQ,dragon boat racing,82,桨叶长度主要由以下哪项因素决定？,"['A) 桨手身高和艇型', 'B) 传统', 'C) 比赛类型', 'D) 船只颜色']",A) 桨手身高和艇型
+China,RBQ,dragon boat racing,83,在传统赛艇比赛中，以下哪项是不允许的？,"['A) 站立划桨', 'B) 坐姿划桨', 'C) 桨同步', 'D) 鼓手呼喊']",A) 站立划桨
+China,RBQ,dragon boat racing,84,赛事官员负责执行以下规则：,"['A) 赛道、起点、终点、安全', 'B) 仅限划桨方式', 'C) 船只装饰', 'D) 鼓手位置']",A) 赛道、起点、终点、安全
+China,RBQ,dragon boat racing,85,龙舟比赛通常以以下方式开始：,"['A) 哨声或喇叭声', 'B) 划桨手信号', 'C) 鼓手开始', 'D) 船长喊叫']",A) 哨声或喇叭声
+China,RBQ,dragon boat racing,86,影响龙舟速度最大的因素是什么？,"['A) 桨同步性', 'B) 船重', 'C) 水温', 'D) 鼓手位置']",A) 桨同步性
+China,RBQ,dragon boat racing,87,如何解决比赛平局？,"['A) 照片判定、回放或加时赛', 'B) 抛硬币', 'C) 额外鼓点', 'D) 观众投票']",A) 照片判定、回放或加时赛
+China,RBQ,dragon boat racing,88,水上运动的安全设备包括：,"['A) 救生衣', 'B) 头盔', 'C) 护膝', 'D) 手套']",A) 救生衣
+China,RBQ,dragon boat racing,89,船只必须停放在：,"['A) 指定泊位', 'B) 任意水域', 'C) 外侧航道', 'D) 海岸线']",A) 指定泊位
+China,RBQ,dragon boat racing,90,鼓手使用什么工具来敲击鼓以控制节奏？,"['A) 鼓棒', 'B) 旗帜', 'C) 桨', 'D) 哨子']",A) 鼓棒
+China,RBQ,dragon boat racing,91,队长与以下人员协调：,"['A) 鼓手', 'B) 划桨手', 'C) 舵手', 'D) 以上全部']",D) 以上全部
+China,RBQ,dragon boat racing,92,龙舟桨手应该：,A) 坐姿正确 B) 划桨动作要同步 C) 跟随鼓手 D) 以上全部,D) 以上所有选项
+China,RBQ,dragon boat racing,93,比赛可能包含多少支队伍？,A) 多支队伍，视赛事而定 B) 仅两支队伍 C) 仅四支队伍 D) 一支队伍,A) 多支队伍，视赛事而定
+China,RBQ,dragon boat racing,94,鼓手发出的信号是：,"['A) 开始、节奏、结束', 'B) 舵控', 'C) 船体颜色', 'D) 团队重量']",A) 开始、节奏、结束
+China,RBQ,dragon boat racing,95,长距离比赛中轮换桨手有助于：,"['A) 减轻疲劳', 'B) 速度', 'C) 转向', 'D) 鼓点']",A) 减轻疲劳
+China,RBQ,dragon boat racing,96,违反球道规定可能导致：,"['A) 处罚或取消资格', 'B) 无影响', 'C) 额外杆数', 'D) 奖励']",A) 处罚或取消资格
+China,RBQ,dragon boat racing,97,龙舟比赛强调：,A) 团队协作 B) 力量 C) 耐力 D) 以上全部,D) 以上所有选项
+China,RBQ,dragon boat racing,98,桨叶应在以下角度入水：,"['A) 合适的角度', 'B) 仅垂直方向', 'C) 仅水平方向', 'D) 随机']",A) 合适的角度
+China,RBQ,dragon boat racing,99,划船操控可能受到以下因素影响：,"['A) 风向、水流、划桨频率', 'B) 船的颜色', 'C) 鼓手的鞋子', 'D) 团队加油']",A) 风向、水流、划桨频率
+China,RBQ,dragon boat racing,100,比赛通常采用以下方式计时：,A) 秒表或电子计时 B) 鼓手计数 C) 船长手表 D) 手动旗,A) 秒表或电子计时器
+China,RBQ,dragon boat racing,101,哪种划水方式效率最高？,"['A) 同步、完整的划水动作', 'B) 随机的划水动作', 'C) 短促的抽动式划水动作', 'D) 只有弓桨手划水']",A) 同步、完整的划水动作
+China,RBQ,dragon boat racing,102,划船时，船员的节奏与协调由以下哪位人员监控？,"['A) 官员', 'B) 鼓手', 'C) 舵手', 'D) 船长']",C) 舵手
+China,RBQ,dragon boat racing,103,龙舟比赛是以下活动的一部分：,"['A) 节庆活动和比赛', 'B) 仅限个人训练', 'C) 武术', 'D) 游泳比赛']",A) 节庆活动和比赛
+China,RBQ,dragon boat racing,104,龙舟比赛中，船头桨手的角色是什么？,"['A) 与鼓手一起设定节奏', 'B) 掌舵', 'C) 指导桨手', 'D) 保持船只平衡和辅助转向']",D) 保持船只平衡和辅助转向
+China,RBQ,dragon boat racing,105,舵手使用什么工具来控制船只的方向？,"['A) 扫桨', 'B) 桨', 'C) 舵', 'D) 绳索']",C) 舵
+China,RBQ,dragon boat racing,106,赛前热身的主要目的是什么？,"['A) 防止受伤', 'B) 提高体温', 'C) 增强团队默契', 'D) 准备比赛装备']",A) 防止受伤
+China,RBQ,dragon boat racing,107,正式比赛中如何发出起跑信号？,"['A) 哨声或喇叭声', 'B) 鼓声', 'C) 旗帜声', 'D) 船长喊叫']",A) 哨声或喇叭声
+China,RBQ,dragon boat racing,108,在龙舟比赛中，“追水”指的是：,"['A) 桨正确入水', 'B) 溅水', 'C) 转向', 'D) 桨随水流退出']",D) 桨随水流退出
+China,RBQ,dragon boat racing,109,什么是“释放”击球？,"['A) 在击球瞬间放松手腕以增加球速', 'B) 踢水', 'C) 控制方向', 'D) 跳跃']",A) 在击球瞬间放松手腕以增加球速
+China,RBQ,dragon boat racing,110,划桨者采用何种交替坐姿以保持划船平衡？,"['A) 左右交替', 'B) 全部向左', 'C) 全部向右', 'D) 随机']",A) 左右交替
+China,RBQ,dragon boat racing,111,如果在帆船比赛中一艘船与另一艘船相撞会发生什么？,"['A) 处罚或取消资格', 'B) 重新开始', 'C) 无影响', 'D) 奖励积分']",A) 处罚或取消资格
+China,RBQ,dragon boat racing,112,船员在海上作业时必须穿着：,"['A) 救生衣', 'B) 头盔', 'C) 手套', 'D) 鞋子']",A) 救生衣
+China,RBQ,dragon boat racing,113,赛艇比赛中的赛道分配由什么决定？,"['A) 随机抽签或种子选手', 'B) 队长选择', 'C) 鼓手', 'D) 桨手身高']",A) 随机抽签或种子选手
+China,RBQ,dragon boat racing,114,“十大划”指的是：,"['A) 十次强劲而同步的划桨动作', 'B) 十名桨手', 'C) 十分钟', 'D) 十艘船']",A) 十次强劲而同步的划桨动作
+China,RBQ,dragon boat racing,115,在龙舟比赛中，哪些行为属于违规行为？,"['A) 站立划桨', 'B) 坐姿划桨', 'C) 不跟随鼓手节奏', 'D) 未由专人掌舵']",A) 站立划桨
+China,RBQ,dragon boat racing,116,在龙舟比赛中，鼓手的节奏主要控制：,"['A) 划桨节奏', 'B) 转向角度', 'C) 船向', 'D) 航道选择']",A) 划桨节奏
+China,RBQ,dragon boat racing,117,龙舟比赛中的鼓手站的位置是：,"['A) 船尾', 'B) 船首', 'C) 船中部', 'D) 鼓手位置']",B) 船首
+China,RBQ,dragon boat racing,118,船通常由以下材料制成：,A) 木材、玻璃纤维、碳纤维 B) 石材 C) 仅金属 D) 布料,A) 木材、玻璃纤维、碳纤维
+China,RBQ,dragon boat racing,119,桨手如何协调划桨动作？,A) 跟随鼓手 B) 随机 C) 仅限船长 D) 中段划桨手,A) 跟随鼓手
+China,RBQ,dragon boat racing,120,正确的划桨技巧是什么？,"['A) 全程划水，动作连贯', 'B) 短促的抽动式划水', 'C) 仅提拉', 'D) 旋转桨']",A) 全程划水，动作连贯
+China,RBQ,dragon boat racing,121,田径比赛中抢跑之后会发生什么？,"['A) 警告或重新开始', 'B) 立即取消资格', 'C) 自由划桨', 'D) 额外划桨']",A) 警告或重新开始
+China,RBQ,dragon boat racing,122,如何决出胜负？,A) 第一个冲过终点线的人 B) 桨最多的人 C) 最重的船 D) 鼓手的叫喊,A) 第一个冲过终点线的人
+China,RBQ,dragon boat racing,123,违反高尔夫规则中的球道规定会导致：,"['A) 罚杆', 'B) 额外击球', 'C) 奖励积分', 'D) 无影响']",A) 罚杆
+China,RBQ,dragon boat racing,124,短程赛通常涵盖：,"['A) 50–200 米', 'B) 200–500 米', 'C) 1 公里', 'D) 2 公里']",A) 50–200 米
+China,RBQ,dragon boat racing,125,长距离比赛通常指以下哪种距离范围？,"['A) 2–5公里', 'B) 200米', 'C) 500米', 'D) 50米']",A) 2–5公里
+China,RBQ,dragon boat racing,126,在长距离赛艇比赛中，多名桨手共同划桨的主要目的是：,"['A) 减轻疲劳', 'B) 增加船重', 'C) 鼓手优势', 'D) 易于操控']",A) 减轻疲劳
+China,RBQ,dragon boat racing,127,谁来执行安全规则？,A) 官员 B) 队长 C) 鼓手 D) 观众,A) 官员
+China,RBQ,dragon boat racing,128,鼓手与以下人员沟通：,A) 所有桨手 B) 仅舵手 C) 仅船长 D) 观众,A) 所有划桨者
+China,RBQ,dragon boat racing,129,正确的划水角度可确保：,A) 最大推进力 B) 船体倾斜 C) 鼓手优势 D) 变道,A) 最大推进力
+China,RBQ,dragon boat racing,130,桨手的滑座设计主要用途是：,"['A) 增加划桨力量和效率', 'B) 仅提供舒适', 'C) 随机放置', 'D) 遵循传统']",A) 增加划桨力量和效率
+China,RBQ,dragon boat racing,131,船只的推进方式是：,"['扫桨', '仅用手', '桨', '绳索']",桨
+China,RBQ,dragon boat racing,132,鼓手发出信号时：,"['A) 开始、节奏、结束', 'B) 船体颜色', 'C) 航道', 'D) 桨手交接']",A) 开始、节奏、结束
+China,RBQ,dragon boat racing,133,在划船时，船员必须避免：,"['A) 身体探出船外', 'B) 坐姿划桨', 'C) 鼓手协调性', 'D) 划桨节奏']",A) 身体探出船外
+China,RBQ,dragon boat racing,134,赛事官员检查以下内容：,"['A) 赛道、起点、终点、安全', 'B) 仅限划桨', 'C) 船只装饰', 'D) 鼓点']",A) 赛道、起点、终点、安全
+China,RBQ,dragon boat racing,135,桨叶同步会影响：,A) 速度、效率、稳定性 B) 鼓手位置 C) 船体颜色 D) 桨高,A) 速度、效率、稳定性
+China,RBQ,dragon boat racing,136,救生衣是强制穿着的，因为：,"['A) 安全性', 'B) 传统性', 'C) 重量', 'D) 风格']",A) 安全性
+China,RBQ,dragon boat racing,137,船只的主要组成部分包括：,"['A) 浮标或旗帜', 'B) 绳索', 'C) 鼓手', 'D) 船长']",B) 绳索
