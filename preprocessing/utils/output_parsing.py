@@ -54,6 +54,6 @@ class TargetFormatter:
             cleaned = self.fallback_reasoning
 
         if self.use_think_tags:
-            return f"<think>\n{cleaned}\n</think>\n\\boxed{{{final_answer}}}."
+            return f"<think>\n{cleaned}\n</think>\n\\boxed{{{final_answer}}}"
 
-        return f"\n{cleaned}\n\n\\boxed{{{final_answer}}}."
+        return f"\n{cleaned}\n\n\\boxed{{{final_answer}}}"
