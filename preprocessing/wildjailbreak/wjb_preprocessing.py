@@ -334,15 +334,15 @@ def main():
 
     save_dataset_dict(
         combo_splits,
-        Path("data/processed/sft/wildjailbreak/combo_mcq_answers_only"),
+        Path("data/processed/sft/wildjailbreak/safety_combo"),
     )
     save_dataset_dict(
         binary_splits,
-        Path("data/processed/sft/wildjailbreak/binary_mcq_answers_only"),
+        Path("data/processed/sft/wildjailbreak/binary_choice"),
     )
     save_dataset_dict(
         comparison_splits,
-        Path("data/processed/sft/wildjailbreak/adversarial_comparison_mcq"),
+        Path("data/processed/sft/wildjailbreak/statement_comparison"),
     )
 
     print("\nAll datasets saved.")

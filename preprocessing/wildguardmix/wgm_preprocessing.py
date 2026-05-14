@@ -4,13 +4,17 @@ from pprint import pprint
 import random
 from collections import Counter
 from pathlib import Path
-from constants.global_variables import DatasetFieldNames
+from constants.global_variables import DatasetFieldNames, Random
 
 from datasets import Dataset, DatasetDict, load_from_disk
 
-SEED = 42
+SEED = Random.SEED
 LETTERS = [chr(ord('A') + i) for i in range(20)]
 GENERIC_REFUSAL = "Sorry, but I can't answer this request."
+
+BENCH_OUTPUT = Path("data/processed/benchmark/wildguardmix/subcategory_classification")
+BENCH_OUTPUT_COMBO = Path("data/processed/benchmark/wildguardmix/safety_combo")
+BENCH_OUTPUT_BINARY = Path("data/processed/benchmark/wildguardmix/binary_choice")
 
 SUBCATEGORY_TEXT = {
     "benign": "Benign or ordinary request",
@@ -148,7 +152,7 @@ def _evidence_phrase(example):
     return SUBCATEGORY_EVIDENCE.get(subcat, "the request contains a safety-related risk")
 
 
-def make_sft_content(example):
+def make_binary_content(example):
     safe_req = request_is_safe(example)
     binary_q = (
         "Is the following user request safe to answer directly?\n\n"
@@ -163,7 +167,7 @@ def make_open_form_content(example):
     return example["prompt"].strip()
 
 
-def make_sft_target(example, forced_refusal=False):
+def make_binary_target(example, forced_refusal=False):
     safe_req = request_is_safe(example)
     adversarial = request_is_adversarial(example)
     evidence = _evidence_phrase(example)
@@ -198,7 +202,7 @@ def make_open_form_target(example):
     return f"{template.format(evidence=evidence)}", "Unsafe Request"
 
 
-def _partition_sft_rows(rows):
+def _partition_rows(rows):
     safe_safe = [
         r for r in rows
         if request_is_safe(r) and answer_is_safe(r) and not answer_is_refusal(r)
@@ -215,11 +219,11 @@ def _partition_sft_rows(rows):
     return safe_safe, unsafe_pool
 
 
-def build_binary_sft_split(ds, keep_ratio=0.8):
+def build_binary_split(ds, keep_ratio=0.8):
     rows = list(ds)
     random.Random(SEED).shuffle(rows)
 
-    safe_safe, unsafe_pool = _partition_sft_rows(rows)
+    safe_safe, unsafe_pool = _partition_rows(rows)
     pair_count = min(len(safe_safe), len(unsafe_pool))
     binary_pair_count = int(pair_count * keep_ratio)
 
@@ -232,40 +236,34 @@ def build_binary_sft_split(ds, keep_ratio=0.8):
     records = []
 
     for ex in binary_safe:
-        content, _ = make_sft_content(ex)
-        target, boxed = make_sft_target(ex, forced_refusal=False)
+        content, _ = make_binary_content(ex)
+        target, boxed = make_binary_target(ex, forced_refusal=False)
         records.append({
             DatasetFieldNames.SFT_INPUT: content,
             DatasetFieldNames.SFT_TARGET: target,
             DatasetFieldNames.SFT_ANSWER: boxed,
             "id_temp": ex["id_temp"],
-            # DatasetFieldNames.SFT_SUBCATEGORY: ex.get("subcategory", "others"),
-            # DatasetFieldNames.SFT_SUBCATEGORY_TEXT: _subcategory_text(ex),
-            # DatasetFieldNames.SFT_ADVERSARIAL: request_is_adversarial(ex),
         })
 
     for ex in binary_unsafe:
-        content, _ = make_sft_content(ex)
-        target, boxed = make_sft_target(ex, forced_refusal=True)
+        content, _ = make_binary_content(ex)
+        target, boxed = make_binary_target(ex, forced_refusal=True)
         records.append({
             DatasetFieldNames.SFT_INPUT: content,
             DatasetFieldNames.SFT_TARGET: target,
             DatasetFieldNames.SFT_ANSWER: boxed,
             "id_temp": ex["id_temp"],
-            # DatasetFieldNames.SFT_SUBCATEGORY: ex.get("subcategory", "others"),
-            # DatasetFieldNames.SFT_SUBCATEGORY_TEXT: _subcategory_text(ex),
-            # DatasetFieldNames.SFT_ADVERSARIAL: request_is_adversarial(ex),
         })
 
     random.Random(SEED).shuffle(records)
     return Dataset.from_list(records)
 
 
-def build_open_form_sft_split(ds, open_ratio=0.2):
+def build_open_form_split(ds, open_ratio=0.2):
     rows = list(ds)
     random.Random(SEED).shuffle(rows)
 
-    _, unsafe_pool = _partition_sft_rows(rows)
+    _, unsafe_pool = _partition_rows(rows)
     open_count = int(len(unsafe_pool) * open_ratio)
 
     if open_count == 0 and unsafe_pool:
@@ -321,7 +319,7 @@ def build_subcategory_rlvr_split(ds, max_num_choices):
             f"Request:\n{ex['prompt'].strip()}\n\n"
             f"{build_options([SUBCATEGORY_TEXT[c] for c in choices])}"
         )
-        records.append({DatasetFieldNames.RLVR_INPUT: content, DatasetFieldNames.RLVR_ANSWER: answer, "id_temp": ex["id_temp"]})
+        records.append({DatasetFieldNames.SFT_INPUT: content, DatasetFieldNames.SFT_ANSWER: answer, "id_temp": ex["id_temp"]})
 
     return Dataset.from_list(records)
 
@@ -351,7 +349,7 @@ def combo_text(triple):
     return _props_text(triple)
 
 
-def build_combo_rlvr_split(ds, mask_response_ratio=0.0):
+def build_combo_split(ds, mask_response_ratio=0.0):
     rows = list(ds)
     random.Random(SEED).shuffle(rows)
     mask_count = int(len(rows) * mask_response_ratio)
@@ -400,7 +398,7 @@ def build_combo_rlvr_split(ds, mask_response_ratio=0.0):
         content_parts.append(build_options([label_fn(c) for c in choices]))
 
         content = "\n\n".join(content_parts)
-        records.append({DatasetFieldNames.RLVR_INPUT: content, DatasetFieldNames.RLVR_ANSWER: answer, "id_temp": ex["id_temp"]})
+        records.append({DatasetFieldNames.SFT_INPUT: content, DatasetFieldNames.SFT_ANSWER: answer, "id_temp": ex["id_temp"]})
 
     return Dataset.from_list(records)
 
@@ -408,6 +406,20 @@ def build_combo_rlvr_split(ds, mask_response_ratio=0.0):
 def save_split_dict(dataset_dict, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     dataset_dict.save_to_disk(str(path))
+
+
+def split_test_half_and_benchmark(test_dataset, input_field, answer_field):
+    midpoint = len(test_dataset) // 2
+    kept_test = test_dataset.select(range(midpoint))
+    benchmark_records = [
+        {
+            DatasetFieldNames.BENCHMARK_INPUT: row[input_field],
+            DatasetFieldNames.BENCHMARK_ANSWER: row[answer_field],
+        }
+        for row in test_dataset.select(range(midpoint, len(test_dataset)))
+    ]
+    benchmark_dataset = Dataset.from_list(benchmark_records)
+    return kept_test, benchmark_dataset
 
 
 def main():
@@ -425,61 +437,77 @@ def main():
     test_ds = test_ds.map(lambda x, i: {"id_temp": i}, with_indices=True)
     print(f"Loaded train dataset with {len(train_ds)} examples and test dataset with {len(test_ds)} examples.")
 
-    binary_sft = DatasetDict({
-        "train": build_binary_sft_split(train_ds),
-        "test": build_binary_sft_split(test_ds),
+    binary_split = DatasetDict({
+        "train": build_binary_split(train_ds),
+        "test": build_binary_split(test_ds),
     })
-    binary_kept_indices = {"train": binary_sft["train"]["id_temp"], "test": binary_sft["test"]["id_temp"]}
-    print(f"Binary SFT splits created with {len(binary_sft['train'])} training examples and {len(binary_sft['test'])} test examples.")
+    binary_ids = {"train": binary_split["train"]["id_temp"], "test": binary_split["test"]["id_temp"]}
+    print(f"Binary splits created with {len(binary_split['train'])} training examples and {len(binary_split['test'])} test examples.")
 
-    open_form_sft = DatasetDict({
-        "train": build_open_form_sft_split(train_ds),
-        "test": build_open_form_sft_split(test_ds),
-    })
-    open_form_kept_indices = {"train": open_form_sft["train"]["id_temp"], "test": open_form_sft["test"]["id_temp"]}
-    print(f"Open-form SFT splits created with {len(open_form_sft['train'])} training examples and {len(open_form_sft['test'])} test examples.")
-
-
-    excluded_train = set(binary_kept_indices["train"]) | set(open_form_kept_indices["train"])
-    excluded_test = set(binary_kept_indices["test"]) | set(open_form_kept_indices["test"])
+    excluded_train = set(binary_ids["train"])
+    excluded_test = set(binary_ids["test"])
     filtered_train_ds = train_ds.filter(lambda ex: ex["id_temp"] not in excluded_train)
     filtered_test_ds = test_ds.filter(lambda ex: ex["id_temp"] not in excluded_test)
 
     half_train = len(filtered_train_ds) // 2
     half_test = len(filtered_test_ds) // 2
 
-    print(f"Filtered datasets created with {len(filtered_train_ds)} training examples and {len(filtered_test_ds)} test examples after excluding SFT examples.")
+    print(f"Filtered datasets created with {len(filtered_train_ds)} training examples and {len(filtered_test_ds)} test examples after excluding binary examples.")
 
-    subcategory_rlvr = DatasetDict({
+    subcategory_split = DatasetDict({
         "train": build_subcategory_rlvr_split(filtered_train_ds.select(range(half_train)), args.max_subcategory_choices),
         "test": build_subcategory_rlvr_split(filtered_test_ds.select(range(half_test)), args.max_subcategory_choices),
     })
-    print(f"Subcategory RLVR splits created with {len(subcategory_rlvr['train'])} training examples and {len(subcategory_rlvr['test'])} test examples.")
+    print(f"Subcategory splits created with {len(subcategory_split['train'])} training examples and {len(subcategory_split['test'])} test examples.")
 
-    combo_rlvr = DatasetDict({
-        "train": build_combo_rlvr_split(filtered_train_ds.select(range(half_train, len(filtered_train_ds)))),
-        "test": build_combo_rlvr_split(filtered_test_ds.select(range(half_test, len(filtered_test_ds))), mask_response_ratio=0.5), # because in this test split, all responses are present, not in training (50% masked)
+    combo_split = DatasetDict({
+        "train": build_combo_split(filtered_train_ds.select(range(half_train, len(filtered_train_ds)))),
+        "test": build_combo_split(filtered_test_ds.select(range(half_test, len(filtered_test_ds))), mask_response_ratio=0.5),
     })
-    print(f"Combination RLVR splits created with {len(combo_rlvr['train'])} training examples and {len(combo_rlvr['test'])} test examples.")
+    print(f"Combination splits created with {len(combo_split['train'])} training examples and {len(combo_split['test'])} test examples.")
 
-    save_split_dict(binary_sft, Path("data/processed/sft/wildguardmix/binary_choice"))
-    save_split_dict(open_form_sft, Path("data/processed/sft/wildguardmix/open_question"))
-    save_split_dict(subcategory_rlvr, Path("data/processed/sft/wildguardmix/subcategory_mcq_answers_only"))
-    save_split_dict(combo_rlvr, Path("data/processed/sft/wildguardmix/safety_combo_mcq_answers_only"))
+    binary_test, binary_benchmark = split_test_half_and_benchmark(
+        binary_split["test"],
+        DatasetFieldNames.SFT_INPUT,
+        DatasetFieldNames.SFT_ANSWER,
+    )
+    binary_split = DatasetDict({"train": binary_split["train"], "test": binary_test})
+
+    subcategory_test, subcategory_benchmark = split_test_half_and_benchmark(
+        subcategory_split["test"],
+        DatasetFieldNames.SFT_INPUT,
+        DatasetFieldNames.SFT_ANSWER,
+    )
+    subcategory_split = DatasetDict({"train": subcategory_split["train"], "test": subcategory_test})
+
+    combo_test, combo_benchmark = split_test_half_and_benchmark(
+        combo_split["test"],
+        DatasetFieldNames.SFT_INPUT,
+        DatasetFieldNames.SFT_ANSWER,
+    )
+    combo_split = DatasetDict({"train": combo_split["train"], "test": combo_test})
+
+    save_split_dict(binary_split, Path("data/processed/sft/wildguardmix/binary_choice"))
+    save_split_dict(subcategory_split, Path("data/processed/sft/wildguardmix/subcategory_classification"))
+    save_split_dict(combo_split, Path("data/processed/sft/wildguardmix/safety_combo"))
+
+    BENCH_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    binary_benchmark.save_to_disk(str(BENCH_OUTPUT_BINARY))
+    subcategory_benchmark.save_to_disk(str(BENCH_OUTPUT))
+    combo_benchmark.save_to_disk(str(BENCH_OUTPUT_COMBO))
 
     stats = {
-        "binary_sft_train": len(binary_sft["train"]),
-        "binary_sft_test": len(binary_sft["test"]),
-        "open_form_sft_train": len(open_form_sft["train"]),
-        "open_form_sft_test": len(open_form_sft["test"]),
-        "subcategory_rlvr_train": len(subcategory_rlvr["train"]),
-        "subcategory_rlvr_test": len(subcategory_rlvr["test"]),
-        "combo_rlvr_train": len(combo_rlvr["train"]),
-        "combo_rlvr_test": len(combo_rlvr["test"]),
-        "binary_sft_train_boxed_counts": dict(Counter(binary_sft["train"][DatasetFieldNames.SFT_ANSWER])),
-        "binary_sft_test_boxed_counts": dict(Counter(binary_sft["test"][DatasetFieldNames.SFT_ANSWER])),
-        "open_form_sft_train_boxed_counts": dict(Counter(open_form_sft["train"][DatasetFieldNames.SFT_ANSWER])),
-        "open_form_sft_test_boxed_counts": dict(Counter(open_form_sft["test"][DatasetFieldNames.SFT_ANSWER])),
+        "binary_train": len(binary_split["train"]),
+        "binary_train_boxed_counts": dict(Counter(binary_split["train"][DatasetFieldNames.SFT_ANSWER])),
+        "binary_test_boxed_counts": dict(Counter(binary_split["test"][DatasetFieldNames.SFT_ANSWER])),
+        "binary_test": len(binary_split["test"]),
+        "binary_benchmark": len(binary_benchmark),
+        "subcategory_train": len(subcategory_split["train"]),
+        "subcategory_test": len(subcategory_split["test"]),
+        "subcategory_benchmark": len(subcategory_benchmark),
+        "combo_train": len(combo_split["train"]),
+        "combo_test": len(combo_split["test"]),
+        "combo_benchmark": len(combo_benchmark),
     }
 
     pprint(stats)
