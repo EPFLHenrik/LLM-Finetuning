@@ -245,6 +245,14 @@ def save_dataset_dict(dataset_dict, path):
     dataset_dict.save_to_disk(str(path))
 
 
+def split_train_test(dataset, test_ratio=0.01):
+    if len(dataset) == 0:
+        return DatasetDict({"train": dataset, "test": dataset})
+    if len(dataset) == 1:
+        return DatasetDict({"train": dataset, "test": dataset.select([])})
+    return dataset.train_test_split(test_size=test_ratio, seed=SEED, shuffle=True)
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -320,25 +328,32 @@ def main():
     )
 
     # ── Save ────────────────────────────────────────────────────────────────
+    combo_splits = split_train_test(combo_ds, test_ratio=0.01)
+    binary_splits = split_train_test(binary_ds, test_ratio=0.01)
+    comparison_splits = split_train_test(comparison_ds, test_ratio=0.01)
+
     save_dataset_dict(
-        DatasetDict({"train": combo_ds}),
+        combo_splits,
         Path("data/processed/sft/wildjailbreak/combo_mcq_answers_only"),
     )
     save_dataset_dict(
-        DatasetDict({"train": binary_ds}),
+        binary_splits,
         Path("data/processed/sft/wildjailbreak/binary_mcq_answers_only"),
     )
     save_dataset_dict(
-        DatasetDict({"train": comparison_ds}),
+        comparison_splits,
         Path("data/processed/sft/wildjailbreak/adversarial_comparison_mcq"),
     )
 
     print("\nAll datasets saved.")
     pprint(
         {
-            "combo_mcq_train": len(combo_ds),
-            "binary_mcq_train": len(binary_ds),
-            "comparison_mcq_train": len(comparison_ds),
+            "combo_mcq_train": len(combo_splits["train"]),
+            "combo_mcq_test": len(combo_splits["test"]),
+            "binary_mcq_train": len(binary_splits["train"]),
+            "binary_mcq_test": len(binary_splits["test"]),
+            "comparison_mcq_train": len(comparison_splits["train"]),
+            "comparison_mcq_test": len(comparison_splits["test"]),
         }
     )
 
