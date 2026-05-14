@@ -5,3 +5,11 @@ python -m multilingual.train.sft \
     --eval_steps 10 \
     --save_steps 10 \
     --log_steps 1
+
+
+# full run
+python -m multilingual.train.sft \
+    --run_name sft_v1 \
+    --eval_steps 250 \
+    --save_steps 250 \
+    --log_steps 10
