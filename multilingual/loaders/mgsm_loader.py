@@ -1,4 +1,4 @@
-"""multilingual/mgsm_loader.py
+"""multilingual/loaders/mgsm_loader.py
 
 Loads MGSM examples for local evaluation and training.
 

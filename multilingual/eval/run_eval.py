@@ -1,4 +1,4 @@
-"""multilingual/run_eval.py"""
+"""multilingual/eval/run_eval.py"""
 
 import argparse
 import json

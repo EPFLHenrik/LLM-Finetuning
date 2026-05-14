@@ -1,4 +1,4 @@
-"""multilingual/milu_loader.py"""
+"""multilingual/loaders/milu_loader.py"""
 
 from typing import Any, Dict, List, Optional, Tuple
 

@@ -1,9 +1,7 @@
-"""multilingual/ceval_loader.py"""
+"""multilingual/loaders/ceval_loader.py"""
 
 from typing import Any, Dict, List, Optional, Tuple
-
 from datasets import get_dataset_config_names, load_dataset
-
 from multilingual.utils import VAL_SEED, select_at_most
 
 # C-Eval: one config per subject, 52 subjects total.

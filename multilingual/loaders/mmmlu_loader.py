@@ -1,4 +1,4 @@
-"""multilingual/mmmlu_loader.py"""
+"""multilingual/loaders/mmmlu_loader.py"""
 
 from typing import Any, Dict, List, Optional, Tuple
 from datasets import load_dataset

@@ -11,7 +11,6 @@ Generation follows the official CI evaluation contract:
 from typing import Any, Dict, List
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from multilingual.config import SYSTEM_PROMPT
 
 
