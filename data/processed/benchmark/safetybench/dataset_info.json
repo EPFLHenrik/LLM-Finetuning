@@ -9,6 +9,30 @@
     "answer": {
       "dtype": "string",
       "_type": "Value"
+    },
+    "task_type": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "source_uid": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "original_idx": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "num_options": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "category": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "sub_category": {
+      "dtype": "null",
+      "_type": "Value"
     }
   },
   "homepage": "",

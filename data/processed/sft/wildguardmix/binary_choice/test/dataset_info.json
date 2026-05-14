@@ -14,8 +14,40 @@
       "dtype": "string",
       "_type": "Value"
     },
+    "task_type": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "source_uid": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "source_split": {
+      "dtype": "string",
+      "_type": "Value"
+    },
     "id_temp": {
       "dtype": "int64",
+      "_type": "Value"
+    },
+    "subcategory": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "adversarial": {
+      "dtype": "bool",
+      "_type": "Value"
+    },
+    "prompt_safe": {
+      "dtype": "bool",
+      "_type": "Value"
+    },
+    "response_safe": {
+      "dtype": "bool",
+      "_type": "Value"
+    },
+    "response_refusal": {
+      "dtype": "bool",
       "_type": "Value"
     }
   },
