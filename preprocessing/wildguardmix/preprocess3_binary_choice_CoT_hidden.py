@@ -69,6 +69,30 @@ def save_checkpoint(rows: list[dict], output_path: Path) -> None:
     tmp_output.replace(output_path)
 
 
+def load_rows_by_id(output_path: Path) -> dict[int, dict]:
+    """Load an existing dataset and index rows by integer id."""
+    if not output_path.exists():
+        return {}
+
+    dataset_existing = load_from_disk(str(output_path))
+    rows_existing = dataset_existing.to_list()
+    del dataset_existing
+    gc.collect()
+
+    rows_by_id: dict[int, dict] = {}
+    for pos, row in enumerate(rows_existing):
+        raw_id = row.get("id")
+        row_id = pos if raw_id is None else int(raw_id)
+        row["id"] = row_id
+        if row_id in rows_by_id:
+            raise RuntimeError(
+                f"Duplicate row id={row_id} found in existing dataset at {output_path}."
+            )
+        rows_by_id[row_id] = row
+
+    return rows_by_id
+
+
 def extract_reasoning_from_output(text: str) -> str:
     """Extract reasoning, prioritizing content inside <think>...</think> tags."""
     think_matches = re.findall(
@@ -121,28 +145,71 @@ def extract_boxed_answer(text: str) -> str | None:
     return matches[-1].upper()
 
 
-def append_failure_log(log_path: Path, message: str) -> None:
-    with log_path.open("a", encoding="utf-8") as log_file:
-        log_file.write(message + "\n")
+def write_error_log(log_path: Path, lines: list[str]) -> None:
+    """Write the whole error log in a stable, readable layout."""
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    content = "\n".join(lines).rstrip() + "\n"
+    log_path.write_text(content, encoding="utf-8")
+
+
+def build_batch_error_lines(
+    batch_number: int,
+    batch_indices: list[int],
+    state: dict[int, dict],
+    max_distinct_tries: int,
+) -> list[str]:
+    """Format per-batch failures: fallback first, then 5/5..1/5 tries."""
+    if not batch_indices:
+        return []
+
+    batch_start_id = batch_indices[0]
+    batch_end_id = batch_indices[-1] + 1
+    lines = [f"Batch N.{batch_number} ({batch_start_id} - {batch_end_id}):"]
+
+    fallback_indices = [idx for idx in batch_indices if state[idx]["used_fallback"]]
+    for idx in fallback_indices:
+        sample = state[idx]
+        lines.append(
+            "FAIL (Fallback): "
+            f"[id={idx}] distinct_failed_tries={sample['wrong_distinct_try_count']}/{max_distinct_tries}, "
+            f"total_generations={sample['total_generation_calls']}."
+        )
+
+    for tries in range(max_distinct_tries, 0, -1):
+        grouped_indices = [
+            idx
+            for idx in batch_indices
+            if (not state[idx]["used_fallback"])
+            and state[idx]["wrong_distinct_try_count"] == tries
+        ]
+        for idx in grouped_indices:
+            sample = state[idx]
+            lines.append(
+                f"FAIL ({tries}/{max_distinct_tries} tries): "
+                f"[id={idx}] matched on distinct_try={sample['distinct_try_count']}, "
+                f"total_generations={sample['total_generation_calls']}."
+            )
+
+    lines.append("")
+    return lines
 
 
 print("1. Loading existing output dataset (if any)...")
-existing_rows = []
-existing_count = 0
-if args.output.exists():
-    try:
-        existing_dataset = load_from_disk(str(args.output))
-        existing_count = len(existing_dataset)
-        existing_rows = existing_dataset.to_list()
-        dataset_len = len(existing_dataset)
-        del existing_dataset
-        gc.collect()
-        print(f"   OK: Found existing output with {existing_count} rows")
-    except Exception as exc:
-        print(f"ERROR: Could not read existing output dataset at {args.output}: {exc}")
-        sys.exit(1)
+fallback_output_path = args.output.parent / f"{args.output.name}_fallback"
+try:
+    train_rows_by_id = load_rows_by_id(args.output)
+    fallback_rows_by_id = load_rows_by_id(fallback_output_path)
+except Exception as exc:
+    print(f"ERROR: Could not read existing output dataset(s): {exc}")
+    sys.exit(1)
+
+if train_rows_by_id or fallback_rows_by_id:
+    print(
+        "   OK: Found existing outputs with "
+        f"{len(train_rows_by_id)} train rows and {len(fallback_rows_by_id)} fallback rows"
+    )
 else:
-    print("   OK: No existing output found, starting from empty dataset")
+    print("   OK: No existing outputs found, starting from empty datasets")
 
 print("\n2. Loading source dataset...")
 path = INPUT_DATASET_PATH / args.split if args.split else INPUT_DATASET_PATH
@@ -163,36 +230,7 @@ if args.from_id < 0 or args.to_id < 0:
 if args.from_id >= args.to_id:
     print("ERROR: --from_id must be strictly smaller than --to_id")
     sys.exit(1)
-
-
-if args.from_id > existing_count:
-    print(
-        f"SKIP: --from_id ({args.from_id}) is greater than output row count ({existing_count}). "
-        "Impossible to run, this will corrupt the order of the output dataset compared to the input dataset."
-        "Aborting."
-    )
-    sys.exit(0)
-
-if args.to_id <= existing_count and not args.overwrite:
-    print(
-        f"SKIP: --to_id ({args.to_id}) is smaller than or equal to output row count ({existing_count}). "
-        "Nothing to run."
-    )
-    sys.exit(0)
-
-effective_from = (
-    max(args.from_id, existing_count) if not args.overwrite else args.from_id
-)
-if effective_from != args.from_id and not args.overwrite:
-    print(
-        f"INFO: Resuming from output row count. Requested --from_id={args.from_id}, "
-        f"but starting at {effective_from}."
-    )
-if args.overwrite:
-    print(
-        f"INFO: --overwrite is set. Starting from --from_id={args.from_id} and ignoring existing output row count ({existing_count}). "
-        "This will lead to duplicate rows in the output dataset if --from_id < existing row count."
-    )
+effective_from = args.from_id
 
 effective_to = min(args.to_id, dataset_len)
 if args.to_id > dataset_len:
@@ -207,9 +245,26 @@ if effective_from >= effective_to:
     )
     sys.exit(0)
 
+processed_ids = set(train_rows_by_id.keys()) | set(fallback_rows_by_id.keys())
+if args.overwrite:
+    indices = list(range(effective_from, effective_to))
+    print("INFO: --overwrite is set. Existing rows in range will be regenerated by id.")
+else:
+    indices = [
+        idx
+        for idx in range(effective_from, effective_to)
+        if idx not in processed_ids
+    ]
+
+if not indices:
+    print(
+        f"SKIP: No ids to process in [{effective_from}, {effective_to}) after accounting for existing train/fallback rows."
+    )
+    sys.exit(0)
+
 print(
     f"   Processing range: [{effective_from}, {effective_to}) "
-    f"=> {effective_to - effective_from} example(s)."
+    f"=> {len(indices)} example(s) to generate."
 )
 
 print("\n3. Loading tokenizer...")
@@ -230,20 +285,20 @@ print("   OK: Model loaded")
 
 print("\n5. Processing examples and checkpoint-saving after each item...")
 args.output.parent.mkdir(parents=True, exist_ok=True)
-failed_log_path = args.output.parent / "failed_binary_choice_CoT_hidden.log"
-failed_log_path.write_text(
-    (
-        "# Failed answer attempts during preprocess3_binary_choice_CoT_hidden.py\n"
-        f"# output={args.output}\n"
-        f"# processing_range=[{effective_from}, {effective_to})\n"
-    ),
-    encoding="utf-8",
-)
-print(f"   Failure log path: {failed_log_path}")
+split_name = args.split if args.split else "all"
+error_log_path = args.output / f"error_{split_name}.log"
+error_log_lines = [
+    "# Failed generations during preprocess3_binary_choice_CoT_hidden.py",
+    f"# output={args.output}",
+    f"# fallback_output={fallback_output_path}",
+    f"# processing_range=[{effective_from}, {effective_to})",
+    "",
+]
+print(f"   Error log path: {error_log_path}")
+print(f"   Fallback output path: {fallback_output_path}")
 
 max_distinct_tries = 5
 max_total_generations = 20
-indices = list(range(effective_from, effective_to))
 batch_size = 500
 num_batches = (len(indices) + batch_size - 1) // batch_size
 
@@ -271,10 +326,12 @@ for idx in indices:
         "answer": answer_letter,
         "hidden_text": hidden_text,
         "distinct_try_count": 0,
+        "wrong_distinct_try_count": 0,
         "total_generation_calls": 0,
         "seen_generations": set(),
         "chosen_rationale": "",
         "chosen_answer": None,
+        "used_fallback": False,
     }
 
 for batch_idx in range(num_batches):
@@ -306,12 +363,7 @@ for batch_idx in range(num_batches):
             sample["total_generation_calls"] += 1
 
             if rationale in sample["seen_generations"]:
-                message = (
-                    f"[id={idx}] Duplicate generation ignored "
-                    f"(call={sample['total_generation_calls']}, distinct={sample['distinct_try_count']})."
-                )
-                print(f"FAIL: {message}")
-                append_failure_log(failed_log_path, f"FAIL: {message}")
+                pass
             else:
                 sample["seen_generations"].add(rationale)
                 sample["distinct_try_count"] += 1
@@ -321,14 +373,7 @@ for batch_idx in range(num_batches):
                     sample["chosen_rationale"] = extract_reasoning_from_output(rationale)
                     sample["chosen_answer"] = predicted_answer
                 else:
-                    preview = rationale.replace("\n", " ")[:220]
-                    message = (
-                        f"[id={idx}] Wrong answer on distinct_try={sample['distinct_try_count']}/"
-                        f"{max_distinct_tries}: predicted={predicted_answer!r}, expected={sample['answer']!r}. "
-                        f"Preview: {preview}"
-                    )
-                    print(f"FAIL: {message}")
-                    append_failure_log(failed_log_path, f"FAIL: {message}")
+                    sample["wrong_distinct_try_count"] += 1
 
             if sample["chosen_answer"] != sample["answer"] and (
                 sample["distinct_try_count"] < max_distinct_tries
@@ -371,43 +416,64 @@ for batch_idx in range(num_batches):
             sample = state[idx]
             sample["chosen_rationale"] = extract_reasoning_from_output(output.outputs[0].text.strip())
             sample["chosen_answer"] = sample["answer"]
-            fallback_message = (
-                f"[id={idx}] Fallback used after {sample['distinct_try_count']} distinct failed tries "
-                f"({sample['total_generation_calls']} total generations)."
-            )
-            print(f"FAIL: {fallback_message}")
-            append_failure_log(failed_log_path, f"FAIL: {fallback_message}")
+            sample["used_fallback"] = True
 
     for idx in tqdm.tqdm(batch_indices, desc=f"Writing rows for batch {batch_idx + 1}"):
         sample = state[idx]
         target_text = build_target_from_reasoning(sample["chosen_rationale"], sample["chosen_answer"])
 
         new_row = {
+            "id": idx,
             DatasetFieldNames.SFT_INPUT: sample["input"],
             DatasetFieldNames.SFT_TARGET: target_text,
             DatasetFieldNames.SFT_ANSWER: sample["answer"],
             DistillationFieldNames.TEACHER_MODEL: TEACHER_MODEL,
         }
 
-        if idx < len(existing_rows):
-            existing_rows[idx] = new_row
-        elif idx == len(existing_rows):
-            existing_rows.append(new_row)
+        if sample["used_fallback"]:
+            fallback_rows_by_id[idx] = new_row
+            train_rows_by_id.pop(idx, None)
         else:
-            raise RuntimeError(
-                "Non-contiguous write detected: cannot write source index "
-                f"{idx} when output has only {len(existing_rows)} rows. "
-                "Run earlier indices first to keep ordering consistent."
-            )
+            train_rows_by_id[idx] = new_row
+            fallback_rows_by_id.pop(idx, None)
 
-        if (idx + 1) % 10 == 0 or idx == effective_to - 1:
-            save_checkpoint(existing_rows, args.output)
-            print(
-                f"   Saved checkpoint: {len(existing_rows)} total rows "
-                f"(last processed id={idx})"
-            )
+    train_rows_sorted = [train_rows_by_id[row_id] for row_id in sorted(train_rows_by_id)]
+    fallback_rows_sorted = [
+        fallback_rows_by_id[row_id] for row_id in sorted(fallback_rows_by_id)
+    ]
+
+    save_checkpoint(train_rows_sorted, args.output)
+    save_checkpoint(fallback_rows_sorted, fallback_output_path)
+
+    batch_error_lines = build_batch_error_lines(
+        batch_number=batch_idx + 1,
+        batch_indices=batch_indices,
+        state=state,
+        max_distinct_tries=max_distinct_tries,
+    )
+    error_log_lines.extend(batch_error_lines)
+    write_error_log(error_log_path, error_log_lines)
+
+    print(
+        "   Saved checkpoint: "
+        f"train_rows={len(train_rows_sorted)}, fallback_rows={len(fallback_rows_sorted)} "
+        f"(last processed id={idx})"
+    )
+
+all_output_ids = set(train_rows_by_id.keys()) | set(fallback_rows_by_id.keys())
+expected_ids = set(range(effective_from, effective_to)) if args.overwrite else (
+    processed_ids | set(indices)
+)
+if not expected_ids.issubset(all_output_ids):
+    missing_ids = sorted(expected_ids - all_output_ids)[:10]
+    raise RuntimeError(
+        "Missing ids after save across train and fallback outputs. "
+        f"First missing ids: {missing_ids}"
+    )
 
 print(
-    f"SUCCESS: Done! Output now has {len(existing_rows)} rows at {args.output}. "
+    "SUCCESS: Done! "
+    f"Output has {len(train_rows_by_id)} non-fallback rows at {args.output}, "
+    f"and {len(fallback_rows_by_id)} fallback rows at {fallback_output_path}. "
     f"Processed ids [{effective_from}, {effective_to})."
 )

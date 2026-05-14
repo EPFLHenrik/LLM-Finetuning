@@ -126,9 +126,53 @@ def extract_boxed_answer(text: str) -> str | None:
     return matches[-1].upper()
 
 
-def append_failure_log(log_path: Path, message: str) -> None:
-    with log_path.open("a", encoding="utf-8") as log_file:
-        log_file.write(message + "\n")
+def write_error_log(log_path: Path, lines: list[str]) -> None:
+    """Write the whole error log in a stable, readable layout."""
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    content = "\n".join(lines).rstrip() + "\n"
+    log_path.write_text(content, encoding="utf-8")
+
+
+def build_batch_error_lines(
+    batch_number: int,
+    batch_indices: list[int],
+    state: dict[int, dict],
+    max_distinct_tries: int,
+) -> list[str]:
+    """Format per-batch failures: fallback first, then 5/5..1/5 tries."""
+    if not batch_indices:
+        return []
+
+    batch_start_id = batch_indices[0]
+    batch_end_id = batch_indices[-1] + 1
+    lines = [f"Batch N.{batch_number} ({batch_start_id} - {batch_end_id}):"]
+
+    fallback_indices = [idx for idx in batch_indices if state[idx]["used_fallback"]]
+    for idx in fallback_indices:
+        sample = state[idx]
+        lines.append(
+            "FAIL (Fallback): "
+            f"[id={idx}] distinct_failed_tries={sample['wrong_distinct_try_count']}/{max_distinct_tries}, "
+            f"total_generations={sample['total_generation_calls']}."
+        )
+
+    for tries in range(max_distinct_tries, 0, -1):
+        grouped_indices = [
+            idx
+            for idx in batch_indices
+            if (not state[idx]["used_fallback"])
+            and state[idx]["wrong_distinct_try_count"] == tries
+        ]
+        for idx in grouped_indices:
+            sample = state[idx]
+            lines.append(
+                f"FAIL ({tries}/{max_distinct_tries} tries): "
+                f"[id={idx}] matched on distinct_try={sample['distinct_try_count']}, "
+                f"total_generations={sample['total_generation_calls']}."
+            )
+
+    lines.append("")
+    return lines
 
 
 print("1. Loading existing output dataset (if any)...")
@@ -234,16 +278,15 @@ print("   OK: Model loaded")
 
 print("\n5. Processing examples and checkpoint-saving after each item...")
 args.output.parent.mkdir(parents=True, exist_ok=True)
-failed_log_path = args.output.parent / "failed_CoT_hidden.log"
-failed_log_path.write_text(
-    (
-        "# Failed answer attempts during preprocess2b_CoT_hidden.py\n"
-        f"# output={args.output}\n"
-        f"# processing_range=[{effective_from}, {effective_to})\n"
-    ),
-    encoding="utf-8",
-)
-print(f"   Failure log path: {failed_log_path}")
+split_name = "all"
+error_log_path = args.output / f"error_{split_name}.log"
+error_log_lines = [
+    "# Failed generations during preprocess2b_CoT_hidden.py",
+    f"# output={args.output}",
+    f"# processing_range=[{effective_from}, {effective_to})",
+    "",
+]
+print(f"   Error log path: {error_log_path}")
 
 max_distinct_tries = 5
 max_total_generations = 20
@@ -275,10 +318,12 @@ for idx in indices:
         "answer": answer_letter,
         "hidden_text": hidden_text,
         "distinct_try_count": 0,
+        "wrong_distinct_try_count": 0,
         "total_generation_calls": 0,
         "seen_generations": set(),
         "chosen_rationale": "",
         "chosen_answer": None,
+        "used_fallback": False,
     }
 
 for batch_idx in range(num_batches):
@@ -310,12 +355,7 @@ for batch_idx in range(num_batches):
             sample["total_generation_calls"] += 1
 
             if rationale in sample["seen_generations"]:
-                message = (
-                    f"[id={idx}] Duplicate generation ignored "
-                    f"(call={sample['total_generation_calls']}, distinct={sample['distinct_try_count']})."
-                )
-                print(f"FAIL: {message}")
-                append_failure_log(failed_log_path, f"FAIL: {message}")
+                pass
             else:
                 sample["seen_generations"].add(rationale)
                 sample["distinct_try_count"] += 1
@@ -325,14 +365,7 @@ for batch_idx in range(num_batches):
                     sample["chosen_rationale"] = extract_reasoning_from_output(rationale)
                     sample["chosen_answer"] = predicted_answer
                 else:
-                    preview = rationale.replace("\n", " ")[:220]
-                    message = (
-                        f"[id={idx}] Wrong answer on distinct_try={sample['distinct_try_count']}/"
-                        f"{max_distinct_tries}: predicted={predicted_answer!r}, expected={sample['answer']!r}. "
-                        f"Preview: {preview}"
-                    )
-                    print(f"FAIL: {message}")
-                    append_failure_log(failed_log_path, f"FAIL: {message}")
+                    sample["wrong_distinct_try_count"] += 1
 
             if sample["chosen_answer"] != sample["answer"] and (
                 sample["distinct_try_count"] < max_distinct_tries
@@ -375,12 +408,7 @@ for batch_idx in range(num_batches):
             sample = state[idx]
             sample["chosen_rationale"] = extract_reasoning_from_output(output.outputs[0].text.strip())
             sample["chosen_answer"] = sample["answer"]
-            fallback_message = (
-                f"[id={idx}] Fallback used after {sample['distinct_try_count']} distinct failed tries "
-                f"({sample['total_generation_calls']} total generations)."
-            )
-            print(f"FAIL: {fallback_message}")
-            append_failure_log(failed_log_path, f"FAIL: {fallback_message}")
+            sample["used_fallback"] = True
 
     for idx in tqdm.tqdm(batch_indices, desc=f"Writing rows for batch {batch_idx + 1}"):
         sample = state[idx]
@@ -404,12 +432,21 @@ for batch_idx in range(num_batches):
                 "Run earlier indices first to keep ordering consistent."
             )
 
-        if (idx + 1) % 10 == 0 or idx == effective_to - 1:
-            save_checkpoint(existing_rows, args.output)
-            print(
-                f"   Saved checkpoint: {len(existing_rows)} total rows "
-                f"(last processed id={idx})"
-            )
+    save_checkpoint(existing_rows, args.output)
+
+    batch_error_lines = build_batch_error_lines(
+        batch_number=batch_idx + 1,
+        batch_indices=batch_indices,
+        state=state,
+        max_distinct_tries=max_distinct_tries,
+    )
+    error_log_lines.extend(batch_error_lines)
+    write_error_log(error_log_path, error_log_lines)
+
+    print(
+        f"   Saved checkpoint: {len(existing_rows)} total rows "
+        f"(last processed id={idx})"
+    )
 
 print(
     f"SUCCESS: Done! Output now has {len(existing_rows)} rows at {args.output}. "

@@ -1,5 +1,5 @@
 Loaded: data/processed/sft/wildguardmix/binary_choice_CoT_hidden/train
-Rows: 600  |  Columns: ['prompt', 'target', 'answer', 'teacher_model']
+Rows: 13296  |  Columns: ['prompt', 'target', 'answer', 'teacher_model']
 
 ────────────────────────────────────────────────────────────────────────
   Row 23
@@ -163,6 +163,6 @@ Qwen/Qwen3-32B-AWQ
 
 ────────────────────────────────────────────────────────────────────────
 Data Type Distribution:
-  UNKNOWN         600
-Rows: 600  |  Columns: ['prompt', 'target', 'answer', 'teacher_model']
+  UNKNOWN         13296
+Rows: 13296  |  Columns: ['prompt', 'target', 'answer', 'teacher_model']
 
