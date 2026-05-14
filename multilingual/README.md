@@ -3,9 +3,9 @@
 This folder contains the multilingual evaluation code and the planned training pipeline for the multilingual expert model.
 The goal is to improve the model on multilingual and region-specific question answering, while keeping the evaluation format compatible with the official MNLP CI evaluation.
 
-Current base model: `Qwen/Qwen3-1.7B`
-Target languages: `Russian, Chinese, Italian, Spanish, Hindi`
-English is also included as a MGSM/math baseline, but it is not a target language.
+- Current base model: `Qwen/Qwen3-1.7B`
+- Target languages: `Russian, Chinese, Italian, Spanish, Hindi`
+- English is also included as a MGSM/math baseline, but it is not a target language.
 
 
 ## 1. Main design principles
@@ -166,11 +166,12 @@ The `prompt` field is always the raw question text. It does not include boxed-an
 
 | Dataset | Loader | HF dataset | Task | Languages | Local split strategy | Notes |
 |---|---|---|---|---|---|---|
-| INCLUDE | `include_loader.py` | `CohereLabs/include-base-44` | MCQ | RU, ZH, IT, ES, HI | deterministic train/val split with `VAL_SEED=42`, `VAL_FRACTION=0.15` | Main regional multilingual QA dataset. English skipped. |
-| MGSM | `mgsm_loader.py` | `juletxara/mgsm` | Math | RU, ZH, ES, EN | deterministic train/val split from the only labeled split | Used for multilingual mathematical reasoning. HI and IT skipped. |
-| MMMLU | `mmmlu_loader.py` | `openai/MMMLU` | MCQ | ES, HI, IT, ZH | stratified local train/val split by subject | Broad multilingual knowledge. Russian not available. |
-| MILU | `milu_loader.py` | `ai4bharat/MILU` | MCQ | HI | validation split for local val; test split used as train pool | Hindi local/exam-style QA. |
-| C-Eval | `ceval_loader.py` | `ceval/ceval-exam` | MCQ | ZH | labeled `val` split split into 80% train / 20% val, stratified by subject | Chinese exam QA. Official test has no labels. |
+| INCLUDE | `include_loader.py` | `CohereLabs/include-base-44` | MCQ | RU, ZH, IT, ES, HI | The loader selects the available labeled split and deterministically carves it into local train/val using `VAL_SEED=42` and `VAL_FRACTION=0.15`. | Main regional multilingual QA dataset. English skipped because no English INCLUDE config is used. |
+| MGSM | `mgsm_loader.py` | `juletxara/mgsm` | Math | RU, ZH, ES, EN | MGSM only provides one labeled split for these configs, so the loader deterministically splits that split into local train/val using `VAL_SEED=42` and `VAL_FRACTION=0.15`. | Used for multilingual mathematical reasoning. HI and IT skipped. Some translated examples may be noisy. |
+| MMMLU | `mmmlu_loader.py` | `openai/MMMLU` | MCQ | ES, HI, IT, ZH | The loader uses the labeled HF `test` split and creates a deterministic subject-stratified local train/val split, with `N_VAL_PER_SUBJECT=4`. | Broad multilingual knowledge. Russian not available. English can be added later as a diagnostic/control set. |
+| MILU | `milu_loader.py` | `ai4bharat/MILU` | MCQ | HI | The loader uses the official HF `validation` split as local validation. Since the official hidden CI eval is separate, the larger HF `test` split is shuffled with `VAL_SEED=42` and used as the local train pool. | Hindi local/exam-style QA. This split choice should be documented clearly because it intentionally trains on the public HF `test` split. |
+| C-Eval | `ceval_loader.py` | `ceval/ceval-exam` | MCQ | ZH | C-Eval’s labeled HF `val` split is the only usable labeled split. The loader creates a deterministic 80/20 local train/val split, stratified by subject, using `VAL_SEED=42`. | Chinese exam QA. Official HF `test` has no labels; `dev` is few-shot style and skipped. |
+
 
 Language abbreviations:
 

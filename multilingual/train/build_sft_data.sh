@@ -1,0 +1,1 @@
+python -m multilingual.train.build_sft_data --debug

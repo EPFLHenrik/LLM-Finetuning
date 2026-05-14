@@ -3,6 +3,8 @@
 from typing import Any, Dict, List, Optional, Tuple
 from datasets import get_dataset_config_names, load_dataset
 from multilingual.utils import VAL_SEED, select_at_most
+import random
+from collections import defaultdict
 
 # C-Eval: one config per subject, 52 subjects total.
 # 'val' split has labels (~1346 total); 'test' has NO labels — never use test.
@@ -30,7 +32,7 @@ def _format_example(ex: Dict[str, Any], subject: str, idx: int) -> Dict[str, Any
 def _load_subject_val(subject: str) -> List[Dict[str, Any]]:
     """Load the val split for one subject (has labels)."""
     try:
-        ds = load_dataset("ceval/ceval-exam", name=subject, trust_remote_code=True)
+        ds = load_dataset("ceval/ceval-exam", name=subject)
     except Exception as e:
         print(f"[C-Eval] Failed to load subject '{subject}': {e}")
         return []
@@ -49,9 +51,6 @@ def _stratified_split(
     Split (row, subject) pairs into train/val, stratified by subject.
     Returns lists of (row, subject) tuples.
     """
-    import random
-    from collections import defaultdict
-
     rng = random.Random(seed)
     by_subject: Dict[str, List[Tuple[Dict, str]]] = defaultdict(list)
     for row, subj in zip(all_rows, subject_labels):
@@ -67,7 +66,6 @@ def _stratified_split(
 
     return train_pairs, val_pairs
 
-
 def load_ceval_examples(
     n: Optional[int] = None,
     split: str = "val",
@@ -82,6 +80,9 @@ def load_ceval_examples(
     split='val'   → held-out validation pool
     split='train' → training pool
     """
+    if split not in {"train", "val"}:
+        raise ValueError(f"split must be 'train' or 'val', got {split!r}")
+
     subjects = _get_all_subjects()
 
     all_rows, subject_labels = [], []
@@ -96,7 +97,12 @@ def load_ceval_examples(
 
     pairs = val_pairs if split == "val" else train_pairs
 
-    # Respect n cap before formatting
+    # shuffle the final train/val pool before applying n.
+    # the split itself is already subject-stratified inside _stratified_split().
+    rng = random.Random(VAL_SEED)
+    pairs = pairs[:]
+    rng.shuffle(pairs)
+
     if n is not None:
         pairs = pairs[:n]
 
@@ -104,7 +110,6 @@ def load_ceval_examples(
         _format_example(row, subj, idx)
         for idx, (row, subj) in enumerate(pairs)
     ]
-
 
 def load_ceval_splits() -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Convenience: return (train_examples, val_examples)."""

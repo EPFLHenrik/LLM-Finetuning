@@ -8,10 +8,9 @@ the same train/val carve-out logic as the INCLUDE loader.
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from datasets import get_dataset_config_names, load_dataset
-
+from datasets import get_dataset_config_names, load_dataset, concatenate_datasets
 from multilingual.config import TARGET_LANGUAGES
-from multilingual.utils import get_train_val_split, pick_split, select_at_most
+from multilingual.utils import get_train_val_split, pick_split, VAL_FRACTION, VAL_SEED, select_at_most
 
 
 def _infer_key(ex: Dict[str, Any], candidates: List[str]) -> str:
@@ -73,27 +72,49 @@ def load_mgsm_examples(
     """
     Load MGSM examples for a given language.
 
-    Args:
-        language: Key from TARGET_LANGUAGES.
-        n:        Max examples (None = all).
-        split:    'val' or 'train' — same carve-out logic as INCLUDE.
+    MGSM has a tiny HF train split and a larger HF test split.
+    For this project, we merge all labeled MGSM examples and create a
+    deterministic local train/val split.
+
+    split='train' -> local training pool
+    split='val'   -> local held-out validation pool
     """
+    if split not in {"train", "val"}:
+        raise ValueError(f"split must be 'train' or 'val', got {split!r}")
+
     config = _resolve_config(language)
     if config is None:
         print(f"[MGSM] No config for {language}; skipping.")
         return []
 
     ds = load_dataset("juletxara/mgsm", config)
-    split_name = pick_split(ds)
-    train_pool, val_set = get_train_val_split(ds, split_name)
 
-    data = val_set if split == "val" else train_pool
+    parts = []
+    for hf_split in ("train", "test"):
+        if hf_split in ds and len(ds[hf_split]) > 0:
+            parts.append(ds[hf_split])
 
-    if len(data) == 0:
+    if not parts:
+        print(f"[MGSM] No labeled splits found for {language}.")
+        return []
+
+    data = concatenate_datasets(parts)
+    data = data.shuffle(seed=VAL_SEED)
+
+    n_total = len(data)
+    n_val = max(1, int(n_total * VAL_FRACTION))
+    n_train = n_total - n_val
+
+    val_set = data.select(range(n_val))
+    train_pool = data.select(range(n_val, n_val + n_train))
+
+    selected = val_set if split == "val" else train_pool
+
+    if len(selected) == 0:
         print(f"[MGSM] Empty {split} split for {language}.")
         return []
 
-    sampled = select_at_most(data, n)
+    sampled = select_at_most(selected, n)
     return [_format_example(sampled[i], language, i) for i in range(len(sampled))]
 
 

@@ -45,6 +45,8 @@ def load_milu_examples(
       split='train' → loads the 'test' split, shuffled, used as training pool
                       (the official 'test' split is ~14k Hindi examples)
     """
+    if split not in {"train", "val"}:
+        raise ValueError(f"split must be 'train' or 'val', got {split!r}")
     hf_split = "validation" if split == "val" else "test"
     data = load_dataset(
         "ai4bharat/MILU",
@@ -53,9 +55,7 @@ def load_milu_examples(
         token=hf_token or True,
     )
 
-    if split == "train":
-        data = data.shuffle(seed=VAL_SEED)
-
+    data = data.shuffle(seed=VAL_SEED)
     sampled = select_at_most(data, n)
     return [_format_example(sampled[i], i) for i in range(len(sampled))]
 

@@ -4,7 +4,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from datasets import load_dataset
 from multilingual.config import TARGET_LANGUAGES
 from multilingual.utils import VAL_SEED, select_at_most
-
+import random
+from collections import defaultdict
 
 # map our language keys to MMMLU config names.
 # Russian is absent from MMMLU.
@@ -37,8 +38,6 @@ def _stratified_split(data, n_val_per_subject: int, seed: int):
     Split by Subject so val coverage is uniform across all 57 categories.
     Returns (train_indices, val_indices).
     """
-    from collections import defaultdict
-    import random
 
     rng = random.Random(seed)
 
@@ -58,6 +57,8 @@ def _stratified_split(data, n_val_per_subject: int, seed: int):
 
 
 def _load_split(language: str, split: str) -> Tuple[List[int], Any]:
+    if split not in {"train", "val"}:
+        raise ValueError(f"split must be 'train' or 'val', got {split!r}")
     config = MMMLU_CONFIGS.get(language)
     if config is None:
         return [], None
@@ -74,6 +75,9 @@ def load_mmmlu_examples(
     split: str = "val",
 ) -> List[Dict[str, Any]]:
     """Load MMMLU examples. split='val' or 'train'."""
+    if split not in {"train", "val"}:
+        raise ValueError(f"split must be 'train' or 'val', got {split!r}")
+
     if language not in MMMLU_CONFIGS:
         print(f"[MMMLU] No config for {language} (Russian not in MMMLU); skipping.")
         return []
@@ -82,7 +86,12 @@ def load_mmmlu_examples(
     if not indices:
         return []
 
-    # Respect n cap
+    # shuffle the final train/val pool before applying n.
+    # the split itself is already subject-stratified inside _stratified_split().
+    rng = random.Random(VAL_SEED)
+    indices = indices[:]
+    rng.shuffle(indices)
+
     if n is not None:
         indices = indices[:n]
 

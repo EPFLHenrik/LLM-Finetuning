@@ -3,6 +3,7 @@ from pathlib import Path
 
 REPO = Path("/scratch/workspace/emma/standard-project-m2-mystery-machine")
 DEFAULT_MODEL_NAME = "Qwen/Qwen3-1.7B"
+SFT_DATA_DIR = REPO / "multilingual" / "data" / "sft"
 TARGET_LANGUAGES = {
     "russian": {"include_config": "Russian",  "mgsm_configs": ["ru"]},
     "chinese": {"include_config": "Chinese",  "mgsm_configs": ["zh"]},

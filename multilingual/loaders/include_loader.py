@@ -69,6 +69,8 @@ def load_include_examples(
         split:     'val'   → the held-out validation slice (never train on this)
                    'train' → the training pool
     """
+    if split not in {"train", "val"}:
+        raise ValueError(f"split must be 'train' or 'val', got {split!r}")
     include_config = TARGET_LANGUAGES[language]["include_config"]
     if include_config is None:
         print(f"[INCLUDE] No config for {language}; skipping.")
