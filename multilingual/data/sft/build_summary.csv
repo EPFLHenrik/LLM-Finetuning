@@ -29,8 +29,6 @@ milu,hindi,train,14811,/scratch/workspace/emma/standard-project-m2-mystery-machi
 milu,hindi,val,812,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/milu_hindi_val.jsonl
 ceval,chinese,train,1072,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/ceval_chinese_train.jsonl
 ceval,chinese,val,273,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/ceval_chinese_val.jsonl
-cultsportqa,chinese,train,2060,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/cultsportqa_chinese_train.jsonl
-cultsportqa,chinese,val,364,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/cultsportqa_chinese_val.jsonl
 cultsportqa,hindi,train,10878,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/cultsportqa_hindi_train.jsonl
 cultsportqa,hindi,val,1921,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/cultsportqa_hindi_val.jsonl
 belebele,russian,train,765,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/belebele_russian_train.jsonl

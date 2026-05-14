@@ -1,6 +1,4 @@
 """multilingual/loaders/cultsportqa_loader.py"""
-
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import pandas as pd
 from multilingual.config import REPO
@@ -65,7 +63,7 @@ def load_cultsportqa_examples(
 
     if n is not None:
         data = data.iloc[:n]
-    return [ex for ex in (_format_example(data.iloc[i], language, i) for i in range(len(data))) if ex is not None]
+    return [_format_example(data.iloc[i], language, i) for i in range(len(data))]
 
 
 def load_cultsportqa_splits(

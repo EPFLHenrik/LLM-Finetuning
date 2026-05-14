@@ -1,0 +1,115 @@
+#!/bin/bash
+# Submit one RCP job that runs multilingual SFT, exports the best LoRA adapter,
+# merges it into Qwen/Qwen3-1.7B, and pushes the merged checkpoint to Hugging Face.
+
+set -euo pipefail
+
+# ============== EDIT THESE LINES ==============
+GASPAR="anastass"
+GROUP="g02"
+REPO_DIR="/scratch/workspace/emma/standard-project-m2-mystery-machine"
+
+RUN_NAME="sft_multilingual_v1"
+HF_REPO="cs-552-2026-mystery-machine/multilingual_model"
+
+EPOCHS=1
+LR="2e-4"
+BATCH_SIZE=1
+GRAD_ACCUM=16
+EVAL_STEPS=250
+SAVE_STEPS=250
+LOG_STEPS=10
+# ==============================================
+
+if [[ -z "${GASPAR}" ]]; then
+    echo "ERROR: set GASPAR." >&2
+    exit 1
+fi
+
+if [[ -z "${GROUP}" ]]; then
+    echo "ERROR: set GROUP." >&2
+    exit 1
+fi
+
+if [[ -z "${HF_TOKEN:-}" ]]; then
+    echo "ERROR: HF_TOKEN is not set in your shell. Run: export HF_TOKEN=..." >&2
+    exit 1
+fi
+
+if [[ -z "${WANDB_API_KEY:-}" ]]; then
+    echo "ERROR: WANDB_API_KEY is not set in your shell. Run: export WANDB_API_KEY=..." >&2
+    exit 1
+fi
+
+GPUS=1
+NODE="${NODE:-a100-40g}"
+SUFFIX="${1:-sft-export}"
+JOB_NAME="cs552-${GASPAR}-${GROUP}-${SUFFIX}-$(date +%H%M%S)"
+PROJECT="course-cs-552-${GASPAR}"
+
+IMAGE="ayushkumartarun/course-cs-552-standard:v1"
+
+SCRATCH_PVC="course-cs-552-scratch-${GROUP}"
+SHARED_RO_PVC="course-cs-552-shared-ro"
+SHARED_RW_PVC="course-cs-552-shared-rw"
+
+ADAPTER_PATH="multilingual/results/checkpoints/${RUN_NAME}/best_adapter"
+EXPORT_DIR="multilingual/results/exports/${RUN_NAME}"
+
+echo ">>> Submitting ${JOB_NAME}"
+echo ">>> Run name: ${RUN_NAME}"
+echo ">>> HF repo:  ${HF_REPO}"
+
+MSYS_NO_PATHCONV=1 runai submit \
+  --name "${JOB_NAME}" \
+  -p "${PROJECT}" \
+  --image "${IMAGE}" \
+  --gpu "${GPUS}" \
+  --large-shm \
+  --node-pools "${NODE}" \
+  --working-dir /scratch \
+  --environment HF_HOME=/scratch/hf_cache \
+  --environment HF_HUB_ENABLE_HF_TRANSFER=1 \
+  --environment HF_TOKEN="${HF_TOKEN}" \
+  --environment WANDB_API_KEY="${WANDB_API_KEY}" \
+  --environment WANDB_DIR=/scratch/wandb \
+  --existing-pvc "claimname=${SCRATCH_PVC},path=/scratch" \
+  --existing-pvc "claimname=${SHARED_RO_PVC},path=/shared-ro" \
+  --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
+  --command -- /bin/bash -lc "\
+    set -euo pipefail && \
+    mkdir -p /scratch/hf_cache /scratch/wandb && \
+    ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
+    cd ${REPO_DIR} && \
+    python -m multilingual.train.sft \
+      --run_name ${RUN_NAME} \
+      --epochs ${EPOCHS} \
+      --batch_size ${BATCH_SIZE} \
+      --grad_accum ${GRAD_ACCUM} \
+      --lr ${LR} \
+      --eval_steps ${EVAL_STEPS} \
+      --save_steps ${SAVE_STEPS} \
+      --log_steps ${LOG_STEPS} && \
+    python -m multilingual.train.export \
+      --adapter_path ${ADAPTER_PATH} \
+      --output_dir ${EXPORT_DIR} \
+      --hf_repo ${HF_REPO} \
+      --push"
+
+cat <<EOF
+
+>>> Job submitted: ${JOB_NAME}
+
+Watch it start:
+  runai describe job ${JOB_NAME} -p ${PROJECT}
+
+Stream logs:
+  runai logs -f ${JOB_NAME} -p ${PROJECT}
+
+Shell in pod:
+  runai bash ${JOB_NAME} -p ${PROJECT}
+
+Stop the job:
+  runai delete job ${JOB_NAME} -p ${PROJECT}
+
+EOF
