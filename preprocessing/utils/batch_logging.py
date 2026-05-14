@@ -13,14 +13,14 @@ class BatchFailureLogger:
     def initialize(
         self,
         *,
-        script_name: str,
+        input_path: Path,
         output_path: Path,
         fallback_output_path: Path,
         effective_from: int,
         effective_to: int,
     ) -> None:
         self.lines = [
-            f"# Failed generations during {script_name}",
+            f"# Failed generations during processing of {input_path}",
             f"# output={output_path}",
             f"# fallback_output={fallback_output_path}",
             f"# processing_range=[{effective_from}, {effective_to})",

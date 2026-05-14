@@ -13,9 +13,6 @@ ROOT = Path(__file__).resolve().parents[2]
 INPUT_DATASET_PATH = (
     ROOT / "data" / "processed" / "sft" / "wildguardmix" / "binary_choice"
 )
-DEFAULT_OUTPUT_PATH = (
-    ROOT / "data" / "processed" / "sft" / "wildguardmix" / "binary_choice_CoT_hidden"
-)
 TEACHER_MODEL = "Qwen/Qwen3-32B-AWQ"
 
 
@@ -41,6 +38,7 @@ class RuntimeConfig:
 
 def build_runtime_config(
     *,
+    input_path: Path,
     output_root: Path,
     split: str | None,
     max_new_tokens: int,
@@ -55,7 +53,7 @@ def build_runtime_config(
     split_name = split if split else "all"
     error_log_path = output_path / f"error_{split_name}.log"
 
-    input_path = INPUT_DATASET_PATH / split if split else INPUT_DATASET_PATH
+    input_path = input_path / split if split else input_path
 
     return RuntimeConfig(
         input_path=input_path,

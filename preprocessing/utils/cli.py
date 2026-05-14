@@ -1,29 +1,31 @@
 import argparse
 from pathlib import Path
-
-from preprocessing.utils.config import DEFAULT_OUTPUT_PATH
-
+from constants.global_variables import TrainingConstants
 
 def parse_generation_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate short SafetyBench rationales with a teacher model."
+        description="Generate reasoning rationales from a teacher model to distill into a student model. This script handles both the primary generation and fallback generation."
+    )
+    parser.add_argument(
+        "--input",
+        type=Path,
+        help="Input Hugging Face dataset directory",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=DEFAULT_OUTPUT_PATH,
         help="Output directory",
     )
     parser.add_argument(
         "--split",
         type=str,
         default=None,
-        help="Which split to process (train/test)",
+        help="Which split to process (train/test). If None, the program considers --input as being the directory containing the data.",
     )
     parser.add_argument(
         "--max-new-tokens",
         type=int,
-        default=1024,
+        default=TrainingConstants.MAX_NEW_TOKENS,
         help="Max tokens per rationale",
     )
     parser.add_argument(
