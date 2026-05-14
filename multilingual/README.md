@@ -1,24 +1,12 @@
 # Multilingual component
 
 This folder contains the multilingual evaluation code and the planned training pipeline for the multilingual expert model.
-
 The goal is to improve the model on multilingual and region-specific question answering, while keeping the evaluation format compatible with the official MNLP CI evaluation.
 
-Current base model:
+Current base model: `Qwen/Qwen3-1.7B`
+Target languages: `Russian, Chinese, Italian, Spanish, Hindi`
+English is also included as a MGSM/math baseline, but it is not a target language.
 
-```
-Qwen/Qwen3-1.7B
-```
-
-Target languages:
-
-```
-Russian, Chinese, Italian, Spanish, Hindi
-```
-
-English is also included for MGSM/math sanity checks, but it is not a target language.
-
----
 
 ## 1. Main design principles
 
@@ -41,7 +29,7 @@ multilingual/config.py
 Current prompt:
 
 ```
-You are a multilingual reasoning assistant. Think carefully before answering. Always enclose your final answer in \boxed{}, for example \boxed{A} for multiple-choice questions or \boxed{42} for numeric answers. Respond in the same language as the question.
+You are a multilingual reasoning assistant. Think briefly before answering — avoid repetition and unnecessary elaboration. For multiple-choice questions, choose exactly one option. Always end your response with exactly one boxed answer on the last line: use \boxed{X} for multiple-choice questions, where X is the chosen letter, or \boxed{42} for numeric answers. Do not output anything after the boxed answer. Respond in the same language as the question.
 ```
 
 The model therefore receives prompts in this chat format:
@@ -52,9 +40,8 @@ user: raw dataset question
 assistant: generated answer with think block and boxed final answer
 ```
 
-The user turn must stay raw because this matches the official CI setting.
+The user turn must stay as it is because this matches the official CI setting.
 
----
 
 ## 2. Repository structure
 
@@ -77,7 +64,6 @@ multilingual/
 └── results/
 ```
 
----
 
 ## 3. Main files
 
@@ -159,7 +145,6 @@ get_train_val_split(ds, split_name)
 
 It creates deterministic local train/validation splits when a dataset does not already provide separate train and validation splits.
 
----
 
 ## 4. Dataset loaders
 
@@ -203,8 +188,6 @@ Each loader exposes a `load_<dataset>_examples(..., split="train" or "val")` fun
 ## 5. Evaluation pipeline
 
 There are two evaluation modes.
-
----
 
 ## 5.1 Diagnostic local evaluation
 
@@ -309,7 +292,6 @@ The summary file contains also:
 The most important metric is `strict_accuracy`, because it best matches the official boxed evaluation.
 The fallback metric is only diagnostic. It helps identify whether the model knew the answer but failed the required output format.
 
----
 
 ## 5.2 Official-format scoring
 
@@ -398,7 +380,6 @@ BENCHMARK_TO_METHOD["multilingual"] = "boxed"
 
 This means the final answer must be extractable from the last `\boxed{...}` in the generated output.
 
----
 
 ## 6. Answer extraction
 
@@ -442,11 +423,8 @@ For `benchmark="multilingual"`, it extracts answers with:
 ```
 extract_boxed_answer(text, strip_double_curly_brace=True)
 ```
-
 Therefore, the expected final answer format is `\boxed{A}` for MCQ and `\boxed{42}` for numeric/math questions. 
 
-
----
 
 ## 7. Running the test script
 
@@ -482,7 +460,6 @@ Before running evaluation, we need to make sure `HF_TOKEN` is set, which should 
 export HF_TOKEN=hf_xxx
 ```
 
----
 
 ## 8. Current adapter baseline
 
@@ -516,7 +493,6 @@ down_proj
 
 For model merging, all group members should use the same LoRA rank, alpha, dropout, and target modules, otherwise merging adapters becomes harder and less reliable.
 
----
 
 ## 9. Planned training pipeline
 
@@ -546,7 +522,6 @@ Planned steps:
 6. Select the best checkpoint using local validation performance.
 7. Save the final adapter for later merging with the other group experts.
 
----
 
 ## 10. Training data format
 
@@ -579,7 +554,6 @@ Important:
 
 The training data should always include the boxed final answer. Otherwise the model may learn to answer correctly but fail the official extractor. Because think mode is enabled during inference, the SFT completions should also include a `think` block. Otherwise the model may be trained in a format that conflicts with the generation setup.
 
----
 
 ## 11. Thinking strategy
 
@@ -614,7 +588,6 @@ Work through the arithmetic carefully and derive the requested quantity step by 
 ```
 
 Avoid training many examples with completely empty think blocks, because this may teach the model to skip thinking entirely. A short but non-empty think block is a safer middle ground.
-
 
 
 ## 12. Useful commands
