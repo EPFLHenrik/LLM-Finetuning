@@ -17,6 +17,10 @@ data/*
 # !data/processed/sft/safetybench/
 # !data/processed/sft/wildguardmix/
 
+!data/raw/
+data/raw/*
+!data/raw/safetybench/
+
 !data/processed/benchmark/
 data/processed/benchmark/*
 !data/processed/benchmark/safetybench/
