@@ -1,13 +1,13 @@
+"""multilingual/evaluation.py"""
+
 import json
 import re
 import sys
 from typing import Any, Dict, List, Optional
-
 import pandas as pd
 from tqdm.auto import tqdm
 from multilingual.config import MCQ_LETTERS, REPO
 from multilingual.utils import normalize_mc_answer, normalize_text_answer
-
 sys.path.append(str(REPO))
 from evaluate.extract_answer import extract_boxed_answer, is_equiv
 
