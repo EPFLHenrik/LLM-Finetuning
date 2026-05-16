@@ -1,0 +1,13 @@
+# Generated data files
+*.csv
+
+# Optional local datasets and preprocessing outputs
+data/
+/data/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Notebook checkpoints
+.ipynb_checkpoints/
