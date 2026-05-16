@@ -1,6 +1,6 @@
 #!/bin/bash
 # CS-552 — submit a non-interactive Run:AI job to download and preprocess
-# the CommonsenseQA dataset into /data.
+# a Hugging Face dataset into the repository-local data/ directory.
 
 set -euo pipefail
 
@@ -31,9 +31,26 @@ SCRATCH_PVC="course-cs-552-scratch-${GROUP}"
 SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
-HF_TOKEN="${HF_TOKEN:-}"
+HF_TOKEN="${HF_TOKEN:?Set HF_TOKEN before running download.sh}"
+DATASET_PATH="${DATASET_PATH:?Set DATASET_PATH before running download.sh}"
+DATASET_CONFIG="${DATASET_CONFIG:-}"
+QUESTION_KEYS="${QUESTION_KEYS:-question,question__stem,stem,query,text,prompt}"
+CHOICE_KEYS="${CHOICE_KEYS:-choices,options,answer_choices,candidates}"
+ANSWER_KEYS="${ANSWER_KEYS:-answerKey,answer_key,label,answer,answerIndex}"
 
 REPO_DIR="/scratch/workspace/henrik/standard-project-m2-mystery-machine"
+DATASET_SLUG="${DATASET_SLUG:-$(python - <<'PY'
+import os
+dataset_path = os.environ["DATASET_PATH"]
+dataset_config = os.environ.get("DATASET_CONFIG") or ""
+slug = dataset_path.replace("/", "__").replace(":", "__")
+if dataset_config:
+  slug += "__" + dataset_config.replace("/", "__").replace(":", "__").replace(" ", "_")
+print(slug)
+PY
+)}"
+RAW_DATA_DIR="${RAW_DATA_DIR:-${REPO_DIR}/data/datasets/${DATASET_SLUG}}"
+PREPROCESS_DATA_DIR="${PREPROCESS_DATA_DIR:-${REPO_DIR}/data/preprocessing/${DATASET_SLUG}}"
 
 echo ">>> Submitting ${JOB_NAME} (1 GPU)"
 
@@ -55,11 +72,11 @@ runai submit \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
   --command -- /bin/bash -lc "\
     set -euo pipefail && \
-    mkdir -p /scratch/hf_cache /scratch/wandb /data/datasets/commonsense_qa /data/preprocessing/commonsense_qa && \
+    mkdir -p /scratch/hf_cache /scratch/wandb \"${RAW_DATA_DIR}\" \"${PREPROCESS_DATA_DIR}\" && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
     cd \"${REPO_DIR}\" && \
-    python scripts/download_commonsense_qa.py --output-dir /data/datasets/commonsense_qa && \
-    python scripts/preprocess_commonsense_qa.py --input-dir /data/datasets/commonsense_qa --output-dir /data/preprocessing/commonsense_qa"
+    python scripts/download_hf.py --hf-token \"${HF_TOKEN}\" --dataset-path \"${DATASET_PATH}\" ${DATASET_CONFIG:+--dataset-config \"${DATASET_CONFIG}\"} --output-dir \"${RAW_DATA_DIR}\" && \
+    python scripts/preprocess_hf.py --dataset-path \"${DATASET_PATH}\" ${DATASET_CONFIG:+--dataset-config \"${DATASET_CONFIG}\"} --input-dir \"${RAW_DATA_DIR}\" --output-dir \"${PREPROCESS_DATA_DIR}\" --question-keys \"${QUESTION_KEYS}\" --choice-keys \"${CHOICE_KEYS}\" --answer-keys \"${ANSWER_KEYS}\""
 
 cat <<EOF
 
@@ -70,10 +87,10 @@ Stream logs:       runai logs -f ${JOB_NAME} -p ${PROJECT}
 Stop the job:      runai delete job ${JOB_NAME} -p ${PROJECT}
 
 Output locations inside the pod:
-  /data/datasets/commonsense_qa
-  /data/preprocessing/commonsense_qa
+  ${RAW_DATA_DIR}
+  ${PREPROCESS_DATA_DIR}
 
 The job runs both Python files in order:
-  1. scripts/download_commonsense_qa.py
-  2. scripts/preprocess_commonsense_qa.py
+  1. scripts/download_hf.py
+  2. scripts/preprocess_hf.py
 EOF
