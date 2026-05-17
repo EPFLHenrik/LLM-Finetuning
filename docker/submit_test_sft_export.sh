@@ -53,8 +53,8 @@ SCRATCH_PVC="course-cs-552-scratch-${GROUP}"
 SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
-ADAPTER_PATH="multilingual/results/checkpoints/${RUN_NAME}/best_adapter"
-EXPORT_DIR="multilingual/results/exports/${RUN_NAME}"
+ADAPTER_PATH="${REPO_DIR}/multilingual/results/checkpoints/${RUN_NAME}/best_adapter"
+EXPORT_DIR="${REPO_DIR}/multilingual/results/exports/${RUN_NAME}"
 
 echo ">>> Submitting ${JOB_NAME}"
 echo ">>> Run name: ${RUN_NAME}"

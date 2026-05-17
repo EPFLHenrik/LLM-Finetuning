@@ -94,9 +94,9 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     },
     "ceval": {
         "languages": ["chinese"],
-        "max_per_dataset": 2000,
+        "max_per_dataset": 3000,
         "language_caps": {
-            "chinese": 2000,
+            "chinese": 3000,
         }
 
     },
@@ -122,7 +122,7 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
         # italian is machine-translated — cap lower than Spanish
         "language_caps": {
             "spanish": 2000,
-            "italian": 400,
+            "italian": 1000,
         },
     },
     "mera": {
