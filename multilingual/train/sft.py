@@ -207,6 +207,7 @@ def main():
         remove_unused_columns=False,
         do_train=True,
         do_eval=True,
+        eval_on_start=True,
         seed=42,
         data_seed=42,
         # SFTConfig-specific

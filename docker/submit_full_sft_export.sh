@@ -59,7 +59,7 @@ echo ">>> Submitting ${JOB_NAME}"
 echo ">>> Run name: ${RUN_NAME}"
 echo ">>> HF repo:  ${HF_REPO}"
 
-MSYS_NO_PATHCONV=1 runai submit \
+MSYS_NO_PATHCONV=1 runai training submit \
   --name "${JOB_NAME}" \
   -p "${PROJECT}" \
   --image "${IMAGE}" \
