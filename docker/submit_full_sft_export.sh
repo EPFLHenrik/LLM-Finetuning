@@ -97,7 +97,8 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
     python -m multilingual.train.export \
       --adapter_path ${ADAPTER_PATH} \
       --output_dir ${EXPORT_DIR} \
-      --hf_repo ${HF_REPO}"
+      --hf_repo ${HF_REPO} \
+      --push"
 
 cat <<EOF
 
