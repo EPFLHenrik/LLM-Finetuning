@@ -83,6 +83,7 @@ MSYS_NO_PATHCONV=1 runai training submit \
     mkdir -p /scratch/hf_cache /scratch/wandb && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
     cd ${REPO_DIR} && \
+    python -m multilingual.train.build_sft_data --overwrite && \
     python -m multilingual.train.sft \
       --run_name ${RUN_NAME} \
       --epochs ${EPOCHS} \
