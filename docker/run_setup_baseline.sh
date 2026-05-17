@@ -45,45 +45,28 @@ if [[ "${1:-}" == "--local" ]]; then
   exec python scripts/setup_baseline.py "$@"
 fi
 
-# Build sanitized args for the remote run so --dest ends up under WORKSPACE_BASE
-DEST_REL="models/qwen3_baseline"
-NEW_ARGS=()
-SKIP_NEXT=0
-while (( "$#" )); do
-  arg="$1"
-  if [[ $SKIP_NEXT -eq 1 ]]; then
-    SKIP_NEXT=0
-    shift
-    continue
-  fi
-  case "$arg" in
-    --dest=*)
-      DEST_REL="${arg#--dest=}"
-      shift
-      ;;
-    --dest)
-      DEST_REL="$2"
-      SKIP_NEXT=1
-      shift
-      ;;
-    *)
-      NEW_ARGS+=("$arg")
-      shift
-      ;;
-  esac
-done
+# Configure args from environment variables (mirrors download.sh style)
+# Environment variables you can set before running this script:
+#  DEST_REL (relative path under WORKSPACE_BASE, default: models/qwen3_baseline)
+#  SOURCE_REPO (HF source repo, default: Qwen/Qwen3-1.7B)
+#  PUSH_REPO (HF repo id to push to; optional)
+#  COMMIT_MESSAGE (commit message when pushing)
+#  YES (set to "true" to auto-confirm overwrites)
+
+DEST_REL="${DEST_REL:-models/qwen3_baseline}"
+SOURCE_REPO="${SOURCE_REPO:-Qwen/Qwen3-1.7B}"
+# Default HF repo to push prepared artifacts to (can be overridden by env)
+PUSH_REPO="${PUSH_REPO:-cs-552-2026-mystery-machine/general_knowledge_model}"
+COMMIT_MESSAGE="${COMMIT_MESSAGE:-Add model artifacts from setup_baseline}"
+YES_FLAG="${YES:-false}"
 
 # Normalize dest to be relative and safe
-DEST_REL="${DEST_REL#/}"         # strip leading /
+DEST_REL="${DEST_REL#/}"
 if [[ "$DEST_REL" == *".."* ]]; then
   echo "Refusing dest containing '..'" >&2
   exit 1
 fi
 DEST_ABS="${WORKSPACE_BASE}/${DEST_REL}"
-
-# Append normalized --dest to args
-NEW_ARGS+=("--dest" "$DEST_ABS")
-REMOTE_ARGS="$(printf ' %q' "${NEW_ARGS[@]}")"
 
 echo ">>> Submitting ${JOB_NAME} to prepare baseline (dest: ${DEST_ABS})"
 
@@ -101,14 +84,12 @@ runai submit \
   --existing-pvc "claimname=${SCRATCH_PVC},path=/scratch" \
   --existing-pvc "claimname=${SHARED_RO_PVC},path=/shared-ro" \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
-  --command -- /bin/bash -lc "\
-    set -euo pipefail && \
-    echo \"REMOTE: WORKSPACE_BASE='${WORKSPACE_BASE}'\" && \
-    mkdir -p \"${WORKSPACE_BASE}\" \"${WORKSPACE_BASE}/hf_cache\" \"${WORKSPACE_BASE}/wandb\" && \
-    ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
-    cd \"${REPO_DIR}\" && \
-    python scripts/setup_baseline.py${REMOTE_ARGS}"
-
+  --command -- \
+  python3 scripts/setup_baseline.py \
+  --repo "${SOURCE_REPO}" \
+  --push-repo "${PUSH_REPO}" \
+  --commit-message "${COMMIT_MESSAGE}" \
+  --yes
 cat <<EOF
 
 >>> Job submitted: ${JOB_NAME}
