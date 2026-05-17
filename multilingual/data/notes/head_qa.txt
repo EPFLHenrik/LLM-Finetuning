@@ -1,0 +1,101 @@
+HEAD-QA v2 cleaning / processing summary
+
+Dataset:
+- Source: alesi12/head_qa_v2.
+- Configs used: es and it.
+- Goal: add healthcare/professional exam-style MCQ data for Spanish and Italian, aligned with INCLUDE-like medical/professional domains.
+
+Language coverage:
+- Spanish: original HEAD-QA-style healthcare exam data.
+- Italian: appears to be machine-translated from Spanish, not independently collected Italian exam data.
+- Evidence: Spanish and Italian have identical row counts, category counts, year distribution, option-count distribution, and image-question distribution.
+- Decision: keep Italian because it can still help with Italian medical/professional terminology, but cap it lower than Spanish later if possible.
+
+Splits:
+- Only a single train split exists.
+- We therefore apply our own deterministic 85/15 train/val split in the loader using VAL_SEED and VAL_FRACTION.
+- No official test split is used.
+
+Original counts:
+- Spanish: 12,751 rows.
+- Italian: 12,751 rows.
+- Total: 25,502 rows.
+
+Categories:
+- Both languages have the same category distribution:
+  - biology: 2119
+  - chemistry: 2140
+  - medicine: 2156
+  - nursing: 2069
+  - pharmacology: 2146
+  - psychology: 2121
+
+Answer/options format:
+- qtext: question text.
+- answers: list of dictionaries with aid and atext.
+- ra: correct answer id, 1-indexed, matching one of the aid values.
+- Important: the correct answer must be mapped by position in the answers list, not by raw aid value.
+- In the processed CSV, we store ra_letter, so the loader should use row["ra_letter"] directly.
+- atexts is saved as the answer-option text list.
+- aids is saved as the answer-id list.
+
+Number of options:
+- Both 4-option and 5-option questions exist.
+- 2013–2014 mostly have 5 options.
+- 2015+ mostly have 4 options.
+- We kept both 4-option and 5-option rows because the benchmark format allows variable numbers of choices.
+- Before filtering, each language had:
+  - 10,094 rows with 4 answers
+  - 2,657 rows with 5 answers
+
+Image filtering:
+- Image-dependent questions were removed.
+- has_image = True means the original image field was not None.
+- Total image rows removed across both languages: 668.
+- All image rows also mention an image/figure/radiograph in text, but the actual filtering criterion was has_image, not regex.
+- After cleaning, we asserted that clean["has_image"].sum() == 0.
+
+Cleaning rules:
+- Keep rows where:
+  - qtext is non-empty.
+  - ra maps correctly to one of the answer positions.
+  - ra_letter is valid for the number of options.
+  - no corruption characters are present.
+  - has_image is False.
+- Reject rows with image dependency, invalid answer mapping, empty text, or corruption.
+
+Cleaning result:
+- Total rows: 25,502.
+- Image rows filtered: 668.
+- Clean rows: 24,778.
+- Rejected rows: 724.
+- Therefore, 56 non-image rows were also rejected due to other cleaning checks.
+
+Processed files:
+- Saved under:
+  multilingual/data/processed/head_qa/
+- Main files:
+  - head_qa_clean_all.csv
+  - head_qa_rejected_all.csv
+- Optional language-specific files may also be saved for inspection.
+
+Loader behavior:
+- Read head_qa_clean_all.csv.
+- Filter by language: spanish or italian.
+- Shuffle deterministically with VAL_SEED.
+- Apply 85/15 train/val split with VAL_FRACTION.
+- Parse atexts.
+- Format options dynamically:
+  A) ...
+  B) ...
+  C) ...
+  D) ...
+  E) ... if present
+- Set answer = row["ra_letter"].
+- task_type = "mcq".
+- Metadata should include config, qid, name, year, category, n_answers, and translated = True for Italian / False for Spanish.
+
+Suggested caps later:
+- Spanish HEAD-QA: relatively high, e.g. around 1000.
+- Italian HEAD-QA: lower, e.g. around 300–500, because it is translated duplicate content.
+- Do not cap in the cleaning notebook; cap later in the SFT builder.

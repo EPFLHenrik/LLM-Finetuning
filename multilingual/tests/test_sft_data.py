@@ -35,7 +35,7 @@ REQUIRED_FIELDS  = {
 VALID_SPLITS      = {"train", "val"}
 VALID_TASK_TYPES  = {"mcq", "math"}
 VALID_ROLES       = ["system", "user", "assistant"]
-MCQ_ANSWER_RE     = re.compile(r"^[A-D]$")
+MCQ_ANSWER_RE     = re.compile(r"^[A-Z]$")
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -1,0 +1,1 @@
+python -m multilingual.train.check_sft_stats

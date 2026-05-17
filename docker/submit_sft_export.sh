@@ -101,15 +101,24 @@ cat <<EOF
 >>> Job submitted: ${JOB_NAME}
 
 Watch it start:
-  runai describe job ${JOB_NAME} -p ${PROJECT}
+  runai workload describe ${JOB_NAME} -p ${PROJECT}
+
+List workloads:
+  runai workload list -p ${PROJECT}
 
 Stream logs:
+  runai workload logs ${JOB_NAME} -p ${PROJECT}
+
+If streaming logs with the new command is not supported, use:
   runai logs -f ${JOB_NAME} -p ${PROJECT}
 
 Shell in pod:
   runai bash ${JOB_NAME} -p ${PROJECT}
 
+Attach with VS Code:
+  refresh the Kubernetes sidebar and attach to pod ${JOB_NAME}-0-0
+
 Stop the job:
-  runai delete job ${JOB_NAME} -p ${PROJECT}
+  runai workload delete ${JOB_NAME}
 
 EOF

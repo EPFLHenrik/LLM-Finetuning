@@ -1,0 +1,98 @@
+MERA cleaning / processing summary
+
+Dataset:
+- Source: MERA-evaluation/MERA.
+- Goal: add Russian SFT data aligned with our MCQ / numeric boxed-answer format.
+- We processed only useful Russian tasks and saved all clean usable rows; caps will be applied later in the SFT builder, not in the notebook.
+
+Selected subsets:
+- Included:
+  - mamuramu
+  - mathlogicqa
+  - ruopenbookqa
+  - ruworldtree
+  - parus
+  - rcb
+  - rwsd
+  - use
+- Excluded:
+  - chegeka: inspected manually and excluded because it is open-answer quiz QA, not MCQ/numeric.
+  - multiq: skipped because it is open-answer extractive QA.
+  - rumultiar/simplear: skipped for now.
+  - all diagnostic/safety/code/algorithmic tasks not aligned with multilingual MCQ SFT.
+  - all test/public_test splits.
+
+Split policy:
+- We used only train, validation, and dev splits.
+- validation/dev were mapped to internal val.
+- test and public_test were skipped to avoid benchmark leakage.
+- Final splits:
+  - mamuramu: train 285
+  - mathlogicqa: train 680
+  - parus: train 400, val 100
+  - rcb: train 438, val 220
+  - ruopenbookqa: train 2338
+  - ruworldtree: train 115
+  - rwsd: train 606, val 204
+  - use: train 1909, val 660
+
+Task-format decisions:
+- Kept only task types compatible with our SFT format:
+  - mcq
+  - numeric
+- Removed all short_answer rows.
+- This excluded CheGeKa entirely and removed the open-text USE tasks.
+- Final task-type distribution:
+  - mcq: 5386 rows
+  - numeric: 2569 rows
+  - total: 7955 rows
+
+RWSD reformatting:
+- RWSD originally had binary answers Да / Нет.
+- Distribution was balanced enough:
+  - total: Да 388, Нет 422
+  - train: Да 297, Нет 309
+  - val: Да 91, Нет 113
+- We reformatted RWSD into standard A/B MCQ:
+  - A) Да
+  - B) Нет
+- Answers were mapped as:
+  - Да -> A
+  - Нет -> B
+- Metadata keeps the raw answer.
+
+USE filtering:
+- USE originally had multiple task types: multiple_choice, matching, and text.
+- We kept only multiple-choice/matching-style tasks and classified them as numeric because answers are often numeric sequences such as "1,4" or "8,1,9,7".
+- We removed open-text USE tasks.
+- Final USE count after filtering: 2569 rows.
+
+Final saved files:
+- multilingual/data/processed/mera/mera_clean_all.csv
+- multilingual/data/processed/mera/mera_excluded_short_answer.csv
+- multilingual/data/processed/mera/mera_rejected_all.csv
+- Also saved per-subset files:
+  - mera_clean_mamuramu.csv
+  - mera_clean_mathlogicqa.csv
+  - mera_clean_parus.csv
+  - mera_clean_rcb.csv
+  - mera_clean_ruopenbookqa.csv
+  - mera_clean_ruworldtree.csv
+  - mera_clean_rwsd.csv
+  - mera_clean_use.csv
+
+Final subset distribution:
+- mamuramu: 285 mcq
+- mathlogicqa: 680 mcq
+- parus: 500 mcq
+- rcb: 658 mcq
+- ruopenbookqa: 2338 mcq
+- ruworldtree: 115 mcq
+- rwsd: 810 mcq after A/B reformatting
+- use: 2569 numeric
+
+Notes for caps later:
+- Do not cap in the notebook; cap in the SFT builder.
+- ruopenbookqa and use dominate MERA, so they may need moderate caps.
+- mamuramu and ruworldtree are small enough to keep fully.
+- rwsd/parus/rcb/mathlogicqa are useful structured reasoning tasks and can be moderately capped or kept depending on the total Russian budget.
