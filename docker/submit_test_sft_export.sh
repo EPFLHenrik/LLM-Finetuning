@@ -94,7 +94,7 @@ MSYS_NO_PATHCONV=1 runai submit \
       --adapter_path ${ADAPTER_PATH} \
       --output_dir ${EXPORT_DIR} \
       --hf_repo ${HF_REPO} \
-      --push" 
+      --push"
 
 cat <<EOF
 
