@@ -94,6 +94,7 @@ def parse_args():
     parser.add_argument("--save_steps",   type=int,   default=DEFAULT_SAVE_STEPS)
     parser.add_argument("--eval_steps",   type=int,   default=DEFAULT_EVAL_STEPS)
     parser.add_argument("--log_steps",    type=int,   default=DEFAULT_LOG_STEPS)
+    parser.add_argument("--per_device_eval_batch_size", type=int, default=4)
     parser.add_argument("--max_steps",    type=int,   default=-1,
                         help="Override epochs. Use with small values for debug runs.")
     parser.add_argument("--wandb_project", type=str, default=WANDB_PROJECT)
@@ -184,7 +185,7 @@ def main():
         num_train_epochs=args.epochs,
         max_steps=args.max_steps,
         per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
+        per_device_eval_batch_size=args.per_device_eval_batch_size,
         gradient_accumulation_steps=args.grad_accum,
         learning_rate=args.lr,
         warmup_ratio=args.warmup_ratio,

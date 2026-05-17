@@ -9,16 +9,19 @@ GASPAR="anastass"
 GROUP="g02"
 REPO_DIR="/scratch/workspace/emma/standard-project-m2-mystery-machine"
 
-RUN_NAME="sft_multilingual_v2"
+RUN_NAME="sft_multilingual_v3"
 HF_REPO="cs-552-2026-mystery-machine/multilingual_model"
 
 EPOCHS=3
 LR="2e-4"
-BATCH_SIZE=1
-GRAD_ACCUM=16
+BATCH_SIZE=2
+GRAD_ACCUM=8
 EVAL_STEPS=250
 SAVE_STEPS=250
 LOG_STEPS=10
+
+EVAL_STEPS=500
+EVAL_BATCH_SIZE=8
 # ==============================================
 
 if [[ -z "${GASPAR}" ]]; then
@@ -89,6 +92,8 @@ MSYS_NO_PATHCONV=1 runai training submit \
       --eval_steps ${EVAL_STEPS} \
       --save_steps ${SAVE_STEPS} \
       --log_steps ${LOG_STEPS} && \
+      --eval_steps ${EVAL_STEPS} \
+      --per_device_eval_batch_size ${EVAL_BATCH_SIZE} \
     python -m multilingual.train.export \
       --adapter_path ${ADAPTER_PATH} \
       --output_dir ${EXPORT_DIR} \
