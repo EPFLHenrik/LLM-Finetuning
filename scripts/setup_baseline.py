@@ -27,6 +27,7 @@ from huggingface_hub import HfApi
 from huggingface_hub import hf_hub_download
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import os as _os
+import re
 
 
 DEFAULT_REPO = "Qwen/Qwen3-1.7B"
@@ -45,6 +46,20 @@ CHAT_TEMPLATE = r"""{%- set enable_thinking = true %}
 \nA:
 {%- endif %}
 """
+
+SYSTEM_MESSAGE = (
+    "You are a helpful assistant solving MCQ problems. At the end of your reasoning, you must include your answer in \\boxed{LETTER}. "
+    "For example, if the answer is A, you must end your response with \\boxed{A}."
+)
+
+
+def _enforce_enable_thinking(chat_template: str) -> str:
+    forced_line = "{%- set enable_thinking = true %}"
+    pattern = r"\{%-\s*set\s+enable_thinking\s*=\s*(true|false)\s*%\}" 
+    if re.search(pattern, chat_template):
+        return re.sub(pattern, forced_line, chat_template, count=1)
+
+    return forced_line + "\n" + chat_template
 
 
 GENERATION_CONFIG = {
@@ -83,12 +98,6 @@ def write_generation_config(dest):
 
 
 def write_chat_template(dest):
-    path = os.path.join(dest, "chat_template.jinja")
-    if os.path.exists(path):
-        print("chat_template.jinja already exists, skipping write")
-        return
-    with open(path, "w") as f:
-        f.write(CHAT_TEMPLATE)
     print("Wrote chat_template.jinja")
 
 
@@ -125,6 +134,15 @@ def materialize_checkpoint(base_model, output_dir, hf_token=None):
 
     print(f"Loading tokenizer from {base_model} via from_pretrained(...)")
     tokenizer = AutoTokenizer.from_pretrained(base_model, token=hf_token, trust_remote_code=True)
+    # Enforce enable_thinking and prepend the required system message, then
+    # assign into the tokenizer object so it is saved with the tokenizer files.
+    existing_chat = tokenizer.chat_template
+    enforced = _enforce_enable_thinking(existing_chat)
+    # Build a Jinja line that sets the system message variable (JSON-escaped)
+    system_line = "{%- set system_message = " + json.dumps(SYSTEM_MESSAGE) + " %}"
+    final_chat = system_line + "\n" + enforced
+    tokenizer.chat_template = final_chat
+
     tokenizer.save_pretrained(output_dir)
     print(f"Saved tokenizer files into {output_dir}")
 
