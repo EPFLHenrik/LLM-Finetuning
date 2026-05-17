@@ -8,20 +8,19 @@ set -euo pipefail
 GASPAR="anastass"
 GROUP="g02"
 REPO_DIR="/scratch/workspace/emma/standard-project-m2-mystery-machine"
+SFT_CONFIG="${REPO_DIR}/configs/sft/v4b.json"
 
-RUN_NAME="sft_multilingual_v3"
+RUN_NAME="sft_multilingual_v4b"
 HF_REPO="cs-552-2026-mystery-machine/multilingual_model"
 
 EPOCHS=3
-LR="2e-4"
+LR="1e-4"
 BATCH_SIZE=2
 GRAD_ACCUM=8
 EVAL_STEPS=250
 SAVE_STEPS=250
 LOG_STEPS=10
-
-EVAL_STEPS=500
-EVAL_BATCH_SIZE=8
+EVAL_BATCH_SIZE=1
 # ==============================================
 
 if [[ -z "${GASPAR}" ]]; then
@@ -62,11 +61,10 @@ echo ">>> Submitting ${JOB_NAME}"
 echo ">>> Run name: ${RUN_NAME}"
 echo ">>> HF repo:  ${HF_REPO}"
 
-MSYS_NO_PATHCONV=1 runai training submit \
-  --name "${JOB_NAME}" \
+MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
   -p "${PROJECT}" \
   --image "${IMAGE}" \
-  --gpu "${GPUS}" \
+  --gpu-devices-request "${GPUS}" \
   --large-shm \
   --node-pools "${NODE}" \
   --working-dir /scratch \
@@ -83,7 +81,7 @@ MSYS_NO_PATHCONV=1 runai training submit \
     mkdir -p /scratch/hf_cache /scratch/wandb && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
     cd ${REPO_DIR} && \
-    python -m multilingual.train.build_sft_data --overwrite && \
+    python -m multilingual.train.build_sft_data --overwrite --config ${SFT_CONFIG} && \
     python -m multilingual.train.sft \
       --run_name ${RUN_NAME} \
       --epochs ${EPOCHS} \
@@ -92,14 +90,12 @@ MSYS_NO_PATHCONV=1 runai training submit \
       --lr ${LR} \
       --eval_steps ${EVAL_STEPS} \
       --save_steps ${SAVE_STEPS} \
-      --log_steps ${LOG_STEPS} && \
-      --eval_steps ${EVAL_STEPS} \
-      --per_device_eval_batch_size ${EVAL_BATCH_SIZE} \
+      --log_steps ${LOG_STEPS} \
+      --per_device_eval_batch_size ${EVAL_BATCH_SIZE} && \
     python -m multilingual.train.export \
       --adapter_path ${ADAPTER_PATH} \
       --output_dir ${EXPORT_DIR} \
-      --hf_repo ${HF_REPO} \
-      --push"
+      --hf_repo ${HF_REPO}"
 
 cat <<EOF
 

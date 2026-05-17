@@ -521,23 +521,38 @@ def parse_args():
         help="Final per-language cap in the mixed file. Set 0 to disable.")
     parser.add_argument("--debug",     action="store_true")
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--config", type=Path, default=None,
+    help="Optional JSON file overriding DATASET_REGISTRY and global caps.")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    max_mixed = args.max_per_language_mixed if args.max_per_language_mixed > 0 else None
-    hf_token  = os.environ.get("HF_TOKEN", "")
+    
+    max_per_language = args.max_per_language
+    max_per_dataset  = args.max_per_dataset
+    max_mixed        = args.max_per_language_mixed if args.max_per_language_mixed > 0 else None
 
+    if args.config:
+        with open(args.config) as f:
+            cfg = json.load(f)
+        max_per_language = cfg.get("max_per_language", max_per_language)
+        max_per_dataset  = cfg.get("max_per_dataset",  max_per_dataset)
+        max_mixed        = cfg.get("max_per_language_mixed", max_mixed)
+        if "dataset_registry" in cfg:
+            DATASET_REGISTRY.update(cfg["dataset_registry"])
+
+    hf_token = os.environ.get("HF_TOKEN", "")
     print(f"Debug:     {args.debug}  Overwrite: {args.overwrite}")
-    print(f"Caps:      max_per_language={args.max_per_language}, "
-          f"max_per_dataset={args.max_per_dataset}, "
+    print(f"Config:    {args.config or 'default'}")
+    print(f"Caps:      max_per_language={max_per_language}, "
+          f"max_per_dataset={max_per_dataset}, "
           f"max_per_language_mixed={max_mixed}")
     print(f"Output:    {SFT_DATA_DIR}\n")
 
     build(
-        max_per_language=args.max_per_language,
-        max_per_dataset=args.max_per_dataset,
+        max_per_language=max_per_language,
+        max_per_dataset=max_per_dataset,
         max_per_language_mixed=max_mixed,
         debug=args.debug,
         overwrite=args.overwrite,

@@ -1,0 +1,14 @@
+{
+    "dataset_registry": {
+        "include": {
+            "languages": null,
+            "language_caps": {
+                "spanish": 3500,
+                "italian": 3500,
+                "russian": 3500,
+                "chinese": 3500,
+                "hindi":   3500
+            }
+        }
+    }
+}
