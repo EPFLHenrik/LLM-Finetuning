@@ -1,5 +1,3 @@
-2026-05-14 14:22:25 | --ds data/processed/sft/wildguardmix/subcategory_classification/train
-2026-05-14 14:24:25 | --ds data/processed/sft/wildguardmix/safety_combo/train
 2026-05-14 14:45:23 | --ds data/processed/benchmark/wildjailbreak/binary_choice
 2026-05-14 14:46:00 | --ds data/processed/benchmark/wildjailbreak/safety_combo
 2026-05-14 14:46:31 | --ds data/processed/benchmark/wildjailbreak/statement_comparison
@@ -8,3 +6,5 @@
 2026-05-14 15:55:40 | --ds data/processed/sft/distillation/sb_mcq_prompt1_think/train
 2026-05-14 15:56:10 | --ds data/processed/sft/distillation/sb_mcq_prompt1_think/train_fallback
 2026-05-14 16:11:52 | --ds data/processed/sft/distillation/sb_mcq_prompt1_no_think/train_fallback
+2026-05-16 21:08:53 | --ds data/processed/sft/distillation/sb_mcq/train_fallback
+2026-05-16 21:11:58 | --ds data/processed/sft/distillation/sb_mcq/train
