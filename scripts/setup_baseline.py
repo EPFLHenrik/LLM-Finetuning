@@ -171,7 +171,6 @@ def push_to_hf(repo_id, source_dir, commit_message="Add model artifacts"):
                       repo_id=repo_id,
                       repo_type="model",
                       commit_message=commit_message,
-                      delete_patterns="*",
                       token=token)
     print("Upload complete.")
 
