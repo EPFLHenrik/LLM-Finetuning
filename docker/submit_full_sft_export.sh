@@ -16,11 +16,12 @@ HF_REPO="cs-552-2026-mystery-machine/multilingual_model"
 EPOCHS=3
 LR="1e-4"
 BATCH_SIZE=2
+EVAL_BATCH_SIZE=2
+LORA_DROPOUT=0.1
 GRAD_ACCUM=8
 EVAL_STEPS=250
 SAVE_STEPS=250
 LOG_STEPS=10
-EVAL_BATCH_SIZE=1
 # ==============================================
 
 if [[ -z "${GASPAR}" ]]; then
@@ -88,6 +89,7 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
       --batch_size ${BATCH_SIZE} \
       --grad_accum ${GRAD_ACCUM} \
       --lr ${LR} \
+      --lora_dropout ${LORA_DROPOUT} \
       --eval_steps ${EVAL_STEPS} \
       --save_steps ${SAVE_STEPS} \
       --log_steps ${LOG_STEPS} \

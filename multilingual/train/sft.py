@@ -44,7 +44,7 @@ DEFAULT_VAL_FILE   = SFT_DATA_DIR / "mixed" / "val_mixed.jsonl"
 
 LORA_R              = 16
 LORA_ALPHA          = 32
-LORA_DROPOUT        = 0.05
+LORA_DROPOUT        = 0.05 #
 LORA_TARGET_MODULES = [
     "q_proj", "k_proj", "v_proj", "o_proj",
     "gate_proj", "up_proj", "down_proj",
@@ -89,6 +89,9 @@ def parse_args():
     parser.add_argument("--batch_size",   type=int,   default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--grad_accum",   type=int,   default=DEFAULT_GRAD_ACCUM)
     parser.add_argument("--lr",           type=float, default=DEFAULT_LR)
+    parser.add_argument("--lora_dropout", type=float, default=LORA_DROPOUT)
+    parser.add_argument("--lora_r",       type=int,   default=LORA_R)
+    parser.add_argument("--lora_alpha",   type=int,   default=LORA_ALPHA)
     parser.add_argument("--warmup_ratio", type=float, default=DEFAULT_WARMUP_RATIO)
     parser.add_argument("--max_seq_len",  type=int,   default=DEFAULT_MAX_SEQ_LEN)
     parser.add_argument("--save_steps",   type=int,   default=DEFAULT_SAVE_STEPS)
@@ -173,9 +176,9 @@ def main():
 
     lora_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
-        r=LORA_R,
-        lora_alpha=LORA_ALPHA,
-        lora_dropout=LORA_DROPOUT,
+        r=args.lora_r,
+        lora_alpha=args.lora_alpha,
+        lora_dropout=args.lora_dropout,
         target_modules=LORA_TARGET_MODULES,
         bias="none",
     )

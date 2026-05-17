@@ -47,7 +47,7 @@ from multilingual.loaders.global_piqa_loader import load_global_piqa_examples
 
 DEFAULT_MAX_PER_LANGUAGE = 1500
 DEFAULT_MAX_PER_DATASET  = 7000
-DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL = 750
+DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL = 1500
 # Target examples per language in the final mixed file.
 # Set to None to disable final language balancing.
 DEFAULT_MAX_PER_LANGUAGE_MIXED = 6000
