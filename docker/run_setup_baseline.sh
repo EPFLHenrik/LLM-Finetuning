@@ -26,6 +26,9 @@ if [[ "${GROUP}" == "gXX" || -z "${GROUP}" ]]; then
 fi
 
 WORKSPACE_BASE="/scratch/workspace/henrik/standard-project-m2-mystery-machine"
+REPO_DIR="${WORKSPACE_BASE}"
+GPUS=1
+NODE="${NODE:-a100-40g}"
 SUFFIX="setup-baseline"
 JOB_NAME="cs552-${GASPAR}-${GROUP}-${SUFFIX}-$(date +%H%M%S)"
 PROJECT="course-cs-552-${GASPAR}"
@@ -80,6 +83,7 @@ DEST_ABS="${WORKSPACE_BASE}/${DEST_REL}"
 
 # Append normalized --dest to args
 NEW_ARGS+=("--dest" "$DEST_ABS")
+REMOTE_ARGS="$(printf ' %q' "${NEW_ARGS[@]}")"
 
 echo ">>> Submitting ${JOB_NAME} to prepare baseline (dest: ${DEST_ABS})"
 
@@ -87,9 +91,9 @@ runai submit \
   --name "${JOB_NAME}" \
   -p "${PROJECT}" \
   --image "${IMAGE}" \
-  --gpu 0 \
+  --gpu "${GPUS}" \
   --large-shm \
-  --node-pools "a100-40g" \
+  --node-pools "${NODE}" \
   --working-dir "${WORKSPACE_BASE}" \
   --environment HF_HOME="${WORKSPACE_BASE}/hf_cache" \
   --environment HF_HUB_ENABLE_HF_TRANSFER=1 \
@@ -99,14 +103,11 @@ runai submit \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
   --command -- /bin/bash -lc "\
     set -euo pipefail && \
-    mkdir -p '${WORKSPACE_BASE}' '${WORKSPACE_BASE}/hf_cache' '${WORKSPACE_BASE}/wandb' && \
+    echo \"REMOTE: WORKSPACE_BASE='${WORKSPACE_BASE}'\" && \
+    mkdir -p \"${WORKSPACE_BASE}\" \"${WORKSPACE_BASE}/hf_cache\" \"${WORKSPACE_BASE}/wandb\" && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
-    cd '${WORKSPACE_BASE}' && \
-    # clone the git repo into the workspace (idempotent) && \
-    git clone https://github.com/$(git config --get remote.origin.url | sed -e 's#.*github.com/##' -e 's#\\.git$##') repo || true && \
-    cd repo || true && \
-    # Run setup_baseline.py with sanitized args (ensures --dest under workspace)
-    python scripts/setup_baseline.py ${NEW_ARGS[@]/#/ }"
+    cd \"${REPO_DIR}\" && \
+    python scripts/setup_baseline.py${REMOTE_ARGS}"
 
 cat <<EOF
 
