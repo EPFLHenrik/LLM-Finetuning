@@ -82,6 +82,9 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
     mkdir -p /scratch/hf_cache /scratch/wandb && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
     cd ${REPO_DIR} && \
+    git config --global --add safe.directory ${REPO_DIR} && \
+    git fetch origin && \
+    git pull origin multilingual && \
     python -m multilingual.train.build_sft_data --overwrite --config ${SFT_CONFIG} && \
     python -m multilingual.train.sft \
       --run_name ${RUN_NAME} \
@@ -97,6 +100,7 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
     python -m multilingual.train.export \
       --adapter_path ${ADAPTER_PATH} \
       --output_dir ${EXPORT_DIR} \
+      --run_name ${RUN_NAME} \
       --hf_repo ${HF_REPO} \
       --push"
 
