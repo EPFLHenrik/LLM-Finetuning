@@ -1,0 +1,73 @@
+{
+  "builder_name": "json",
+  "citation": "",
+  "config_name": "test",
+  "dataset_name": "safety_bench",
+  "dataset_size": 8702777,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/thu-coai/SafetyBench@70538631943dc1517ae9bb0733251809f4445d0e/test_zh.json": {
+      "num_bytes": 4414133,
+      "checksum": null
+    },
+    "hf://datasets/thu-coai/SafetyBench@70538631943dc1517ae9bb0733251809f4445d0e/test_en.json": {
+      "num_bytes": 5156143,
+      "checksum": null
+    },
+    "hf://datasets/thu-coai/SafetyBench@70538631943dc1517ae9bb0733251809f4445d0e/test_zh_subset.json": {
+      "num_bytes": 774384,
+      "checksum": null
+    }
+  },
+  "download_size": 10344660,
+  "features": {
+    "question": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "id": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "category": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "options": {
+      "feature": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "_type": "List"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 19047437,
+  "splits": {
+    "zh": {
+      "name": "zh",
+      "num_bytes": 3664938,
+      "num_examples": 11435,
+      "dataset_name": "safety_bench"
+    },
+    "en": {
+      "name": "en",
+      "num_bytes": 4401632,
+      "num_examples": 11435,
+      "dataset_name": "safety_bench"
+    },
+    "zh_subset": {
+      "name": "zh_subset",
+      "num_bytes": 636207,
+      "num_examples": 2100,
+      "dataset_name": "safety_bench"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
