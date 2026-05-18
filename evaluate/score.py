@@ -27,7 +27,7 @@ from .pass_at_k import compute_pass_at_k_for_dataset
 # Mirrors config/benchmarks.yaml in the CI repo.
 BENCHMARK_TO_METHOD = {
     "math": "boxed",
-    "knowledge": "knowledge",
+    "knowledge": "boxed",
     "multilingual": "boxed",
     "safety": "boxed",
 }

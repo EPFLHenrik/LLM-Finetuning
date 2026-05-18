@@ -111,6 +111,8 @@ You can iterate as often as you want — push a new commit and the next nightly 
 - 1× NVIDIA A100 40 GB, FP16 inference.
 - Max model length 4096. The generation stops once the `\boxed{...}` answer is generated, or the model reaches an EoS token, or the maximum length is reached.
 
+`UPDATE: Max new tokens are 4096 for the nightly CI, kept short so the pipeline finishes quickly across all submissions. The final grading run would use 16,384 as stated in the project description.`
+
 ### Metrics
 
 - **pass@1** = per-attempt accuracy with one completion per question.
