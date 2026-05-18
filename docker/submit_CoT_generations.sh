@@ -95,59 +95,59 @@ MSYS_NO_PATHCONV=1 runai submit \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/safetybench/mcq \
     --output data/processed/sft/distillation/sb_mcq \
-    --split train && \
+    --split train --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/safetybench/mcq \
     --output data/processed/sft/distillation/sb_mcq \
-    --split test && \
+    --split test --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildguardmix/binary_choice \
     --output data/processed/sft/distillation/wgm_binary_choice \
-    --split train --from_id 0 --to_id 3000 && \
+    --split train --from_id 0 --to_id 3000 --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildguardmix/binary_choice \
     --output data/processed/sft/distillation/wgm_binary_choice \
-    --split test && \
+    --split test --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildguardmix/safety_combo \
     --output data/processed/sft/distillation/wgm_safety_combo \
-    --split train --from_id 0 --to_id 7000 && \
+    --split train --from_id 0 --to_id 7000 --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildguardmix/safety_combo \
     --output data/processed/sft/distillation/wgm_safety_combo \
-    --split test && \
+    --split test --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildguardmix/subcategory_classification \
     --output data/processed/sft/distillation/wgm_subcategory_classification \
-    --split train --from_id 0 --to_id 12000 && \
+    --split train --from_id 0 --to_id 12000 --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildguardmix/subcategory_classification \
     --output data/processed/sft/distillation/wgm_subcategory_classification \
-    --split test && \
+    --split test --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildjailbreak/binary_choice \
     --output data/processed/sft/distillation/wjb_binary_choice \
-    --split train --from_id 0 --to_id 3000 && \
+    --split train --from_id 0 --to_id 3000 --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildjailbreak/binary_choice \
     --output data/processed/sft/distillation/wjb_binary_choice \
-    --split test && \
+    --split test --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildjailbreak/safety_combo \
     --output data/processed/sft/distillation/wjb_safety_combo \
-    --split train --from_id 0 --to_id 7000 && \
+    --split train --from_id 0 --to_id 7000 --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildjailbreak/safety_combo \
     --output data/processed/sft/distillation/wjb_safety_combo \
-    --split test && \
+    --split test --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildjailbreak/statement_comparison \
     --output data/processed/sft/distillation/wjb_statement_comparison \
-    --split train --from_id 0 --to_id 10000 && \
+    --split train --from_id 0 --to_id 10000 --think && \
     python -m preprocessing.reasoning_generation \
     --input data/processed/sft/wildjailbreak/statement_comparison \
     --output data/processed/sft/distillation/wjb_statement_comparison \
-    --split test"
+    --split test --think"
 
 cat <<EOF
 
