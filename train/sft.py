@@ -166,6 +166,12 @@ def parse_args() -> argparse.Namespace:
         help="Enable thinking mode during benchmark evaluation.",
     )
     parser.add_argument(
+        "--eval-interval",
+        type=int,
+        default=500,
+        help="Number of training steps between evaluations.",
+    )
+    parser.add_argument(
         "--gradient-checkpointing",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -496,6 +502,7 @@ def train(args: argparse.Namespace) -> None:
     print(f"  Datasets             : {args.datasets}")
     print(f"  Train sizes          : {args.train_sizes}")
     print(f"  Benchmarks           : {args.benchmarks}")
+    print(f"  Eval interval        : every {args.eval_interval} steps")
     print(f"  Device               : {device}")
     print(f"  Run name             : {run_name}")
     print(f"  Best checkpoint path : {best_checkpoint_dir}")
@@ -544,6 +551,7 @@ def train(args: argparse.Namespace) -> None:
 
     best_weighted_test = float("inf")
     best_epoch = -1
+    best_step = -1
     global_step = 0
     grad_counter = 0
     train_step = 0
@@ -608,6 +616,57 @@ def train(args: argparse.Namespace) -> None:
                 optimizer.zero_grad()
                 global_step += 1
 
+                # Evaluate at specified intervals
+                if global_step % args.eval_interval == 0:
+                    print(f"[eval] Step {global_step}: Running evaluation...")
+                    for bundle in bundles:
+                        test_avg_loss, eval_step = evaluate_loss(
+                            model,
+                            bundle.test_loader,
+                            device,
+                            wb_run=wb_run,
+                            epoch=epoch,
+                            dataset_name=bundle.name,
+                            eval_step=eval_step,
+                        )
+                        test_loss_by_dataset[bundle.name] = test_avg_loss
+                        test_weight_by_dataset[bundle.name] = bundle.test_size
+
+                    test_weighted = weighted_average(test_loss_by_dataset, test_weight_by_dataset)
+                    print(f"[eval] Step {global_step}: test_weighted_loss={test_weighted:.4f}")
+
+                    # Log eval to wandb
+                    if wb_run is not None:
+                        eval_log = {
+                            "epoch": epoch,
+                            "train/global_step": global_step,
+                            "test/weighted_loss": test_weighted,
+                        }
+                        for name in args.datasets:
+                            eval_log[f"test/{name}_loss"] = test_loss_by_dataset[name]
+                        wb_run.log(eval_log, commit=True)
+
+                    # Save checkpoint if best
+                    if test_weighted < best_weighted_test:
+                        best_weighted_test = test_weighted
+                        best_epoch = epoch
+                        best_step = global_step
+                        print(f"[info] New best checkpoint at step {global_step}. Exporting merged model + LoRA adapter...")
+                        export_merged_checkpoint(
+                            model=model,
+                            tokenizer=tokenizer,
+                            output_dir=best_hf_model_dir,
+                            base_model=BASE_MODEL,
+                            system_prompt=SYSTEM_PROMPT_MCQ,
+                            temperature=args.export_temperature,
+                            top_p=args.export_top_p,
+                            top_k=args.export_top_k,
+                        )
+
+                        if best_lora_dir.exists():
+                            shutil.rmtree(best_lora_dir)
+                        model.save_pretrained(best_lora_dir)
+
         for bundle in bundles:
             train_loss_by_dataset[bundle.name] = (
                 train_loss_sums_by_dataset[bundle.name] / train_batches_by_dataset[bundle.name]
@@ -622,6 +681,8 @@ def train(args: argparse.Namespace) -> None:
             optimizer.zero_grad()
             global_step += 1
 
+        # Final epoch evaluation
+        print(f"[eval] End of epoch {epoch}: Running final evaluation...")
         for bundle in bundles:
             test_avg_loss, eval_step = evaluate_loss(
                 model,
@@ -645,25 +706,6 @@ def train(args: argparse.Namespace) -> None:
                 f"train={dataset_train_loss:.4f} " if math.isfinite(dataset_train_loss) else ""
             )
             print(f"  {name}: {train_fragment}test={test_loss_by_dataset[name]:.4f}")
-
-        if test_weighted < best_weighted_test:
-            best_weighted_test = test_weighted
-            best_epoch = epoch
-            print("[info] New best checkpoint. Exporting merged model + LoRA adapter...")
-            export_merged_checkpoint(
-                model=model,
-                tokenizer=tokenizer,
-                output_dir=best_hf_model_dir,
-                base_model=BASE_MODEL,
-                system_prompt=SYSTEM_PROMPT_MCQ,
-                temperature=args.export_temperature,
-                top_p=args.export_top_p,
-                top_k=args.export_top_k,
-            )
-
-            if best_lora_dir.exists():
-                shutil.rmtree(best_lora_dir)
-            model.save_pretrained(best_lora_dir)
 
         benchmark_payload: dict[str, dict] = {}
         if args.benchmarks and (epoch % args.benchmark_interval == 0):
@@ -700,12 +742,13 @@ def train(args: argparse.Namespace) -> None:
             wb_run.log(log_payload, commit=True)
             wb_run.summary["best_test_weighted_loss"] = best_weighted_test
             wb_run.summary["best_epoch"] = best_epoch
+            wb_run.summary["best_step"] = best_step
             wb_run.summary["best_checkpoint_dir"] = str(best_checkpoint_dir)
             wb_run.summary["best_hf_model_dir"] = str(best_hf_model_dir)
             wb_run.summary["best_lora_dir"] = str(best_lora_dir)
 
     print("\nTraining complete.")
-    print(f"Best checkpoint root: {best_checkpoint_dir} (epoch {best_epoch})")
+    print(f"Best checkpoint root: {best_checkpoint_dir} (epoch {best_epoch}, step {best_step})")
     print(f"  HF merged model: {best_hf_model_dir}")
     print(f"  LoRA adapter   : {best_lora_dir}")
 
