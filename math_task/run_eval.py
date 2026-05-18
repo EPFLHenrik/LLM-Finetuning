@@ -14,7 +14,12 @@ Run from the repo root:
     # Score a finetune later
     python -m math_task.run_eval --dataset math500 --model cs-552-2026-<org>/math_model
 
-Produces three files in math_task/results/ (stem = "<dataset>_<safe_model>"):
+    # Ablation cells (local-only knobs; CI ignores them):
+    python -m math_task.run_eval --dataset math500 --limit 100 --prompt-variant boxed --thinking off
+
+Produces three files in math_task/results/. Stem includes prompt-variant +
+thinking mode so ablation cells don't clobber each other:
+    "<dataset>_<safe_model>_<variant>_think-<on|off>"
     - <stem>_raw.json     full generation outputs incl. finish_reason / n_tokens
     - <stem>_gens.jsonl   directly consumable by `python -m evaluate.score`
     - <stem>_scored.json  combined metrics + per-problem detailed grading
@@ -25,7 +30,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List
 
-from .config import EvalConfig
+from .config import EvalConfig, PROMPT_VARIANTS
 from .dataset_loader import load_gsm8k, load_math500, load_validation_samples
 from .evaluation import compute_extra_metrics
 from .generation import run_generation
@@ -67,24 +72,33 @@ def main() -> None:
                     help="Cap number of problems (useful for fast iteration).")
     ap.add_argument("--model", default=None,
                     help="Override config.model_id (e.g. a finetuned HF checkpoint).")
+    ap.add_argument("--prompt-variant", default="none",
+                    choices=list(PROMPT_VARIANTS),
+                    help="Local-only user-message prefix; CI ignores this.")
+    ap.add_argument("--thinking", default="on", choices=["on", "off"],
+                    help="Qwen3 enable_thinking. Local-only; CI uses the "
+                         "chat_template default of the pushed checkpoint.")
     args = ap.parse_args()
 
     cfg = EvalConfig()
     if args.model:
         cfg.model_id = args.model
+    cfg.prompt_variant = args.prompt_variant
+    cfg.thinking_enabled = (args.thinking == "on")
 
     # 1. load
     items = DATASET_LOADERS[args.dataset](cfg, args.limit)
     print(f"[load] {len(items)} problems from {args.dataset}")
 
     # 2. generate
-    print(f"[gen]  model={cfg.model_id}  n={cfg.n_samples}  max_len={cfg.max_model_len}")
+    print(f"[gen]  model={cfg.model_id}  n={cfg.n_samples}  max_len={cfg.max_model_len}"
+          f"  variant={cfg.prompt_variant}  thinking={args.thinking}")
     generation_results = run_generation(items, cfg)
 
     # 3. save raw outputs (finish_reason + n_tokens preserved)
     cfg.results_dir.mkdir(parents=True, exist_ok=True)
     safe_model = cfg.model_id.replace("/", "_")
-    stem = f"{args.dataset}_{safe_model}"
+    stem = f"{args.dataset}_{safe_model}_{cfg.prompt_variant}_think-{args.thinking}"
 
     raw_path = cfg.results_dir / f"{stem}_raw.json"
     with open(raw_path, "w") as f:
@@ -109,6 +123,10 @@ def main() -> None:
 
     # 6. combine and print
     summary = {
+        "dataset": args.dataset,
+        "model": cfg.model_id,
+        "prompt_variant": cfg.prompt_variant,
+        "thinking": args.thinking,
         "pass@1": scored["metrics"].get("pass@1"),
         "pass@8": scored["metrics"].get("pass@8"),
         "box_compliance_rate": extra["box_compliance_rate"],

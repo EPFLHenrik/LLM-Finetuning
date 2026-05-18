@@ -5,9 +5,30 @@ Defaults mirror the CI evaluation contract from README.md:
   - n = 8 completions per problem
   - apply_chat_template(messages, add_generation_prompt=True), nothing else
 so local numbers are directly comparable to the leaderboard.
+
+The `prompt_variant` and `thinking_enabled` fields are ablation knobs used
+locally to probe how prompt wording and Qwen3 thinking mode affect pass@k.
+CI does NOT pass any of this through — for the final pushed checkpoint,
+encode the chosen behavior in chat_template.jinja and/or the SFT data.
 """
 from dataclasses import dataclass, field
 from pathlib import Path
+
+
+# Prefix prepended to the user message for each ablation cell.
+# "none" stays identical to the CI contract. The other two are ONLY for local
+# probing, since CI never adds anything to the user prompt.
+PROMPT_VARIANTS = {
+    "none": "",
+    "boxed": (
+        "Answer with the final result in \\boxed{} format.\n\n"
+    ),
+    "classify": (
+        "First classify this problem as one of: math reasoning, safety, "
+        "multilinguality, general knowledge. Then solve it and put the "
+        "final answer in \\boxed{} format.\n\n"
+    ),
+}
 
 
 @dataclass
@@ -26,6 +47,10 @@ class EvalConfig:
     top_p: float = 0.95
     top_k: int = 20
     seed: int = 42
+
+    # --- ablation knobs (local only — see module docstring) ---
+    prompt_variant: str = "none"      # key into PROMPT_VARIANTS
+    thinking_enabled: bool = True     # passed as enable_thinking to chat_template
 
     # --- paths (resolved relative to repo root) ---
     repo_root: Path = field(

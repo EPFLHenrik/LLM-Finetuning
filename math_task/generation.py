@@ -4,19 +4,28 @@
 
 No system prompt, no extra instructions. Anything custom must live inside
 the chat_template.jinja itself — that's the only signal CI honors.
+
+Local ablations may prepend a string to the user message (PROMPT_VARIANTS in
+config.py) and override Qwen3's enable_thinking default. Both are CI-invisible
+side channels for probing only.
 """
 from typing import List, Dict
 
-from .config import EvalConfig
+from .config import EvalConfig, PROMPT_VARIANTS
 
 
-def build_prompts(items: List[Dict], tokenizer) -> List[str]:
+def build_prompts(items: List[Dict], tokenizer, config: EvalConfig) -> List[str]:
+    prefix = PROMPT_VARIANTS[config.prompt_variant]
     prompts = []
     for item in items:
-        messages = [{"role": "user", "content": item["prompt"]}]
+        user_content = prefix + item["prompt"] if prefix else item["prompt"]
+        messages = [{"role": "user", "content": user_content}]
         prompts.append(
             tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True,
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                enable_thinking=config.thinking_enabled,
             )
         )
     return prompts
@@ -54,7 +63,7 @@ def run_generation(items: List[Dict], config: EvalConfig) -> List[Dict]:
         top_k=config.top_k,
         seed=config.seed,
     )
-    prompts = build_prompts(items, tokenizer)
+    prompts = build_prompts(items, tokenizer, config)
     outputs = llm.generate(prompts, sp)
 
     results: List[Dict] = []
