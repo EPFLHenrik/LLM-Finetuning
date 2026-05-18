@@ -95,7 +95,9 @@ MSYS_NO_PATHCONV=1 runai submit \
     python -m train.sft \
     --run_name sft_full2 \
     --datasets distillation_no_think/sb_mcq distillation_no_think/wgm_binary_choice distillation_no_think/wgm_safety_combo distillation_no_think/wgm_subcategory_classification distillation_no_think/wjb_binary_choice distillation_no_think/wjb_safety_combo distillation_no_think/wjb_statement_comparison \
-    --train-sizes 10000 3000 3000 10000 3000 3000 5000 && \
+    --train-sizes 10000 3000 3000 10000 3000 3000 5000 \
+    --test-sizes 500 150 150 500 150 150 250 \
+    --eval-interval 100 && \
     python -m benchmark.run \
     --benchmark advbench \
     --think \
