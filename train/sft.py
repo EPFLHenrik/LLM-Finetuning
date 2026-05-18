@@ -127,6 +127,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--test-sizes",
+        nargs="+",
+        type=int,
+        default=None,
+        help=(
+            "Optional per-dataset test sample caps aligned with --datasets order. "
+            "Use -1 for full dataset. Values above dataset size are clamped to full dataset."
+        ),
+    )
+    parser.add_argument(
         "--run_name",
         type=str,
         default=None,
@@ -353,6 +363,49 @@ def apply_train_size_caps(
     return resized_bundles
 
 
+def apply_test_size_caps(
+    bundles: list[DatasetBundle],
+    test_sizes: list[int] | None,
+    seed: int,
+) -> list[DatasetBundle]:
+    if test_sizes is None:
+        return bundles
+
+    if len(test_sizes) != len(bundles):
+        raise ValueError(
+            "--test-sizes must provide exactly one integer per dataset in --datasets. "
+            f"Received {len(test_sizes)} sizes for {len(bundles)} datasets."
+        )
+
+    resized_bundles: list[DatasetBundle] = []
+    for idx, (bundle, requested_size) in enumerate(zip(bundles, test_sizes)):
+        target_test_size = resolve_effective_train_size(requested_size, bundle.test_size)
+        test_dataset = bundle.test_loader.dataset
+
+        if target_test_size < len(test_dataset):
+            indices = list(range(len(test_dataset)))
+            rng = random.Random(seed + idx)
+            rng.shuffle(indices)
+            test_dataset = Subset(test_dataset, indices[:target_test_size])
+
+        resized_bundles.append(
+            DatasetBundle(
+                name=bundle.name,
+                train_loader=bundle.train_loader,
+                test_loader=DataLoader(
+                    test_dataset,
+                    batch_size=bundle.test_loader.batch_size,
+                    shuffle=False,
+                    collate_fn=bundle.test_loader.collate_fn,
+                ),
+                train_size=bundle.train_size,
+                test_size=target_test_size,
+            )
+        )
+
+    return resized_bundles
+
+
 def build_mixed_train_loader(bundles: list[DatasetBundle]) -> DataLoader:
     if not bundles:
         raise ValueError("At least one dataset bundle is required for training.")
@@ -489,6 +542,10 @@ def train(args: argparse.Namespace) -> None:
         raise ValueError(
             "--train-sizes must have the same number of values as --datasets."
         )
+    if args.test_sizes is not None and len(args.test_sizes) != len(args.datasets):
+        raise ValueError(
+            "--test-sizes must have the same number of values as --datasets."
+        )
 
     set_seeds(Random.SEED)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -522,6 +579,11 @@ def train(args: argparse.Namespace) -> None:
     bundles = apply_train_size_caps(
         bundles=bundles,
         train_sizes=args.train_sizes,
+        seed=Random.SEED,
+    )
+    bundles = apply_test_size_caps(
+        bundles=bundles,
+        test_sizes=args.test_sizes,
         seed=Random.SEED,
     )
 
