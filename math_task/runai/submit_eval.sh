@@ -53,24 +53,31 @@ echo ">>> Pod will run: VARIANT=${VARIANT} THINKING=${THINKING} BUDGET=${BUDGET}
 # --- Bootstrap wrapper ------------------------------------------------------
 # The private classroom repo on /scratch needs GitHub auth to `git pull`.
 # We can't ship the fix via pod_entrypoint.sh because the pod can't pull
-# the new entrypoint until auth works.
+# the new entrypoint until auth works (chicken/egg).
 #
-# Earlier attempt: credential.helper "store --file=/tmp/gitcreds". This
-# installed the helper but git still prompted for a username — the helper
-# was either not invoked or the file format mismatch. Switched to
-# `url.insteadOf`, which rewrites all https://github.com/ URLs to embed
-# the token, bypassing the credential helper entirely. Most reliable
-# non-interactive auth method per git docs.
-#
-# Single-quoted heredoc keeps $GITHUB_TOKEN unexpanded on the Mac;
-# positional args ("$@") receive the entrypoint path + dataset + limit.
+# Three attempts so far:
+#   1. credential.helper "store --file=/tmp/gitcreds" — helper installed but
+#      git still prompted for a username. Helper not invoked or file format
+#      mismatch — unclear why.
+#   2. url."<token-url>".insteadOf "https://github.com/" — printed as
+#      installed but same "could not read Username" error.
+#   3. (this one) Do the pull *here* using http.extraheader. This is what
+#      GitHub Actions uses internally and bypasses credential helpers + URL
+#      rewriting entirely. The auth header is passed as a one-off -c flag
+#      so it never touches persistent git config or files on /scratch.
 WRAPPER='set -e
+REPO_DIR="/scratch/workspace/mattea/standard-project-m2-mystery-machine"
+git config --global --add safe.directory "$REPO_DIR"
+cd "$REPO_DIR"
 if [ -n "$GITHUB_TOKEN" ]; then
-  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:"
-  echo "[wrapper] git url rewrite installed for github.com (PAT auth via insteadOf)"
+  echo "[wrapper] pulling latest via http.extraheader (token NOT persisted)..."
+  if git -c "http.https://github.com/.extraheader=Authorization: Bearer $GITHUB_TOKEN" pull --ff-only; then
+    echo "[wrapper] git pull SUCCESS"
+  else
+    echo "[wrapper] WARN: git pull failed; using on-disk code"
+  fi
 else
-  echo "[wrapper] WARN: GITHUB_TOKEN not set; private-repo git pull will fail"
+  echo "[wrapper] WARN: GITHUB_TOKEN not set; using on-disk code"
 fi
 exec bash "$@"'
 
