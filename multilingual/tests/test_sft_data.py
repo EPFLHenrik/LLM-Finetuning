@@ -1,6 +1,7 @@
 """multilingual/tests/test_sft_data.py
 
 Run with:
+    python -m pip install --user pytest
     pytest multilingual/tests/test_sft_data.py -v
 """
 

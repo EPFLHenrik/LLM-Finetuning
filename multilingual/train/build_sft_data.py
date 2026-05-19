@@ -45,16 +45,13 @@ from multilingual.loaders.global_piqa_loader import load_global_piqa_examples
 # Global defaults
 # ---------------------------------------------------------------------------
 
-DEFAULT_MAX_PER_LANGUAGE = 1500
-DEFAULT_MAX_PER_DATASET  = 7000
-DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL = 1500
-# Target examples per language in the final mixed file.
-# Set to None to disable final language balancing.
-DEFAULT_MAX_PER_LANGUAGE_MIXED = 6000
+DEFAULT_MAX_PER_LANGUAGE = 1000
+DEFAULT_MAX_PER_DATASET  = 5000
+DEFAULT_MAX_PER_LANGUAGE_MIXED = 2500
+DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL = 1000
 DEBUG_MAX_TRAIN = 20
 DEBUG_MAX_VAL   = 10
 SHUFFLE_SEED    = 42
-
 SFT_DATA_DIR = REPO / "multilingual" / "data" / "sft"
 
 # ---------------------------------------------------------------------------
@@ -72,10 +69,16 @@ SFT_DATA_DIR = REPO / "multilingual" / "data" / "sft"
 DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     "include": {
         "languages": None,
-        "max_per_dataset": 0,  # DISABLED, test set, do not train on
+        "split_caps": {
+            "train": 0,
+            "val": None,
+        },
     },
     "mgsm": {
-        "languages": None,     # keep all, tiny dataset
+        "languages": None,
+        "split_caps": {
+            "val": 150,
+        },
     },
     "mmmlu": {
         "languages": ["spanish", "hindi", "italian", "chinese"],
@@ -84,28 +87,47 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     "milu": {
         "languages": ["hindi"],
         "max_per_language": 2000,
+        "split_caps": {
+            "val": 300,
+        },
     },
     "ceval": {
         "languages": ["chinese"],
-        "language_caps": {"chinese": 2000},
+        "language_caps": {
+            "chinese": 2000,
+        },
+        "split_caps": {
+            "val": 300,
+        },
     },
     "cultsportqa": {
         "languages": ["chinese", "hindi"],
-        "max_per_language": 3000,
-        "max_per_dataset": 6000,
+        "max_per_language": 1000,
+        "max_per_dataset": 2000,
+        "split_caps": {
+            "val": 400,
+        },
     },
     "belebele": {
         "languages": None,
-        "max_per_language": 500,  # reduced, reading comprehension less aligned
+        "max_per_language": 500,
+        "split_caps": {
+            "val": 200,
+        },
     },
     "xcopa": {
         "languages": ["italian", "chinese"],
-        # small, keep all
+        "split_caps": {
+            "val": 100,
+        },
     },
     "exams": {
         "languages": ["italian", "spanish"],
         "max_per_language": None,
-        "max_per_dataset":  None,  # small, keep all
+        "max_per_dataset": None,
+        "split_caps": {
+            "val": 300,
+        },
     },
     "head_qa": {
         "languages": ["spanish", "italian"],
@@ -113,37 +135,49 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
             "spanish": 1000,
             "italian": 400,
         },
+        "split_caps": {
+            "val": 300,
+        },
     },
     "mera": {
         "languages": ["russian"],
         "max_per_language": 8000,
-        "max_per_dataset":  8000,
+        "max_per_dataset": 8000,
         "stratify_by": "subset",
         "subject_caps": {
-            "use":          800,
+            "use": 800,
             "ruopenbookqa": 800,
-            "rwsd":         None,
-            "rcb":          None,
-            "mathlogicqa":  None,
-            "parus":        None,
-            "mamuramu":     None,
-            "ruworldtree":  None,
+            "rwsd": None,
+            "rcb": None,
+            "mathlogicqa": None,
+            "parus": None,
+            "mamuramu": None,
+            "ruworldtree": None,
+        },
+        "split_caps": {
+            "val": 500,
         },
     },
     "global_mmlu": {
         "languages": None,
         "language_caps": {
-            "russian":  2000,  # priority
-            "chinese":  2000,  # priority
-            "hindi":    1200,
-            "italian":  800,  # reduced
-            "spanish":  800,  # reduced
+            "russian": 1600,
+            "chinese": 1600,
+            "hindi": 800,
+            "italian": 400,
+            "spanish": 400,
+        },
+        "split_caps": {
+            "val": 500,
         },
     },
     "global_piqa": {
         "languages": None,
         "max_per_language": None,
-        "max_per_dataset":  None,  # tiny, keep all
+        "max_per_dataset": None,
+        "split_caps": {
+            "val": 80,
+        },
     },
 }
 
