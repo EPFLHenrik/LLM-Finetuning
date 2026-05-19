@@ -13,8 +13,10 @@
 # Optional ablation knobs (env vars; passed through to pod_entrypoint.sh):
 #   VARIANT=boxed   : user-prompt prefix (none|boxed|classify; default none)
 #   THINKING=off    : Qwen3 enable_thinking (on|off; default on)
+#   BUDGET=ci       : token budget (ci=4096 | final=16384; default final)
 # Example:
-#   VARIANT=boxed THINKING=off bash math_task/runai/submit_eval.sh math500 100
+#   BUDGET=final bash math_task/runai/submit_eval.sh math500_stratified
+#   VARIANT=boxed THINKING=off BUDGET=ci bash math_task/runai/submit_eval.sh math500 100
 set -euo pipefail
 
 # ============== EDIT IF NEEDED ==============
@@ -27,6 +29,7 @@ DATASET="${1:?usage: submit_eval.sh <dataset> [limit]}"
 LIMIT="${2:-}"
 VARIANT="${VARIANT:-none}"
 THINKING="${THINKING:-on}"
+BUDGET="${BUDGET:-final}"
 
 PROJECT="course-cs-552-${GASPAR}"
 NODE="a100-40g"
@@ -35,11 +38,11 @@ SCRATCH_PVC="course-cs-552-scratch-${GROUP}"
 SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
-JOB_NAME="cs552-${GASPAR}-${GROUP}-math-${DATASET}-${VARIANT}-th${THINKING}-$(date +%H%M%S)"
+JOB_NAME="cs552-${GASPAR}-${GROUP}-math-${DATASET}-${VARIANT}-th${THINKING}-b${BUDGET}-$(date +%H%M%S)"
 ENTRYPOINT="${REPO_DIR_IN_POD}/math_task/runai/pod_entrypoint.sh"
 
 echo ">>> Submitting ${JOB_NAME}"
-echo ">>> Pod will run: VARIANT=${VARIANT} THINKING=${THINKING} bash ${ENTRYPOINT} ${DATASET} ${LIMIT}"
+echo ">>> Pod will run: VARIANT=${VARIANT} THINKING=${THINKING} BUDGET=${BUDGET} bash ${ENTRYPOINT} ${DATASET} ${LIMIT}"
 
 # Build the pod command as a bash array — safer than interpolating into a string.
 POD_CMD=(bash "${ENTRYPOINT}" "${DATASET}")
@@ -58,6 +61,7 @@ runai submit \
   --environment HF_TOKEN="${HF_TOKEN:-}" \
   --environment VARIANT="${VARIANT}" \
   --environment THINKING="${THINKING}" \
+  --environment BUDGET="${BUDGET}" \
   --existing-pvc "claimname=${SCRATCH_PVC},path=/scratch" \
   --existing-pvc "claimname=${SHARED_RO_PVC},path=/shared-ro" \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \
