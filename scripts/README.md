@@ -19,6 +19,27 @@ python scripts/run_validation.py --model-dir models/qwen3_baseline
 python scripts/run_validation.py --use-tiny
 ```
 
+Load a local checkpoint, adapt selected files, and save a full new checkpoint.
+Edit constants inside `scripts/model_config.py` first (for example `SYSTEM_MESSAGE`,
+`GENERATION_CONFIG`, `CONFIG_OVERRIDE`, `TOKENIZER_CONFIG_OVERRIDE`), then run:
+
+```bash
+# Apply all built-in overrides from scripts/model_config.py
+python scripts/model_config.py \
+  --model-path models/qwen3_baseline \
+  --output-dir models/qwen3_adapted \
+  --cmd all
+
+# Override exactly one artifact type (still saves full model+tokenizer+configs)
+python scripts/model_config.py \
+  --model-path models/qwen3_baseline \
+  --output-dir models/qwen3_adapted_gen \
+  --cmd generation_config
+
+# Output dir is always overwritten if it already exists
+python scripts/model_config.py --model-path models/qwen3_baseline --output-dir models/qwen3_adapted
+```
+
 Notes:
 - For real evaluation you must have vLLM-loadable safetensors and the Qwen tokenizer
   with `chat_template.jinja` as required by the course README.
