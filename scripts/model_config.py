@@ -13,6 +13,7 @@ import argparse
 import json
 import re
 import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ CONFIG_FILE = "config.json"
 GENERATION_CONFIG_FILE = "generation_config.json"
 TOKENIZER_CONFIG_FILE = "tokenizer_config.json"
 CHAT_TEMPLATE_FILE = "chat_template.jinja"
+CHECKPOINT_MANIFEST_FILE = "checkpoint_manifest.json"
 
 
 SYSTEM_MESSAGE = (
@@ -64,11 +66,17 @@ def _enforce_enable_thinking(chat_template: str, enable_thinking: bool) -> str:
     return forced_line + "\n" + chat_template
 
 
+def _enforce_system_message(chat_template: str) -> str:
+    forced_line = "{%- set system_message = " + json.dumps(SYSTEM_MESSAGE) + " %}"
+    pattern = r"(?m)^\{%-\s*set\s+system_message\s*=\s*.*?%\}\n?"
+    cleaned = re.sub(pattern, "", chat_template)
+    return forced_line + "\n" + cleaned.lstrip("\n")
+
+
 def _build_chat_template(tokenizer) -> str:
     existing_chat = tokenizer.chat_template or ""
-    enforced = _enforce_enable_thinking(existing_chat, enable_thinking=ENABLE_THINKING)
-    system_line = "{%- set system_message = " + json.dumps(SYSTEM_MESSAGE) + " %}"
-    return system_line + "\n" + enforced
+    enforced = _enforce_system_message(existing_chat)
+    return _enforce_enable_thinking(enforced, enable_thinking=ENABLE_THINKING)
 
 
 def _should_apply(cmd: str, target: str) -> bool:
@@ -79,6 +87,21 @@ def _safe_overwrite_output(output_dir: Path) -> None:
     if output_dir.exists():
         shutil.rmtree(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+
+def _write_checkpoint_manifest(output_dir: Path) -> None:
+    manifest = {
+        "run_name": datetime.utcnow().strftime("%Y%m%d-%H%M%S"),
+        "base_model": "Qwen/Qwen3-1.7B",
+        "adapter_path": None,
+        "best_eval_loss": None,
+        "format": "safetensors",
+        "merged_lora": False,
+        "thinking_mode": "on" if ENABLE_THINKING else "off",
+        "generation_config": GENERATION_CONFIG_FILE,
+    }
+    _write_json(output_dir / CHECKPOINT_MANIFEST_FILE, manifest)
+    print(f"Wrote {output_dir / CHECKPOINT_MANIFEST_FILE}")
 
 
 def adapt_checkpoint(
@@ -129,18 +152,22 @@ def adapt_checkpoint(
         _write_json(output_dir / TOKENIZER_CONFIG_FILE, TOKENIZER_CONFIG_OVERRIDE)
         print(f"Wrote {output_dir / TOKENIZER_CONFIG_FILE}")
 
-    # Keep chat_template.jinja and tokenizer_config.chat_template in sync.
+    tokenizer_config_path = output_dir / TOKENIZER_CONFIG_FILE
+    if tokenizer_config_path.exists():
+        tokenizer_config = _read_json(tokenizer_config_path)
+        tokenizer_config["is_local"] = False
+        tokenizer_config.pop("chat_template", None)
+        _write_json(tokenizer_config_path, tokenizer_config)
+        print(f"Normalized {tokenizer_config_path} metadata")
+
+    # Keep chat_template.jinja as the source of truth for the prompt template.
     if _should_apply(cmd, "chat_template"):
         chat_template = _build_chat_template(tokenizer)
         chat_template_path = output_dir / CHAT_TEMPLATE_FILE
         chat_template_path.write_text(chat_template, encoding="utf-8")
         print(f"Wrote {chat_template_path}")
 
-        tokenizer_config_path = output_dir / TOKENIZER_CONFIG_FILE
-        tokenizer_config = _read_json(tokenizer_config_path) if tokenizer_config_path.exists() else {}
-        tokenizer_config["chat_template"] = chat_template
-        _write_json(tokenizer_config_path, tokenizer_config)
-        print(f"Updated {tokenizer_config_path} with chat_template")
+    _write_checkpoint_manifest(output_dir)
 
 
 def main() -> None:
