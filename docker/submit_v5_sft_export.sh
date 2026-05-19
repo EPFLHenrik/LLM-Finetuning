@@ -75,7 +75,6 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
   --environment HF_TOKEN="${HF_TOKEN}" \
   --environment WANDB_API_KEY="${WANDB_API_KEY}" \
   --environment WANDB_DIR=/scratch/wandb \
-  --environment GITHUB_TOKEN="${GITHUB_TOKEN}" \
   --existing-pvc "claimname=${SCRATCH_PVC},path=/scratch" \
   --existing-pvc "claimname=${SHARED_RO_PVC},path=/shared-ro" \
   --existing-pvc "claimname=${SHARED_RW_PVC},path=/shared-rw" \

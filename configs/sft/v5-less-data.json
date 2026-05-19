@@ -1,114 +1,119 @@
-DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
+{
+  "max_per_language": 1000,
+  "max_per_dataset": 5000,
+  "max_per_language_mixed": 2500,
+  "dataset_registry": {
     "include": {
-        "languages": None,
-        "split_caps": {
-            "train": 0,
-            "val": None,
-        },
+      "languages": null,
+      "split_caps": {
+        "train": 0,
+        "val": null
+      }
     },
     "mgsm": {
-        "languages": None,
-        "split_caps": {
-            "val": 150,
-        },
+      "languages": null,
+      "split_caps": {
+        "val": 150
+      }
     },
     "mmmlu": {
-        "languages": ["spanish", "hindi", "italian", "chinese"],
-        "max_per_dataset": 0,  # disabled, replaced by global_mmlu
+      "languages": ["spanish", "hindi", "italian", "chinese"],
+      "max_per_dataset": 0
     },
     "milu": {
-        "languages": ["hindi"],
-        "max_per_language": 2000,
-        "split_caps": {
-            "val": 300,
-        },
+      "languages": ["hindi"],
+      "max_per_language": 2000,
+      "split_caps": {
+        "val": 300
+      }
     },
     "ceval": {
-        "languages": ["chinese"],
-        "language_caps": {
-            "chinese": 2000,
-        },
-        "split_caps": {
-            "val": 300,
-        },
+      "languages": ["chinese"],
+      "language_caps": {
+        "chinese": 2000
+      },
+      "split_caps": {
+        "val": 300
+      }
     },
     "cultsportqa": {
-        "languages": ["chinese", "hindi"],
-        "max_per_language": 1000,
-        "max_per_dataset": 2000,
-        "split_caps": {
-            "val": 400,
-        },
+      "languages": ["chinese", "hindi"],
+      "max_per_language": 1000,
+      "max_per_dataset": 2000,
+      "split_caps": {
+        "val": 400
+      }
     },
     "belebele": {
-        "languages": None,
-        "max_per_language": 500,
-        "split_caps": {
-            "val": 200,
-        },
+      "languages": null,
+      "max_per_language": 500,
+      "split_caps": {
+        "val": 200
+      }
     },
     "xcopa": {
-        "languages": ["italian", "chinese"],
-        "split_caps": {
-            "val": 100,
-        },
+      "languages": ["italian", "chinese"],
+      "split_caps": {
+        "val": 100
+      }
     },
     "exams": {
-        "languages": ["italian", "spanish"],
-        "max_per_language": None,
-        "max_per_dataset": None,
-        "split_caps": {
-            "val": 300,
-        },
+      "languages": ["italian", "spanish"],
+      "max_per_language": null,
+      "max_per_dataset": null,
+      "split_caps": {
+        "val": 300
+      }
     },
     "head_qa": {
-        "languages": ["spanish", "italian"],
-        "language_caps": {
-            "spanish": 1000,
-            "italian": 400,
-        },
-        "split_caps": {
-            "val": 300,
-        },
+      "languages": ["spanish", "italian"],
+      "language_caps": {
+        "spanish": 1000,
+        "italian": 400
+      },
+      "split_caps": {
+        "val": 300
+      }
     },
     "mera": {
-        "languages": ["russian"],
-        "max_per_language": 8000,
-        "max_per_dataset": 8000,
-        "stratify_by": "subset",
-        "subject_caps": {
-            "use": 800,
-            "ruopenbookqa": 800,
-            "rwsd": None,
-            "rcb": None,
-            "mathlogicqa": None,
-            "parus": None,
-            "mamuramu": None,
-            "ruworldtree": None,
-        },
-        "split_caps": {
-            "val": 500,
-        },
+      "languages": ["russian"],
+      "max_per_language": 8000,
+      "max_per_dataset": 8000,
+      "stratify_by": "subset",
+      "subject_caps": {
+        "use": 800,
+        "ruopenbookqa": 800,
+        "rwsd": null,
+        "rcb": null,
+        "mathlogicqa": null,
+        "parus": null,
+        "mamuramu": null,
+        "ruworldtree": null
+      },
+      "split_caps": {
+        "val": 500
+      }
     },
     "global_mmlu": {
-        "languages": None,
-        "language_caps": {
-            "russian": 1600,
-            "chinese": 1600,
-            "hindi": 800,
-            "italian": 400,
-            "spanish": 400,
-        },
-        "split_caps": {
-            "val": 500,
-        },
+      "languages": null,
+      "language_caps": {
+        "russian": 1600,
+        "chinese": 1600,
+        "hindi": 800,
+        "italian": 400,
+        "spanish": 400
+      },
+      "split_caps": {
+        "val": 500
+      }
     },
     "global_piqa": {
-        "languages": None,
-        "max_per_language": None,
-        "max_per_dataset": None,
-        "split_caps": {
-            "val": 80,
-        },
-    },
+      "languages": null,
+      "max_per_language": null,
+      "max_per_dataset": null,
+      "split_caps": {
+        "val": 80
+      }
+    }
+  }
 }
