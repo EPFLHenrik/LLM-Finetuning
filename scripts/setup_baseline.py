@@ -34,19 +34,6 @@ DEFAULT_REPO = "Qwen/Qwen3-1.7B"
 REFERENCE_CONFIG_REPO = "cs-552-2026-mystery-machine/multilingual_model"
 REFERENCE_TOKENIZER_CONFIG_REPO = "cs-552-2026-mystery-machine/safety_model"
 
-CHAT_TEMPLATE = r"""{%- set enable_thinking = true %}
-{%- set system_message = "You are a helpful assistant. When you produce the final answer, wrap it exactly in \\boxed{...} with no surrounding text. Use the <think>...</think> block for internal reasoning if enabled." %}
-
-{%- if enable_thinking %}
-<think>{{ system_message }}</think>
-{%- endif %}
-
-{{ user_message }}
-{%- if add_generation_prompt %}
-\nA:
-{%- endif %}
-"""
-
 SYSTEM_MESSAGE = (
     "You are a helpful assistant solving MCQ problems. At the end of your reasoning, you must include your answer in \\boxed{LETTER}. "
     "For example, if the answer is A, you must end your response with \\boxed{A}."
@@ -54,7 +41,7 @@ SYSTEM_MESSAGE = (
 
 
 def _enforce_enable_thinking(chat_template: str) -> str:
-    forced_line = "{%- set enable_thinking = true %}"
+    forced_line = "{%- set enable_thinking = false %}"
     pattern = r"\{%-\s*set\s+enable_thinking\s*=\s*(true|false)\s*%\}" 
     if re.search(pattern, chat_template):
         return re.sub(pattern, forced_line, chat_template, count=1)
@@ -133,7 +120,7 @@ def materialize_checkpoint(base_model, output_dir, hf_token=None):
     print(f"Saved model weights into {output_dir}")
 
     print(f"Loading tokenizer from {base_model} via from_pretrained(...)")
-    tokenizer = AutoTokenizer.from_pretrained(base_model, token=hf_token, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(base_model, token=hf_token, trust_remote_code=True, use_fast=True)
     # Enforce enable_thinking and prepend the required system message, then
     # assign into the tokenizer object so it is saved with the tokenizer files.
     existing_chat = tokenizer.chat_template
@@ -196,7 +183,7 @@ def push_to_hf(repo_id, source_dir, commit_message="Add model artifacts"):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--base-model", "--repo", dest="base_model", default=DEFAULT_REPO)
-    p.add_argument("--output-dir", "--dest", dest="output_dir", default="models/qwen3_baseline")
+    p.add_argument("--output-dir", "--dest", dest="output_dir", default="models/qwen3_baseline2")
     p.add_argument("--push-repo", default=None,
                    help="If set, push the resulting files to this HF repo id (e.g. user/model)")
     p.add_argument("--commit-message", default="Add model artifacts from setup_baseline",
