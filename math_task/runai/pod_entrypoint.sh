@@ -31,6 +31,17 @@ mkdir -p /scratch/hf_cache
 
 cd "${REPO_DIR}"
 
+# Configure git to authenticate against GitHub via a PAT in GITHUB_TOKEN
+# (forwarded by submit_eval.sh via runai --environment). This is required
+# for private classroom repos; without it `git pull` hangs prompting for
+# a username and falls back to stale on-disk code.
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    git config --global credential.helper '!f() { echo "username=x-access-token"; echo "password=${GITHUB_TOKEN}"; }; f'
+    echo "[git] credentials configured via GITHUB_TOKEN"
+else
+    echo "WARN: GITHUB_TOKEN not set; git pull will likely fail for a private repo"
+fi
+
 # Try to pull, but fall back to on-disk code if there's no usable token.
 git pull --ff-only || echo "WARN: git pull failed; using on-disk code"
 

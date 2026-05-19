@@ -50,8 +50,24 @@ ENTRYPOINT="${REPO_DIR_IN_POD}/math_task/runai/pod_entrypoint.sh"
 echo ">>> Submitting ${JOB_NAME}"
 echo ">>> Pod will run: VARIANT=${VARIANT} THINKING=${THINKING} BUDGET=${BUDGET} bash ${ENTRYPOINT} ${DATASET} ${LIMIT}"
 
-# Build the pod command as a bash array — safer than interpolating into a string.
-POD_CMD=(bash "${ENTRYPOINT}" "${DATASET}")
+# --- Bootstrap wrapper ------------------------------------------------------
+# Reasoning: the private classroom repo on /scratch needs GitHub auth to
+# `git pull`. We can't fix this by editing pod_entrypoint.sh and pushing --
+# the pod can't pull the new entrypoint until auth works. So we set up
+# git credentials INSIDE the runai --command itself, then exec the on-disk
+# entrypoint (which now succeeds at `git pull` and gets the latest code).
+# Single-quoted heredoc keeps $GITHUB_TOKEN unexpanded on the Mac;
+# positional args ("$@") receive the entrypoint path + dataset + limit.
+WRAPPER='if [ -n "$GITHUB_TOKEN" ]; then
+  git config --global credential.helper "store --file=/tmp/gitcreds"
+  printf "https://x-access-token:%s@github.com\n" "$GITHUB_TOKEN" > /tmp/gitcreds
+  echo "[wrapper] git credentials installed from GITHUB_TOKEN"
+else
+  echo "[wrapper] WARN: GITHUB_TOKEN not set; private-repo git pull will fail"
+fi
+exec bash "$@"'
+
+POD_CMD=(bash -c "${WRAPPER}" bash "${ENTRYPOINT}" "${DATASET}")
 [[ -n "${LIMIT}" ]] && POD_CMD+=("${LIMIT}")
 
 runai submit \
@@ -65,6 +81,7 @@ runai submit \
   --environment HF_HOME=/scratch/hf_cache \
   --environment HF_HUB_ENABLE_HF_TRANSFER=1 \
   --environment HF_TOKEN="${HF_TOKEN:-}" \
+  --environment GITHUB_TOKEN="${GITHUB_TOKEN:-}" \
   --environment VARIANT="${VARIANT}" \
   --environment THINKING="${THINKING}" \
   --environment BUDGET="${BUDGET}" \
