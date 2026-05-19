@@ -2,24 +2,30 @@
 
 Run from the repo root:
 
-    # 1-min smoke test on the 10 frozen validation problems
+    # 1-min smoke test on the 10 frozen validation problems (final budget = 16k)
     python -m math_task.run_eval --dataset validation
 
-    # Real signal on MATH-500 (~30-60 min on a single A100)
-    python -m math_task.run_eval --dataset math500
+    # 100-problem stratified subset of MATH-500 (~30-45 min at 16k thinking ON)
+    python -m math_task.run_eval --dataset math500_stratified --budget final
+
+    # Full MATH-500 (~2-3 h at 16k thinking ON)
+    python -m math_task.run_eval --dataset math500 --budget final
+
+    # CI-budget run (4k) for comparison with the nightly EVAL_REPORT
+    python -m math_task.run_eval --dataset math500_stratified --budget ci
 
     # Quick subset for iteration
-    python -m math_task.run_eval --dataset math500 --limit 50
+    python -m math_task.run_eval --dataset math500 --budget final --limit 50
 
     # Score a finetune later
-    python -m math_task.run_eval --dataset math500 --model cs-552-2026-<org>/math_model
+    python -m math_task.run_eval --dataset math500 --budget final --model cs-552-2026-<org>/math_model
 
     # Ablation cells (local-only knobs; CI ignores them):
     python -m math_task.run_eval --dataset math500 --limit 100 --prompt-variant boxed --thinking off
 
 Produces three files in math_task/results/. Stem includes prompt-variant +
-thinking mode so ablation cells don't clobber each other:
-    "<dataset>_<safe_model>_<variant>_think-<on|off>"
+thinking mode + budget so cells don't clobber each other:
+    "<dataset>_<safe_model>_<variant>_think-<on|off>_budget-<ci|final>"
     - <stem>_raw.json     full generation outputs incl. finish_reason / n_tokens
     - <stem>_gens.jsonl   directly consumable by `python -m evaluate.score`
     - <stem>_scored.json  combined metrics + per-problem detailed grading
@@ -30,8 +36,13 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List
 
-from .config import EvalConfig, PROMPT_VARIANTS
-from .dataset_loader import load_gsm8k, load_math500, load_validation_samples
+from .config import BUDGET_TOKENS, EvalConfig, PROMPT_VARIANTS
+from .dataset_loader import (
+    load_gsm8k,
+    load_math500,
+    load_math500_stratified,
+    load_validation_samples,
+)
 from .evaluation import compute_extra_metrics
 from .generation import run_generation
 
@@ -40,9 +51,13 @@ from evaluate.score import score_generations
 
 
 DATASET_LOADERS = {
-    "validation": lambda cfg, limit: load_validation_samples(cfg.repo_root),
-    "gsm8k":      lambda cfg, limit: load_gsm8k(limit=limit),
-    "math500":    lambda cfg, limit: load_math500(limit=limit),
+    "validation":          lambda cfg, limit: load_validation_samples(cfg.repo_root),
+    "gsm8k":               lambda cfg, limit: load_gsm8k(limit=limit),
+    "math500":             lambda cfg, limit: load_math500(limit=limit),
+    # `limit` here means n_per_level (default 20 -> 100 problems balanced over levels 1-5).
+    "math500_stratified":  lambda cfg, limit: load_math500_stratified(
+        n_per_level=limit if limit else 20
+    ),
 }
 
 
@@ -78,9 +93,13 @@ def main() -> None:
     ap.add_argument("--thinking", default="on", choices=["on", "off"],
                     help="Qwen3 enable_thinking. Local-only; CI uses the "
                          "chat_template default of the pushed checkpoint.")
+    ap.add_argument("--budget", default="final", choices=list(BUDGET_TOKENS),
+                    help="ci=4096 tokens (matches nightly CI), "
+                         "final=16384 tokens (matches final grading). "
+                         "Sets max_model_len and max_new_tokens.")
     args = ap.parse_args()
 
-    cfg = EvalConfig()
+    cfg = EvalConfig(budget=args.budget)
     if args.model:
         cfg.model_id = args.model
     cfg.prompt_variant = args.prompt_variant
@@ -91,14 +110,18 @@ def main() -> None:
     print(f"[load] {len(items)} problems from {args.dataset}")
 
     # 2. generate
-    print(f"[gen]  model={cfg.model_id}  n={cfg.n_samples}  max_len={cfg.max_model_len}"
-          f"  variant={cfg.prompt_variant}  thinking={args.thinking}")
+    print(f"[gen]  model={cfg.model_id}  n={cfg.n_samples}  budget={cfg.budget}"
+          f"  max_len={cfg.max_model_len}  variant={cfg.prompt_variant}"
+          f"  thinking={args.thinking}")
     generation_results = run_generation(items, cfg)
 
     # 3. save raw outputs (finish_reason + n_tokens preserved)
     cfg.results_dir.mkdir(parents=True, exist_ok=True)
     safe_model = cfg.model_id.replace("/", "_")
-    stem = f"{args.dataset}_{safe_model}_{cfg.prompt_variant}_think-{args.thinking}"
+    stem = (
+        f"{args.dataset}_{safe_model}_{cfg.prompt_variant}"
+        f"_think-{args.thinking}_budget-{cfg.budget}"
+    )
 
     raw_path = cfg.results_dir / f"{stem}_raw.json"
     with open(raw_path, "w") as f:
@@ -125,6 +148,8 @@ def main() -> None:
     summary = {
         "dataset": args.dataset,
         "model": cfg.model_id,
+        "budget": cfg.budget,
+        "max_model_len": cfg.max_model_len,
         "prompt_variant": cfg.prompt_variant,
         "thinking": args.thinking,
         "pass@1": scored["metrics"].get("pass@1"),

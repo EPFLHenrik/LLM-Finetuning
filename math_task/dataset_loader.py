@@ -44,3 +44,32 @@ def load_math500(limit: Optional[int] = None) -> List[Dict]:
     ds = load_dataset("HuggingFaceH4/MATH-500", split="test")
     items = [{"prompt": ex["problem"], "answer": ex["answer"]} for ex in ds]
     return items[:limit] if limit else items
+
+
+def load_math500_stratified(
+    n_per_level: int = 20, seed: int = 42
+) -> List[Dict]:
+    """MATH-500 with `n_per_level` problems per difficulty level (1..5).
+
+    The default subset has n_per_level*5 = 100 problems balanced across levels.
+    Use this for fast iteration; the first-100 of the unstratified split is
+    skewed toward whatever level happens to come first in the source ordering.
+    """
+    import random
+
+    from datasets import load_dataset
+
+    rng = random.Random(seed)
+    ds = load_dataset("HuggingFaceH4/MATH-500", split="test")
+
+    by_level: Dict[int, List[Dict]] = {}
+    for ex in ds:
+        by_level.setdefault(int(ex["level"]), []).append(ex)
+
+    items: List[Dict] = []
+    for level in sorted(by_level):
+        problems = list(by_level[level])
+        rng.shuffle(problems)
+        for ex in problems[:n_per_level]:
+            items.append({"prompt": ex["problem"], "answer": ex["answer"]})
+    return items
