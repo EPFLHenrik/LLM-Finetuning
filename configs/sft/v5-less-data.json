@@ -1,0 +1,116 @@
+{
+  "dataset_registry": {
+    "include": {
+      "languages": null,
+      "split_caps": {
+        "train": 0,
+        "val": null
+      }
+    },
+    "mgsm": {
+      "languages": null,
+      "split_caps": {
+        "val": 300
+      }
+    },
+    "mmmlu": {
+      "languages": ["spanish", "hindi", "italian", "chinese"],
+      "max_per_dataset": 0
+    },
+    "milu": {
+      "languages": ["hindi"],
+      "max_per_language": 2000,
+      "split_caps": {
+        "val": 300
+      }
+    },
+    "ceval": {
+      "languages": ["chinese"],
+      "language_caps": {
+        "chinese": 2000
+      },
+      "split_caps": {
+        "val": 300
+      }
+    },
+    "cultsportqa": {
+      "languages": ["chinese", "hindi"],
+      "max_per_language": 3000,
+      "max_per_dataset": 6000,
+      "split_caps": {
+        "val": 400
+      }
+    },
+    "belebele": {
+      "languages": null,
+      "max_per_language": 500,
+      "split_caps": {
+        "val": 400
+      }
+    },
+    "xcopa": {
+      "languages": ["italian", "chinese"],
+      "split_caps": {
+        "val": 200
+      }
+    },
+    "exams": {
+      "languages": ["italian", "spanish"],
+      "max_per_language": null,
+      "max_per_dataset": null,
+      "split_caps": {
+        "val": 300
+      }
+    },
+    "head_qa": {
+      "languages": ["spanish", "italian"],
+      "language_caps": {
+        "spanish": 1000,
+        "italian": 400
+      },
+      "split_caps": {
+        "val": 300
+      }
+    },
+    "mera": {
+      "languages": ["russian"],
+      "max_per_language": 8000,
+      "max_per_dataset": 8000,
+      "stratify_by": "subset",
+      "subject_caps": {
+        "use": 800,
+        "ruopenbookqa": 800,
+        "rwsd": null,
+        "rcb": null,
+        "mathlogicqa": null,
+        "parus": null,
+        "mamuramu": null,
+        "ruworldtree": null
+      },
+      "split_caps": {
+        "val": 500
+      }
+    },
+    "global_mmlu": {
+      "languages": null,
+      "language_caps": {
+        "russian": 2000,
+        "chinese": 2000,
+        "hindi": 1200,
+        "italian": 800,
+        "spanish": 800
+      },
+      "split_caps": {
+        "val": 500
+      }
+    },
+    "global_piqa": {
+      "languages": null,
+      "max_per_language": null,
+      "max_per_dataset": null,
+      "split_caps": {
+        "val": 200
+      }
+    }
+  }
+}

@@ -71,91 +71,79 @@ SFT_DATA_DIR = REPO / "multilingual" / "data" / "sft"
 
 DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     "include": {
-        "languages": None,  # all 5 target languages
-        "language_caps": {
-            "spanish": 2500,
-            "italian": 2500,
-            "russian": 2500,
-            "chinese": 2500,
-            "hindi":   2500,
-        },
+        "languages": None,
+        "max_per_dataset": 0,  # DISABLED, test set, do not train on
     },
     "mgsm": {
-        "languages": None,
+        "languages": None,     # keep all, tiny dataset
     },
-    # we added global-MMLU instead
     "mmmlu": {
         "languages": ["spanish", "hindi", "italian", "chinese"],
         "max_per_dataset": 0,  # disabled, replaced by global_mmlu
     },
     "milu": {
         "languages": ["hindi"],
-        "max_per_language": 3000,
+        "max_per_language": 2000,
     },
     "ceval": {
         "languages": ["chinese"],
-        "max_per_dataset": 3000,
-        "language_caps": {
-            "chinese": 3000,
-        }
-
+        "language_caps": {"chinese": 2000},
     },
     "cultsportqa": {
         "languages": ["chinese", "hindi"],
-        "max_per_language": 8000,
-        "max_per_dataset":  8000,
+        "max_per_language": 3000,
+        "max_per_dataset": 6000,
     },
     "belebele": {
         "languages": None,
+        "max_per_language": 500,  # reduced, reading comprehension less aligned
     },
     "xcopa": {
         "languages": ["italian", "chinese"],
+        # small, keep all
     },
     "exams": {
         "languages": ["italian", "spanish"],
-        # small dataset — keep everything, no cap
         "max_per_language": None,
-        "max_per_dataset":  None,
+        "max_per_dataset":  None,  # small, keep all
     },
     "head_qa": {
         "languages": ["spanish", "italian"],
-        # italian is machine-translated — cap lower than Spanish
         "language_caps": {
-            "spanish": 2000,
-            "italian": 1000,
+            "spanish": 1000,
+            "italian": 400,
         },
     },
     "mera": {
         "languages": ["russian"],
-        # single language, include as much as possible
         "max_per_language": 8000,
         "max_per_dataset":  8000,
         "stratify_by": "subset",
         "subject_caps": {
-            "use":          1000,   # numeric, cap it — already large
-            "ruopenbookqa": 1000,   # cap the largest subset
-            "rwsd":         None,  # keep all 810
-            "rcb":          None,  # keep all 658
-            "mathlogicqa":  None,  # keep all 680
-            "parus":        None,  # keep all 500
-            "mamuramu":     None,  # keep all 285
-            "ruworldtree":  None,  # keep all 115
+            "use":          800,
+            "ruopenbookqa": 800,
+            "rwsd":         None,
+            "rcb":          None,
+            "mathlogicqa":  None,
+            "parus":        None,
+            "mamuramu":     None,
+            "ruworldtree":  None,
         },
     },
     "global_mmlu": {
-        "languages": None,  # all 5
+        "languages": None,
         "language_caps": {
-            "italian": 3000,
-            "russian": 3000,
-            "spanish": 3000,
-            "hindi":   1000,
-            "chinese": 1000,
+            "russian":  2000,  # priority
+            "chinese":  2000,  # priority
+            "hindi":    1200,
+            "italian":  800,  # reduced
+            "spanish":  800,  # reduced
         },
     },
     "global_piqa": {
         "languages": None,
         "max_per_language": None,
-        "max_per_dataset":  None,
+        "max_per_dataset":  None,  # tiny, keep all
     },
 }
 
@@ -182,8 +170,14 @@ def _max_per_language(dataset: str, language: str, global_cap: int) -> int:
     return v if v is not None else 10_000_000
 
 
-def _max_per_dataset(dataset: str, global_cap: int) -> int:
+def _max_per_dataset(dataset: str, split: str, global_cap: int) -> int:
     cfg = _dataset_cfg(dataset)
+
+    split_caps = cfg.get("split_caps", {})
+    if split in split_caps:
+        v = split_caps[split]
+        return v if v is not None else 10_000_000
+
     v = cfg.get("max_per_dataset", global_cap)
     return v if v is not None else 10_000_000
 
@@ -393,7 +387,7 @@ def _build_mixed(
             dataset_pool.extend(sampled)
 
         # dataset cap
-        ds_cap = _max_per_dataset(dataset, global_max_per_dataset)
+        ds_cap = _max_per_dataset(dataset, split, global_max_per_dataset)
         rng.shuffle(dataset_pool)
         mixed.extend(dataset_pool[:ds_cap])
 

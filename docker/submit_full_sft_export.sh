@@ -8,9 +8,9 @@ set -euo pipefail
 GASPAR="anastass"
 GROUP="g02"
 REPO_DIR="/scratch/workspace/emma/standard-project-m2-mystery-machine"
-SFT_CONFIG="${REPO_DIR}/configs/sft/v4b.json"
+SFT_CONFIG="${REPO_DIR}/configs/sft/v5-less-data.json"
 
-RUN_NAME="sft_multilingual_v4b"
+RUN_NAME="sft_multilingual_v5-less-data"
 HF_REPO="cs-552-2026-mystery-machine/multilingual_model"
 
 EPOCHS=3
@@ -61,6 +61,7 @@ EXPORT_DIR="${REPO_DIR}/multilingual/results/exports/${RUN_NAME}"
 echo ">>> Submitting ${JOB_NAME}"
 echo ">>> Run name: ${RUN_NAME}"
 echo ">>> HF repo:  ${HF_REPO}"
+echo ">>> SFT config: ${SFT_CONFIG}"
 
 MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
   -p "${PROJECT}" \
@@ -83,12 +84,9 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
     mkdir -p /scratch/hf_cache /scratch/wandb && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
     cd ${REPO_DIR} && \
-    git config --global credential.helper store && \
-    echo "https://${GITHUB_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials && \
-    git config --global --add safe.directory ${REPO_DIR} && \
-    git fetch origin && \
-    git pull origin multilingual && \
-    python -m multilingual.train.build_sft_data --overwrite --config ${SFT_CONFIG} && \
+    python -m multilingual.train.build_sft_data \
+      --config ${SFT_CONFIG} \
+      --overwrite && \
     python -m multilingual.train.sft \
       --run_name ${RUN_NAME} \
       --epochs ${EPOCHS} \
@@ -105,7 +103,8 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
       --output_dir ${EXPORT_DIR} \
       --run_name ${RUN_NAME} \
       --hf_repo ${HF_REPO} \
-      --push"
+      --push \
+      --force_push"
 
 cat <<EOF
 
