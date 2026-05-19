@@ -73,5 +73,5 @@ global_piqa,spanish,train,255,/scratch/workspace/emma/standard-project-m2-myster
 global_piqa,spanish,val,45,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/global_piqa_spanish_val.jsonl
 global_piqa,hindi,train,85,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/global_piqa_hindi_train.jsonl
 global_piqa,hindi,val,15,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/per_dataset/global_piqa_hindi_val.jsonl
-mixed,all,train,12244,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/mixed/train_mixed.jsonl
-mixed,all,val,5038,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/mixed/val_mixed.jsonl
+mixed,all,train,12444,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/mixed/train_mixed.jsonl
+mixed,all,val,3368,/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/mixed/val_mixed.jsonl

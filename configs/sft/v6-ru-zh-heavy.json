@@ -1,0 +1,125 @@
+{
+  "max_per_language": 800,
+  "max_per_dataset": 4000,
+  "max_per_language_mixed": 3000,
+  "dataset_registry": {
+    "include": {
+      "languages": null,
+      "split_caps": {
+        "train": 0,
+        "val": null
+      }
+    },
+    "mgsm": {
+      "languages": null,
+      "max_per_language": 150,
+      "max_per_dataset": 750,
+      "split_caps": {
+        "val": 100
+      }
+    },
+    "mmmlu": {
+      "languages": ["spanish", "hindi", "italian", "chinese"],
+      "max_per_dataset": 0
+    },
+    "milu": {
+      "languages": ["hindi"],
+      "max_per_language": 700,
+      "max_per_dataset": 700,
+      "split_caps": {
+        "val": 200
+      }
+    },
+    "ceval": {
+      "languages": ["chinese"],
+      "language_caps": {
+        "chinese": 2500
+      },
+      "split_caps": {
+        "val": 400
+      }
+    },
+    "cultsportqa": {
+      "languages": ["chinese", "hindi"],
+      "max_per_language": 1000,
+      "max_per_dataset": 2000,
+      "split_caps": {
+        "val": 350
+      }
+    },
+    "belebele": {
+      "languages": null,
+      "max_per_language": 150,
+      "max_per_dataset": 750,
+      "split_caps": {
+        "val": 100
+      }
+    },
+    "xcopa": {
+      "languages": ["italian", "chinese"],
+      "max_per_language": 150,
+      "max_per_dataset": 300,
+      "split_caps": {
+        "val": 50
+      }
+    },
+    "exams": {
+      "languages": ["italian", "spanish"],
+      "max_per_language": 250,
+      "max_per_dataset": 500,
+      "split_caps": {
+        "val": 120
+      }
+    },
+    "head_qa": {
+      "languages": ["spanish", "italian"],
+      "language_caps": {
+        "spanish": 400,
+        "italian": 250
+      },
+      "split_caps": {
+        "val": 120
+      }
+    },
+    "mera": {
+      "languages": ["russian"],
+      "max_per_language": 3500,
+      "max_per_dataset": 3500,
+      "stratify_by": "subset",
+      "subject_caps": {
+        "use": 700,
+        "ruopenbookqa": 700,
+        "rwsd": null,
+        "rcb": null,
+        "mathlogicqa": null,
+        "parus": null,
+        "mamuramu": null,
+        "ruworldtree": null
+      },
+      "split_caps": {
+        "val": 500
+      }
+    },
+    "global_mmlu": {
+      "languages": null,
+      "language_caps": {
+        "russian": 2200,
+        "chinese": 2200,
+        "hindi": 600,
+        "italian": 300,
+        "spanish": 300
+      },
+      "split_caps": {
+        "val": 600
+      }
+    },
+    "global_piqa": {
+      "languages": null,
+      "max_per_language": 80,
+      "max_per_dataset": 400,
+      "split_caps": {
+        "val": 50
+      }
+    }
+  }
+}
