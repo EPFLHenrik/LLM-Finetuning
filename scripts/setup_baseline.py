@@ -49,6 +49,13 @@ def _enforce_enable_thinking(chat_template: str) -> str:
     return forced_line + "\n" + chat_template
 
 
+def _enforce_system_message(chat_template: str) -> str:
+    forced_line = "{%- set system_message = " + json.dumps(SYSTEM_MESSAGE) + " %}"
+    pattern = r"(?m)^\{%-\s*set\s+system_message\s*=\s*.*?%\}\n?"
+    cleaned = re.sub(pattern, "", chat_template)
+    return forced_line + "\n" + cleaned.lstrip("\n")
+
+
 GENERATION_CONFIG = {
     "temperature": 0.7,
     "top_k": 50,
@@ -124,10 +131,8 @@ def materialize_checkpoint(base_model, output_dir, hf_token=None):
     # Enforce enable_thinking and prepend the required system message, then
     # assign into the tokenizer object so it is saved with the tokenizer files.
     existing_chat = tokenizer.chat_template
-    enforced = _enforce_enable_thinking(existing_chat)
-    # Build a Jinja line that sets the system message variable (JSON-escaped)
-    system_line = "{%- set system_message = " + json.dumps(SYSTEM_MESSAGE) + " %}"
-    final_chat = system_line + "\n" + enforced
+    enforced = _enforce_system_message(existing_chat)
+    final_chat = _enforce_enable_thinking(enforced)
     tokenizer.chat_template = final_chat
 
     tokenizer.save_pretrained(output_dir)
