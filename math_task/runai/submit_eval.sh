@@ -51,17 +51,24 @@ echo ">>> Submitting ${JOB_NAME}"
 echo ">>> Pod will run: VARIANT=${VARIANT} THINKING=${THINKING} BUDGET=${BUDGET} bash ${ENTRYPOINT} ${DATASET} ${LIMIT}"
 
 # --- Bootstrap wrapper ------------------------------------------------------
-# Reasoning: the private classroom repo on /scratch needs GitHub auth to
-# `git pull`. We can't fix this by editing pod_entrypoint.sh and pushing --
-# the pod can't pull the new entrypoint until auth works. So we set up
-# git credentials INSIDE the runai --command itself, then exec the on-disk
-# entrypoint (which now succeeds at `git pull` and gets the latest code).
+# The private classroom repo on /scratch needs GitHub auth to `git pull`.
+# We can't ship the fix via pod_entrypoint.sh because the pod can't pull
+# the new entrypoint until auth works.
+#
+# Earlier attempt: credential.helper "store --file=/tmp/gitcreds". This
+# installed the helper but git still prompted for a username — the helper
+# was either not invoked or the file format mismatch. Switched to
+# `url.insteadOf`, which rewrites all https://github.com/ URLs to embed
+# the token, bypassing the credential helper entirely. Most reliable
+# non-interactive auth method per git docs.
+#
 # Single-quoted heredoc keeps $GITHUB_TOKEN unexpanded on the Mac;
 # positional args ("$@") receive the entrypoint path + dataset + limit.
-WRAPPER='if [ -n "$GITHUB_TOKEN" ]; then
-  git config --global credential.helper "store --file=/tmp/gitcreds"
-  printf "https://x-access-token:%s@github.com\n" "$GITHUB_TOKEN" > /tmp/gitcreds
-  echo "[wrapper] git credentials installed from GITHUB_TOKEN"
+WRAPPER='set -e
+if [ -n "$GITHUB_TOKEN" ]; then
+  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:"
+  echo "[wrapper] git url rewrite installed for github.com (PAT auth via insteadOf)"
 else
   echo "[wrapper] WARN: GITHUB_TOKEN not set; private-repo git pull will fail"
 fi
