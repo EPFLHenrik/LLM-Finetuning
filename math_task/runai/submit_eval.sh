@@ -38,7 +38,11 @@ SCRATCH_PVC="course-cs-552-scratch-${GROUP}"
 SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
-JOB_NAME="cs552-${GASPAR}-${GROUP}-math-${DATASET}-${VARIANT}-th${THINKING}-b${BUDGET}-$(date +%H%M%S)"
+# Run:AI job names must be lowercase alphanumeric + '-' only. Sanitize the
+# dataset slug for the name; the original DATASET string is still passed to
+# pod_entrypoint.sh unchanged.
+DATASET_SLUG="${DATASET//_/-}"
+JOB_NAME="cs552-${GASPAR}-${GROUP}-math-${DATASET_SLUG}-${VARIANT}-th${THINKING}-b${BUDGET}-$(date +%H%M%S)"
 ENTRYPOINT="${REPO_DIR_IN_POD}/math_task/runai/pod_entrypoint.sh"
 
 echo ">>> Submitting ${JOB_NAME}"
