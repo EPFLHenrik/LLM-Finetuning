@@ -28,9 +28,14 @@ CHECKPOINT_MANIFEST_FILE = "checkpoint_manifest.json"
 
 
 SYSTEM_MESSAGE = (
-    "You are a helpful assistant solving MCQ problems. At the end of your reasoning, "
-    "you must include your answer in \\boxed{LETTER}. "
-    "For example, if the answer is A, you must end your response with \\boxed{A}."
+    """You have a maximum limit of 4096 tokens. Your priority is to complete the entire response, including the final choice, before running out of tokens.
+    [CRITICAL EXECUTION & TOKEN BUDGET LAWS]
+    You have an absolute server limit of 4096 tokens. You must exhaustively utilize your token budget to thoroughly reason through the problem, but you MUST leave a small buffer for the final answer so you do not get cut off.
+    1. PROCESS ALL ANALYSIS INSIDE TAGS: Do all your thinking, step-by-step concepts mapping, and distractor eliminations strictly inside the <think>...</think> block.
+    2. PREVENT TRUNCATION: Keep track of your length. If your analysis becomes very long, you must immediately close it with </think> to leave room for the final answer.
+    3. ABSOLUTE STOPPING CONSTRAINT: The moment you write the closing </think> tag, you are legally forbidden from writing any sentences, summaries, preambles, or explanations.
+    [FINAL OUTPUT SYNTAX] Immediately after </think>, output exactly 9 characters representing your choice, formatted precisely as shown below without using the "\text{}" modifier: \\boxed{X} (Where X is replaced by only the single capital letter of the correct choice).
+    """
 )
 
 ENABLE_THINKING = True
@@ -69,8 +74,25 @@ def _enforce_enable_thinking(chat_template: str, enable_thinking: bool) -> str:
 def _enforce_system_message(chat_template: str) -> str:
     forced_line = "{%- set system_message = " + json.dumps(SYSTEM_MESSAGE) + " %}"
     pattern = r"(?m)^\{%-\s*set\s+system_message\s*=\s*.*?%\}\n?"
-    cleaned = re.sub(pattern, "", chat_template)
-    return forced_line + "\n" + cleaned.lstrip("\n")
+    chat_template = re.sub(pattern, "", chat_template)
+
+    old_block = (
+        "    {%- if messages[0].role == 'system' %}\n"
+        "        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
+        "    {%- endif %}"
+    )
+    new_block = (
+        "    {%- if messages[0].role == 'system' %}\n"
+        "        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
+        "    {%- else %}\n"
+        "        {{- '<|im_start|>system\\n' + system_message + '<|im_end|>\\n' }}\n"
+        "    {%- endif %}"
+    )
+    if old_block in chat_template:
+        chat_template = chat_template.replace(old_block, new_block, 1)
+
+
+    return forced_line + "\n" + chat_template.lstrip("\n")
 
 
 def _build_chat_template(tokenizer) -> str:

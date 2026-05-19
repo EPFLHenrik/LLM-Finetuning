@@ -9,23 +9,19 @@ and reports exact-match accuracy against boxed answers.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 from pathlib import Path
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 
 
 BOX_RE = re.compile(r"\\boxed\{([^}]*)\}")
-DEFAULT_MODEL_DIR = Path(__file__).resolve().parents[1] / "models" / "qwen3_baseline"
+DEFAULT_MODEL_DIR = Path(__file__).resolve().parents[1] / "models" / "qwen3_thinking"
 DEFAULT_SAMPLES = Path(__file__).resolve().parents[1] / "validation_samples" / "general_knowledge.jsonl"
 DEFAULT_OUTPUT = Path(__file__).resolve().parents[1] / "results" / "general_knowledge_validation.jsonl"
-SYSTEM_PROMPT = (
-    "You are a careful benchmark assistant. "
-    "Answer with only the final result, wrapped exactly in \\boxed{...}. "
-    "For multiple-choice questions, box only the correct option letter."
-)
 
 
 def load_samples(path: Path, limit: int | None = None):
@@ -48,11 +44,8 @@ def extract_boxed(text: str) -> str | None:
 
 
 def format_prompt(tokenizer, prompt: str) -> str:
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": prompt},
-    ]
     if hasattr(tokenizer, "apply_chat_template") and tokenizer.chat_template:
+        messages = [{"role": "user", "content": prompt}]
         return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     return prompt
 
@@ -76,13 +69,38 @@ def generate_answer(model, tokenizer, prompt: str, max_new_tokens: int) -> str:
     return tokenizer.decode(generated, skip_special_tokens=True)
 
 
+def generate_answer_ci_style(
+    model,
+    tokenizer,
+    formatted_prompt: str,
+    generation_config: GenerationConfig,
+    max_new_tokens: int,
+) -> str:
+    inputs = tokenizer(formatted_prompt, return_tensors="pt")
+    device = model.device
+    inputs = {key: value.to(device) for key, value in inputs.items()}
+
+    local_config = copy.deepcopy(generation_config)
+    local_config.max_new_tokens = max_new_tokens
+    if local_config.pad_token_id is None:
+        local_config.pad_token_id = tokenizer.eos_token_id
+    if local_config.eos_token_id is None:
+        local_config.eos_token_id = tokenizer.eos_token_id
+
+    with torch.no_grad():
+        output = model.generate(**inputs, generation_config=local_config)
+
+    generated = output[0, inputs["input_ids"].shape[1]:]
+    return tokenizer.decode(generated, skip_special_tokens=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run validation on the general knowledge snapshot.")
     parser.add_argument("--model-dir", default=str(DEFAULT_MODEL_DIR), help="Path to the local checkpoint directory.")
     parser.add_argument("--samples", default=str(DEFAULT_SAMPLES), help="Path to the general knowledge JSONL file.")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Path to write detailed results JSONL.")
     parser.add_argument("--limit", type=int, default=None, help="Optional maximum number of examples to evaluate.")
-    parser.add_argument("--max-new-tokens", type=int, default=3072, help="Maximum number of generated tokens per example.")
+    parser.add_argument("--max-new-tokens", type=int, default=4096, help="Maximum number of generated tokens per example.")
     parser.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda"], help="Execution device.")
     args = parser.parse_args()
 
@@ -93,6 +111,8 @@ def main() -> int:
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     if tokenizer.pad_token_id is None and tokenizer.eos_token_id is not None:
         tokenizer.pad_token = tokenizer.eos_token
+
+    generation_config = GenerationConfig.from_pretrained(model_dir)
 
     torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
     print(f"Loading model from {model_dir}")
@@ -118,7 +138,13 @@ def main() -> int:
             prompt = sample["prompt"]
             expected = str(sample["answer"]).strip()
             formatted_prompt = format_prompt(tokenizer, prompt)
-            completion = generate_answer(model, tokenizer, formatted_prompt, args.max_new_tokens)
+            completion = generate_answer_ci_style(
+                model,
+                tokenizer,
+                formatted_prompt,
+                generation_config,
+                args.max_new_tokens,
+            )
             boxed = extract_boxed(completion)
             is_correct = boxed is not None and boxed.strip() == expected
             correct += int(is_correct)
