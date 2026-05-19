@@ -14,7 +14,7 @@ GASPAR="hgruber"                    # <-- YOUR GASPAR EPFL username.
 GROUP="g02"                         # <-- YOUR TEAM, e.g. g07.
 
 # model_config.py arguments as constants
-MODEL_PATH="models/qwen3_baseline3"  # Source checkpoint dir (relative to WORKSPACE_BASE)
+MODEL_PATH="models/qwen3_baseline2"  # Source checkpoint dir (relative to WORKSPACE_BASE)
 OUTPUT_DIR="models/qwen3_thinking"   # Output checkpoint dir (relative to WORKSPACE_BASE)
 CMD="chat_template"                  # all | config | generation_config | tokenizer_config | chat_template
 TRUST_REMOTE_CODE="true"            # true | false

@@ -47,7 +47,7 @@ fi
 
 # Parse arguments: optional --use-tiny or model dir
 USE_TINY="false"
-MODEL_DIR="models/qwen3_baseline"
+MODEL_DIR="models/qwen3_thinking"
 if [[ "${1:-}" == "--use-tiny" ]]; then
   USE_TINY="true"
 elif [[ -n "${1:-}" ]]; then
