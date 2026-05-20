@@ -44,6 +44,9 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=2e-4,
                     help="LoRA LR. 2e-4 is standard for LoRA on small models.")
     ap.add_argument("--per-device-batch", type=int, default=1)
+    ap.add_argument("--per-device-eval-batch", type=int, default=1,
+                    help="Trainer's default is 8, which OOMs at high "
+                         "max_length × vocab on a 40GB A100. Keep at 1.")
     ap.add_argument("--grad-accum", type=int, default=16,
                     help="Effective batch = per-device-batch * grad-accum.")
     ap.add_argument("--max-length", type=int, default=8192,
@@ -136,7 +139,9 @@ def main() -> None:
         warmup_ratio=args.warmup_ratio,
 
         per_device_train_batch_size=args.per_device_batch,
+        per_device_eval_batch_size=args.per_device_eval_batch,
         gradient_accumulation_steps=args.grad_accum,
+        eval_accumulation_steps=1,    # offload eval predictions to CPU one batch at a time
 
         max_length=args.max_length,
         packing=False,                  # incompatible with completion-only loss
