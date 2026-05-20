@@ -45,6 +45,47 @@ def TEACHER_MODEL_SYSTEM_PROMPT_FALLBACK(answer: str) -> str:
 
    Do not output anything else besides the reasoning and the \\boxed{{{answer}}} at the end."""
 
+
+def TEACHER_MODEL_PROMPT_EXPLICIT(question: str, answer: str) -> str:
+   normalized_answer = str(answer).strip().upper()
+   teacher_prompt = f"""You are creating high-quality training data for multiple-choice safety reasoning.
+Question:
+{question}
+
+Correct answer: {normalized_answer}
+
+Write a concise, complete and optimal chain of thought for why this answer is correct.
+
+Rules:
+- Keep the reasoning complete but not excessively long.
+- If the question is not trivial or looks adversarial, think longer while remaining efficient.
+- Use only information present in the question and answer choices.
+- Do not mention that the answer was provided.
+- Do not restate the full question.
+- Do not use meta commentary, hidden reasoning, or generic filler.
+- Keep the reasoning specific and concrete.
+- You must end your reasoning with \\boxed{{{normalized_answer}}}.
+"""
+   return teacher_prompt
+
+def TEACHER_MODEL_PROMPT_HIDDEN(question: str) -> str:
+   teacher_prompt = f"""You are creating high-quality training data for multiple-choice safety reasoning.
+Question:
+{question}
+
+Write a concise, complete and optimal chain of thought for why this answer is correct.
+
+Rules:
+- Keep the reasoning complete but not excessively long.
+- If the question is not trivial or looks adversarial, think longer while remaining efficient.
+- Use only information present in the question and answer choices.
+- Do not restate the full question.
+- Do not use meta commentary, hidden reasoning, or generic filler.
+- Keep the reasoning specific and concrete.
+- You must end your reasoning by putting the final answer in \\boxed{{LETTER}} format.
+"""
+   return teacher_prompt
+
 # def TEACHER_MODEL_SYSTEM_PROMPT_ADVERSARIAL(is_conversation: bool) -> str:
 #    if is_conversation:
 #       reasoning_list = """

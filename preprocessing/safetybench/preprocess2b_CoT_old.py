@@ -12,7 +12,7 @@ from constants.global_variables import DatasetFieldNames, DistillationFieldNames
 from vllm import LLM, SamplingParams
 
 ROOT = Path(__file__).resolve().parents[2]
-INPUT_DATASET_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "only_answers"
+INPUT_DATASET_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "mcq"
 DEFAULT_OUTPUT_PATH = ROOT / "data" / "processed" / "sft" / "safetybench" / "CoT"
 TEACHER_MODEL_PATH = str(ROOT.parent.parent.parent / "hf_cache" / "hub" / "models--Qwen--Qwen3-8B" / "snapshots" / "b968826d9c46dd6066d109eabc6255188de91218")
 
@@ -24,7 +24,9 @@ parser.add_argument("--max-new-tokens", type=int, default=1024, help="Max tokens
 parser.add_argument("--from_id", type=int, required=False, help="Start index (inclusive) in shuffled dataset")
 parser.add_argument("--to_id", type=int, required=False, help="End index (exclusive) in shuffled dataset")
 parser.add_argument("--overwrite", action="store_true", help="Whether to overwrite existing output dataset (if any)")
+parser.add_argument("--split", type=str, choices=["train", "test"], default="train", help="Which split to process (train or test)")
 args = parser.parse_args()
+args.output = args.output / args.split
 
 def save_checkpoint(rows: list[dict], output_path: Path) -> None:
     """Write dataset to a temp directory then replace output atomically."""
@@ -58,7 +60,7 @@ else:
     print("   OK: No existing output found, starting from empty dataset")
 
 print("\n2. Loading source dataset...")
-dataset = load_from_disk(str(INPUT_DATASET_PATH))
+dataset = load_from_disk(str(INPUT_DATASET_PATH / args.split))
 dataset = dataset.shuffle(seed=42)
 dataset_len = len(dataset)
 print(f"   OK: Source dataset has {dataset_len} rows")

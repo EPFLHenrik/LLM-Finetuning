@@ -31,12 +31,18 @@ class ThinkTagReasoningExtractor:
         reasoning = re.sub(r"<\\?think>", "", reasoning)
         reasoning = re.sub(r"</think>", "", reasoning)
         reasoning = re.sub(r"<\\think>", "", reasoning)
-        reasoning = re.sub(r"\\boxed\{[^}]*\}", "", reasoning)
+        # Keep the boxed payload (e.g. \boxed{B} -> B) to avoid truncated phrases.
+        reasoning = re.sub(
+            r"\\boxed\s*\{\s*([^}]*)\s*\}",
+            lambda m: m.group(1).strip(),
+            reasoning,
+        )
 
         for pattern in self.meta_patterns:
             reasoning = re.sub(pattern, " ", reasoning)
 
         reasoning = re.sub(r"\s+", " ", reasoning).strip()
+        reasoning = re.sub(r"\s+([,.;:!?])", r"\1", reasoning)
         if not reasoning:
             reasoning = self.fallback_reasoning
 
