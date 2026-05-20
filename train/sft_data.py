@@ -23,11 +23,10 @@ class DatasetBundle:
 
 
 class SFTDataset(torch.utils.data.Dataset):
-    def __init__(self, hf_dataset, tokenizer, max_seq_len: int, system_prompt: str):
+    def __init__(self, hf_dataset, tokenizer, system_prompt: str):
         self.examples = [
             encode_example(
                 tokenizer,
-                max_seq_len,
                 row[DatasetFieldNames.SFT_INPUT],
                 row[DatasetFieldNames.SFT_TARGET],
                 system_prompt,
@@ -44,7 +43,6 @@ class SFTDataset(torch.utils.data.Dataset):
 
 def encode_example(
     tokenizer,
-    max_seq_len: int,
     prompt: str,
     target: str,
     system_prompt: str,
@@ -75,8 +73,8 @@ def encode_example(
     full_ids = tokenizer(full_text, add_special_tokens=False)["input_ids"]
     prompt_len = len(tokenizer(prompt_text, add_special_tokens=False)["input_ids"])
 
-    input_ids = full_ids[:max_seq_len]
-    labels = ([-100] * prompt_len + full_ids[prompt_len:])[:max_seq_len]
+    input_ids = full_ids
+    labels = [-100] * prompt_len + full_ids[prompt_len:]
 
     return {"input_ids": input_ids, "labels": labels}
 
@@ -99,7 +97,6 @@ def collate_fn(batch: list[dict], pad_token_id: int) -> dict:
 def load_dataset_bundles(
     dataset_names: list[str],
     tokenizer,
-    max_seq_len: int,
     batch_size: int,
     system_prompt: str,
 ) -> list[DatasetBundle]:
@@ -117,8 +114,8 @@ def load_dataset_bundles(
         train_hf = load_from_disk(str(train_path))
         test_hf = load_from_disk(str(test_path))
 
-        train_ds = SFTDataset(train_hf, tokenizer, max_seq_len, system_prompt)
-        test_ds = SFTDataset(test_hf, tokenizer, max_seq_len, system_prompt)
+        train_ds = SFTDataset(train_hf, tokenizer, system_prompt)
+        test_ds = SFTDataset(test_hf, tokenizer, system_prompt)
 
         bundles.append(
             DatasetBundle(

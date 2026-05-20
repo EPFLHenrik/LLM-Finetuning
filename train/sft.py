@@ -49,7 +49,6 @@ DEFAULT_BATCH_SIZE = 1
 DEFAULT_GRAD_ACCUM = 16
 DEFAULT_LR = 2e-4
 DEFAULT_WARMUP_RATIO = 0.05
-DEFAULT_MAX_SEQ_LEN = 16384  # max token defined in the report.
 
 # LoRA defaults (gold-standard starter values for 1-2B models).
 LORA_R = 16
@@ -135,7 +134,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--grad-accum", type=int, default=DEFAULT_GRAD_ACCUM)
     parser.add_argument("--lr", type=float, default=DEFAULT_LR)
     parser.add_argument("--warmup-ratio", type=float, default=DEFAULT_WARMUP_RATIO)
-    parser.add_argument("--max-seq-len", type=int, default=DEFAULT_MAX_SEQ_LEN)
     parser.add_argument(
         "--eval-interval",
         type=int,
@@ -484,7 +482,6 @@ def train(args: argparse.Namespace) -> None:
     bundles: list[DatasetBundle] = load_dataset_bundles(
         dataset_names=args.datasets,
         tokenizer=tokenizer,
-        max_seq_len=args.max_seq_len,
         batch_size=args.batch_size,
         system_prompt=SYSTEM_PROMPT_MCQ,
     )
