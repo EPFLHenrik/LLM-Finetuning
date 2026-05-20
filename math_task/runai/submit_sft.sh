@@ -49,25 +49,41 @@ SHARED_RW_PVC="course-cs-552-shared-rw"
 JOB_NAME="cs552-${GASPAR}-${GROUP}-sft-${SUFFIX}-$(date +%H%M%S)"
 
 # --- Bootstrap wrapper ------------------------------------------------------
-# Same pattern as submit_eval.sh: install git credentials from GITHUB_TOKEN,
-# safe-directory the repo, pull latest, then exec the training command.
+# safe-directory the repo, do a one-shot fetch with token embedded in URL
+# (more reliable than http.extraheader Bearer for GitHub git endpoints),
+# then exec the training command.
+#
+# History of failed attempts (so we don't repeat):
+#  - credential.helper store         : helper installed but git never invoked it
+#  - url."tok@github.com".insteadOf  : rewrite installed but git still prompted
+#  - http.extraheader "Bearer $TOK"  : Bearer auth works for REST API, NOT for
+#                                      the git smart-HTTP protocol. GitHub
+#                                      expects "Basic <base64(user:tok)>" or
+#                                      a token-embedded URL.
+# Current: fetch directly from a URL with the token embedded as basic auth
+# (x-access-token:$TOKEN format). Token never persists to disk or git config.
 WRAPPER='set -e
 REPO_DIR="'"${REPO_DIR_IN_POD}"'"
 git config --global --add safe.directory "$REPO_DIR"
 cd "$REPO_DIR"
 if [ -n "$GITHUB_TOKEN" ]; then
-  echo "[wrapper] pulling latest via http.extraheader..."
-  if git -c "http.https://github.com/.extraheader=Authorization: Bearer $GITHUB_TOKEN" pull --ff-only; then
-    echo "[wrapper] git pull SUCCESS"
+  echo "[wrapper] pulling latest with token-embedded fetch URL..."
+  ORIG_URL=$(git remote get-url origin)
+  # Strip any existing auth and the protocol prefix to get just <org>/<repo>[.git]
+  REPO_PATH=$(echo "$ORIG_URL" | sed -E "s#^https?://([^@]*@)?github\.com/##; s#^git@github\.com:##")
+  AUTH_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO_PATH}"
+  if git fetch "$AUTH_URL" math && git reset --hard FETCH_HEAD; then
+    echo "[wrapper] git fetch+reset SUCCESS"
   else
-    echo "[wrapper] WARN: git pull failed; using on-disk code"
+    echo "[wrapper] WARN: git fetch failed; using on-disk code"
   fi
 else
   echo "[wrapper] WARN: GITHUB_TOKEN not set; using on-disk code"
 fi
 
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
-python -c "import torch, vllm, transformers, trl, peft; print(f\"torch={torch.__version__}  vllm={vllm.__version__}  transformers={transformers.__version__}  trl={trl.__version__}  peft={peft.__version__}\")"
+# Comma-print avoids nested quotes that got mangled in earlier runs.
+python -c "import torch, vllm, transformers, trl, peft; print(torch.__version__, vllm.__version__, transformers.__version__, trl.__version__, peft.__version__)"
 
 exec python -m math_task.training.train_sft "$@"'
 
