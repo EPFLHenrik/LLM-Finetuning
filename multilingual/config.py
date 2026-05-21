@@ -26,7 +26,7 @@ SYSTEM_PROMPT = (
     "use \\boxed{X} for multiple-choice questions, where X is the chosen letter, "
     "or \\boxed{42} for numeric answers. "
     "Do not output anything after the boxed answer. "
-    "Respond in the same language as the question."
+    "Your reasoning may be in the language of the question, but the boxed answer must always use Latin letters for MCQ or numbers for numeric."
 )
 
 # Local token budgets. 3072 gives MCQ enough headroom for a short think

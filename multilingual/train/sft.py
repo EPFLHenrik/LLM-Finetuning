@@ -7,7 +7,6 @@ Usage:
     python -m multilingual.train.sft \
         --run_name debug_run \
         --max_steps 20 --eval_steps 10 --save_steps 10 --log_steps 1 --skip_wandb
-
     # Full run
     python -m multilingual.train.sft --run_name my_run
 """
@@ -155,7 +154,6 @@ def main():
             example["messages"],
             tokenize=False,
             add_generation_prompt=False,
-            enable_thinking=False,
         )
 
     # Debug: print one formatted example to verify template output

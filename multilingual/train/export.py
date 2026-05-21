@@ -29,6 +29,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
+from multilingual.config import SYSTEM_PROMPT
+
 BASE_MODEL     = "Qwen/Qwen3-1.7B"
 BEST_RUNS_LOG  = REPO / "multilingual" / "results" / "best_runs.json"
 
@@ -110,17 +112,42 @@ def _disable_peft_bnb_dispatch() -> None:
         print(f"[warn] Failed to disable PEFT bitsandbytes dispatch: {exc}")
 
 
-def _patch_chat_template_no_think(tokenizer) -> None:
+def _patch_chat_template(tokenizer, system_prompt: str) -> None:
+    """
+    Patch the Qwen3 chat template to inject a default system prompt when
+    the CI passes no system message. Thinking mode is kept enabled (default).
+    """
     template = tokenizer.chat_template
     if template is None:
         print("[warn] No chat template found; skipping patch.")
         return
-    prefix = "{%- set enable_thinking = false %}\n"
-    if prefix.strip() in template:
-        print("[info] Chat template already patched; skipping.")
-        return
-    tokenizer.chat_template = prefix + template
-    print("[info] Chat template patched: enable_thinking forced to false.")
+
+    # The block to find in the no-tools branch of the Qwen3 template
+    old_block = (
+        "{%- if messages[0].role == 'system' %}\n"
+        "        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
+        "    {%- endif %}"
+    )
+
+    # Escape backslashes and single quotes for safe Jinja string embedding
+    escaped = system_prompt.replace("\\", "\\\\").replace("'", "\\'")
+    default_line = f"        {{{{- '<|im_start|>system\\n{escaped}<|im_end|>\\n' }}}}"
+
+    new_block = (
+        "{%- if messages[0].role == 'system' %}\n"
+        "        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
+        "    {%- else %}\n"
+        f"{default_line}\n"
+        "    {%- endif %}"
+    )
+
+    if old_block in template:
+        tokenizer.chat_template = template.replace(old_block, new_block)
+        print("[info] Chat template patched: default system prompt injected.")
+        print(f"[info] System prompt: {system_prompt[:80]}...")
+    else:
+        print("[warn] Could not find expected system block in template.")
+        print("[warn] Template may have changed — check manually.")
 
 
 def _verify_export(output_dir: Path, hf_token: str) -> None:
@@ -132,22 +159,27 @@ def _verify_export(output_dir: Path, hf_token: str) -> None:
     tok = AutoTokenizer.from_pretrained(str(output_dir), token=hf_token)
     print("  AutoTokenizer.from_pretrained: OK")
 
+    # Verify system prompt is in template
     template = tok.chat_template or ""
-    assert "enable_thinking = false" in template, \
-        "Chat template does not contain enable_thinking=false!"
-    print("  Chat template no-think patch: OK")
+    assert "multilingual reasoning assistant" in template, \
+        "System prompt not found in chat template!"
+    print("  System prompt in chat template: OK")
 
+    # Test with no system message (simulates CI behavior)
     test_messages = [
-        {"role": "system", "content": "You are a test assistant."},
-        {"role": "user",   "content": "What is 2+2?"},
+        {"role": "user", "content": "What is 2+2?"},
     ]
     rendered = tok.apply_chat_template(
         test_messages, tokenize=False, add_generation_prompt=True
     )
+    assert "<|im_start|>system" in rendered, \
+        "System prompt not rendered when no system message passed!"
+    assert "multilingual reasoning assistant" in rendered, \
+        "System prompt content missing from rendered output!"
     assert "<|im_start|>assistant" in rendered, \
         "apply_chat_template output missing assistant turn!"
-    print("  apply_chat_template: OK")
-    print(f"  Sample output (last 200 chars): ...{rendered[-200:]}")
+    print("  apply_chat_template (no system msg): OK — default system prompt injected")
+    print(f"  Sample output (last 300 chars): ...{rendered[-300:]}")
 
     AutoModelForCausalLM.from_pretrained(
         str(output_dir), token=hf_token,
@@ -216,10 +248,10 @@ def main():
     print("Saving merged model...")
     model.save_pretrained(args.output_dir, safe_serialization=True)
 
-    # Save tokenizer
+    # Save tokenizer with system prompt patched into chat template
     print("Saving tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, token=hf_token)
-    _patch_chat_template_no_think(tokenizer)
+    _patch_chat_template(tokenizer, SYSTEM_PROMPT)
     tokenizer.save_pretrained(args.output_dir)
 
     # Save generation_config.json
@@ -237,14 +269,15 @@ def main():
     # Save manifest
     current_loss = _get_best_eval_loss(args.adapter_path)
     manifest = {
-        "run_name":         run_key,
-        "base_model":       args.base_model,
-        "adapter_path":     str(args.adapter_path),
-        "best_eval_loss":   current_loss,
-        "format":           "safetensors",
-        "merged_lora":      True,
-        "thinking_mode":    "off",
-        "generation_config":"generation_config.json",
+        "run_name":          run_key,
+        "base_model":        args.base_model,
+        "adapter_path":      str(args.adapter_path),
+        "best_eval_loss":    current_loss,
+        "format":            "safetensors",
+        "merged_lora":       True,
+        "thinking_mode":     "enabled",
+        "generation_config": "generation_config.json",
+        "system_prompt":     SYSTEM_PROMPT,
     }
     with open(args.output_dir / "checkpoint_manifest.json", "w") as f:
         json.dump(manifest, f, indent=2)
@@ -268,8 +301,8 @@ def main():
     if args.push:
         if not args.hf_repo:
             raise ValueError("--hf_repo is required when --push is set.")
-        if args.force_push or _should_push(run_key, current_loss, 
-                                            {k: v for k, v in best_runs.items() 
+        if args.force_push or _should_push(run_key, current_loss,
+                                            {k: v for k, v in best_runs.items()
                                              if k != run_key}):
             print(f"\nPushing to HF Hub: {args.hf_repo}")
             api = HfApi()
