@@ -915,7 +915,7 @@ def train(args: argparse.Namespace) -> None:
             final_record = {"epoch": saved_epochs[-1]}
             copy_best_checkpoint(final_record, epoch_root, best_hf_model_dir, best_lora_dir)
 
-    summary_path = args.validation_output_dir / run_name / "validation_selection_summary.json"
+    summary_path = best_checkpoint_dir / "validation_selection_summary.json"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(

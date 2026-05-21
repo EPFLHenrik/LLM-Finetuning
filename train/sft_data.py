@@ -24,15 +24,17 @@ class DatasetBundle:
 
 class SFTDataset(torch.utils.data.Dataset):
     def __init__(self, hf_dataset, tokenizer, system_prompt: str):
-        self.examples = [
-            encode_example(
+        self.examples = []
+        for row in hf_dataset:
+            ex = encode_example(
                 tokenizer,
                 row[DatasetFieldNames.SFT_INPUT],
                 row[DatasetFieldNames.SFT_TARGET],
                 system_prompt,
             )
-            for row in hf_dataset
-        ]
+            if "answer" in row:
+                ex["answer"] = row["answer"]
+            self.examples.append(ex)
 
     def __len__(self):
         return len(self.examples)
@@ -87,11 +89,17 @@ def collate_fn(batch: list[dict], pad_token_id: int) -> dict:
         input_ids.append([pad_token_id] * pad_len + x["input_ids"])
         labels.append([-100] * pad_len + x["labels"])
         attention_mask.append([0] * pad_len + [1] * len(x["input_ids"]))
-    return {
-        "input_ids": torch.tensor(input_ids, dtype=torch.long),
-        "labels": torch.tensor(labels, dtype=torch.long),
-        "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
+        
+    batch_out = {
+    "input_ids": torch.tensor(input_ids, dtype=torch.long),
+    "labels": torch.tensor(labels, dtype=torch.long),
+    "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
     }
+
+    if "answer" in batch[0]:
+        batch_out["answer"] = [x["answer"] for x in batch]
+
+    return batch_out
 
 
 def load_dataset_bundles(
