@@ -8,6 +8,7 @@
 #
 # Usage:
 #   ./submit.sh                # default: 1 GPU, suffix "lab"
+#   USE_GPU=false ./submit.sh   # CPU-only, suffix "lab"
 #   ./submit.sh train          # custom job suffix
 #
 # Once the pod is Running, connect in one of these ways:
@@ -28,8 +29,8 @@
 #   named <job-name>-0-0. Open your repo folder inside the pod and use
 #   Terminal -> New Terminal for a shell in the same environment.
 #
-# NOTE: GPU count is fixed at 1 (40GB A100). The course quota is one GPU
-# per group allocation; asking for more will leave the job stuck Pending.
+# NOTE: Set USE_GPU=false for a CPU-only pod. The course quota is still
+# one GPU per group allocation when GPU is enabled.
 
 set -euo pipefail
 
@@ -49,7 +50,7 @@ if [[ "${GROUP}" == "gXX" || -z "${GROUP}" ]]; then
     exit 1
 fi
 
-GPUS=1   # course cap: 1 GPU
+USE_GPU="true"   # set USE_GPU=false for a CPU-only pod
 NODE="${NODE:-a100-40g}"  # DO NOT CHANGE: course quota is only available on this node pool
 SUFFIX="${1:-lab}"
 JOB_NAME="cs552-${GASPAR}-${GROUP}-${SUFFIX}-$(date +%H%M%S)"
@@ -71,7 +72,13 @@ WANDB_API_KEY="${WANDB_API_KEY:-}"
 # This script does not mount the personal home PVC, so it does not need
 # a hard-coded UID/GID. Use /scratch for course work and deliverables.
 
-echo ">>> Submitting ${JOB_NAME}  (1 GPU)"
+if [[ "${USE_GPU}" == "true" ]]; then
+  GPUS=1
+else
+  GPUS=0
+fi
+
+echo ">>> Submitting ${JOB_NAME}"
 
 runai submit \
   --name "${JOB_NAME}" \

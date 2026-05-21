@@ -70,12 +70,12 @@ MERGE_AND_SAVE=true
 SKIP_WANDB_ARG=""
 OVERWRITE_OUTPUT_ARG=""
 MERGE_AND_SAVE_ARG="--merge-and-save"
+WANDB_KEY="${WANDB_KEY:-}"
  
 
 if [ "$SKIP_WANDB" = "true" ]; then SKIP_WANDB_ARG="--skip-wandb"; fi
 if [ "$OVERWRITE_OUTPUT" = "true" ]; then OVERWRITE_OUTPUT_ARG="--overwrite-output"; fi
 if [ "$MERGE_AND_SAVE" = "false" ]; then MERGE_AND_SAVE_ARG=""; fi
-if [ -n "$WANDB_KEY" ]; then WANDB_KEY_ARG="--wandb-key $WANDB_KEY"; fi
 
 # Check mandatory variables
 if [ -z "$MODEL_FOLDER" ] || [ -z "$DATASET_FILE" ] || [ -z "$OUTPUT_DIR" ]; then
@@ -105,9 +105,7 @@ runai submit \
     set -euo pipefail && \
     mkdir -p /scratch/hf_cache /scratch/wandb && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
-    cd /scratch && \
-    git clone https://github.com/\$(git config --get remote.origin.url | sed -e 's#.*github.com/##' -e 's#\.git$##') repo || true && \
-    cd repo || cd \"${REPO_DIR:-/scratch/workspace/henrik/standard-project-m2-mystery-machine}\" && \
+    cd \"${REPO_DIR:-/scratch/workspace/henrik/standard-project-m2-mystery-machine}\" && \
     python training/lora_post_train.py \
       --model-folder \"${MODEL_FOLDER}\" \
       --dataset-file \"${DATASET_FILE}\" \
@@ -135,6 +133,7 @@ runai submit \
       --max-eval-samples ${MAX_EVAL_SAMPLES} \
       --wandb-project \"${WANDB_PROJECT}\" \
       --wandb-entity \"${WANDB_ENTITY}\" \
+      --wandb-key \"${WANDB_KEY}\" \
       ${SKIP_WANDB_ARG} \
       ${OVERWRITE_OUTPUT_ARG} \
       ${MERGE_AND_SAVE_ARG}"

@@ -120,9 +120,12 @@ def _disable_peft_bnb_dispatch() -> None:
     """Prevent PEFT from importing bitsandbytes when not quantizing."""
     try:
         import peft.tuners.lora.model as lora_model
+        import peft.import_utils as peft_import_utils
 
         lora_model.is_bnb_available = lambda: False
         lora_model.is_bnb_4bit_available = lambda: False
+        peft_import_utils.is_bnb_available = lambda: False
+        peft_import_utils.is_bnb_4bit_available = lambda: False
         print("[info] Disabled PEFT bitsandbytes dispatch.")
     except Exception as exc:
         print(f"[warn] Could not disable PEFT bitsandbytes dispatch: {exc}")
@@ -326,16 +329,16 @@ def main() -> None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
 
+    _disable_peft_bnb_dispatch()
+
     run_name = args.run_name or args.output_dir.name
     if not args.skip_wandb:
         # If the user provided an API key on the CLI, set it and call wandb.login().
         # This mirrors `wandb login` behaviour in non-interactive scripts.
-        if args.wandb_key:
-            os.environ["WANDB_API_KEY"] = args.wandb_key
-            try:
-                wandb.login(key=args.wandb_key)
-            except Exception as exc:
-                print(f"[warn] wandb.login() failed: {exc}")
+        try:
+            wandb.login(key=args.wandb_key)
+        except Exception as exc:
+            print(f"[warn] wandb.login() failed: {exc}")
         wandb.init(
             project=args.wandb_project,
             entity=args.wandb_entity,
@@ -436,7 +439,6 @@ def main() -> None:
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         formatting_func=lambda example: _format_example(tokenizer, example),
-        peft_config=lora_config,
         processing_class=tokenizer,
     )
 
