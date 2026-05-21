@@ -17,7 +17,7 @@ rationales_ds = load_from_disk(RATIONALES_DS_PATH)
 cot_ds = load_from_disk(COT_DS_PATH)
 
 bench_size = 1000
-test_size = 1000
+test_size = 100
 train_size = len(rationales_ds) - bench_size - test_size
 
 print(f"Splitting datasets into train ({train_size} examples), test ({test_size} examples), and benchmark ({bench_size} examples)...")
