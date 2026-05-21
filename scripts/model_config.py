@@ -28,14 +28,23 @@ CHECKPOINT_MANIFEST_FILE = "checkpoint_manifest.json"
 
 
 SYSTEM_MESSAGE = (
-    """You have a maximum limit of 4096 tokens. Your priority is to complete the entire response, including the final choice, before running out of tokens.
-    [CRITICAL EXECUTION & TOKEN BUDGET LAWS]
-    You have an absolute server limit of 4096 tokens. You must exhaustively utilize your token budget to thoroughly reason through the problem, but you MUST leave a small buffer for the final answer so you do not get cut off.
-    1. PROCESS ALL ANALYSIS INSIDE TAGS: Do all your thinking, step-by-step concepts mapping, and distractor eliminations strictly inside the <think>...</think> block.
-    2. PREVENT TRUNCATION: Keep track of your length. If your analysis becomes very long, you must immediately close it with </think> to leave room for the final answer.
-    3. ABSOLUTE STOPPING CONSTRAINT: The moment you write the closing </think> tag, you are legally forbidden from writing any sentences, summaries, preambles, or explanations.
-    [FINAL OUTPUT SYNTAX] Immediately after </think>, output exactly 9 characters representing your choice, formatted precisely as shown below without using the "\text{}" modifier: \\boxed{X} (Where X is replaced by only the single capital letter of the correct choice).
-    """
+    """You are a careful reasoning assistant.
+
+Reason through the problem when needed.
+
+Your final answer must appear exactly once inside \\boxed{...}.
+
+Rules:
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- For math questions, output only the final answer inside \\boxed{...}.
+- Do not include explanations or extra text inside the box.
+- Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+
+Examples:
+\\boxed{B}
+\\boxed{42}
+"""
 )
 
 ENABLE_THINKING = True
@@ -72,9 +81,21 @@ def _enforce_enable_thinking(chat_template: str, enable_thinking: bool) -> str:
 
 
 def _enforce_system_message(chat_template: str) -> str:
-    forced_line = "{%- set system_message = " + json.dumps(SYSTEM_MESSAGE) + " %}"
-    pattern = r"(?m)^\{%-\s*set\s+system_message\s*=\s*.*?%\}\n?"
-    chat_template = re.sub(pattern, "", chat_template)
+    # Insert system_message as a Jinja block to preserve literal newlines
+    forced_block = "{%- set system_message %}\n" + SYSTEM_MESSAGE + "\n{%- endset %}"
+    # Remove any existing system_message assignment, whether single-line or block.
+    chat_template = re.sub(
+        r"(?ms)^\{%-\s*set\s+system_message\s*=\s*.*?%}\s*\n?",
+        "",
+        chat_template,
+        count=1,
+    )
+    #chat_template = re.sub(
+    #    r"(?ms)^\{%-\s*set\s+system_message\s*%}\n.*?^\{%-\s*endset\s*%}\s*\n?",
+    #    "",
+    #    chat_template,
+    #    count=1,
+    #)
 
     old_block = (
         "    {%- if messages[0].role == 'system' %}\n"
@@ -91,8 +112,7 @@ def _enforce_system_message(chat_template: str) -> str:
     if old_block in chat_template:
         chat_template = chat_template.replace(old_block, new_block, 1)
 
-
-    return forced_line + "\n" + chat_template.lstrip("\n")
+    return forced_block + "\n" + chat_template.lstrip("\n")
 
 
 def _build_chat_template(tokenizer) -> str:
@@ -149,12 +169,6 @@ def adapt_checkpoint(
         trust_remote_code=trust_remote_code,
         use_fast=use_fast,
     )
-
-    # Apply chat template to tokenizer object before save_pretrained so tokenizer
-    # artifacts stay coherent with the new template.
-    if _should_apply(cmd, "chat_template"):
-        tokenizer.chat_template = _build_chat_template(tokenizer)
-        print("Applied chat_template from in-file constants")
 
     print(f"Saving model weights/config to {output_dir}...")
     model.save_pretrained(output_dir, safe_serialization=True)

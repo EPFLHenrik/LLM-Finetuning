@@ -50,10 +50,22 @@ def _enforce_enable_thinking(chat_template: str) -> str:
 
 
 def _enforce_system_message(chat_template: str) -> str:
-    forced_line = "{%- set system_message = " + json.dumps(SYSTEM_MESSAGE) + " %}"
-    pattern = r"(?m)^\{%-\s*set\s+system_message\s*=\s*.*?%\}\n?"
-    cleaned = re.sub(pattern, "", chat_template)
-    return forced_line + "\n" + cleaned.lstrip("\n")
+    # Insert system_message as a Jinja block to preserve literal newlines
+    forced_block = "{%- set system_message %}\n" + SYSTEM_MESSAGE + "\n{%- endset %}"
+    # Remove any existing system_message assignment, whether single-line or block.
+    chat_template = re.sub(
+        r"(?ms)^\{%-\s*set\s+system_message\s*=\s*.*?%}\s*\n?",
+        "",
+        chat_template,
+        count=1,
+    )
+    chat_template = re.sub(
+        r"(?ms)^\{%-\s*set\s+system_message\s*%}\n.*?^\{%-\s*endset\s*%}\s*\n?",
+        "",
+        chat_template,
+        count=1,
+    )
+    return forced_block + "\n" + chat_template
 
 
 GENERATION_CONFIG = {

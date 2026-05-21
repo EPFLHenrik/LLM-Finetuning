@@ -68,6 +68,58 @@ def extract_boxed_answer(
     return answer
 
 
+def extract_boxed_answer_with_fallbacks(pred_str: str) -> tuple[str | None, str]:
+    """Extract a single capital-letter answer with boxed-first fallbacks.
+
+    Strategy:
+    1) Try `extract_boxed_answer`.
+       - If boxed content is exactly one capital letter, return it.
+       - Otherwise, return the last capital letter found anywhere inside boxed content.
+    2) If no boxed answer is found, treat the last letter of the whole prediction as
+       the answer if it is a capital letter.
+    3) If that fails, search the last 10 characters for any capital letter and
+       return the last one.
+
+    Returns:
+        A tuple ``(answer, strategy)`` where ``answer`` is a single capital
+        letter ("A"-"Z") or None, and ``strategy`` is one of:
+        - "boxed_exact_capital"
+        - "boxed_contains_capital"
+        - "last_letter_capital"
+        - "tail10_capital"
+        - "no_answer_found"
+    """
+    pred_str = str(pred_str)
+
+    boxed = extract_boxed_answer(pred_str, strip_double_curly_brace=True)
+    if boxed is not None:
+        boxed = boxed.strip()
+        exact = re.fullmatch(r"([A-Z])", boxed)
+        if exact:
+            return exact.group(1), "boxed_exact_capital"
+
+        # Fallback inside boxed content: pick the last capital letter if present.
+        boxed_caps = re.findall(r"[A-Z]", boxed)
+        if boxed_caps:
+            return boxed_caps[-1], "boxed_contains_capital"
+
+    # Fallback when there is no usable boxed answer:
+    # 1) Last letter is the answer if it's a capital letter.
+    last_letter_match = re.search(r"([A-Za-z])[^A-Za-z]*$", pred_str)
+    if last_letter_match:
+        last_letter = last_letter_match.group(1)
+        if re.fullmatch(r"[A-Z]", last_letter):
+            return last_letter, "last_letter_capital"
+
+    # 2) Search for any capital letter in the last 10 characters.
+    tail = pred_str[-10:]
+    tail_caps = re.findall(r"[A-Z]", tail)
+    if tail_caps:
+        return tail_caps[-1], "tail10_capital"
+
+    return None, "no_answer_found"
+
+
 # ---------------------------------------------------------------------------
 # Answer normalization
 # ---------------------------------------------------------------------------
