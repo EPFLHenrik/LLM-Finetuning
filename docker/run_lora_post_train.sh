@@ -68,7 +68,7 @@ MERGE_AND_SAVE=true
 
 # Build flag args
 SKIP_WANDB_ARG=""
-OVERWRITE_OUTPUT_ARG=""
+OVERWRITE_OUTPUT_ARG="--overwrite-output"
 MERGE_AND_SAVE_ARG="--merge-and-save"
 WANDB_KEY="${WANDB_KEY:-}"
  
