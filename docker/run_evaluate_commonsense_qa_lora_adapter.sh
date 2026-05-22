@@ -69,9 +69,7 @@ runai submit \
     set -euo pipefail && \
     mkdir -p /scratch/hf_cache /scratch/wandb && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
-    cd /scratch && \
-    git clone https://github.com/\$(git config --get remote.origin.url | sed -e 's#.*github.com/##' -e 's#\\.git$##') repo || true && \
-    cd repo || cd \"${REPO_DIR:-/scratch/workspace/henrik/standard-project-m2-mystery-machine}\" && \
+    cd \"${REPO_DIR:-/scratch/workspace/henrik/standard-project-m2-mystery-machine}\" && \
     python scripts/evaluate_training.py \
       --checkpoints-dir \"${CHECKPOINTS_DIR}\" \
       --base-model \"${BASE_MODEL}\" \
@@ -80,6 +78,7 @@ runai submit \
       --max-new-tokens 512 \
       --temperature 0.0 \
       --top-p 0.95 \
+      --wandb-key "${WANDB_KEY}" \
       --max-eval-samples 0"
 
 cat <<EOF

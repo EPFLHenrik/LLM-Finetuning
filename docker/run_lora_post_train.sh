@@ -35,11 +35,11 @@ SHARED_RW_PVC="course-cs-552-shared-rw"
 # Expose all script parameters as variables (mandatory ones left empty)
 # Mandatory (edit before submitting)
 MODEL_FOLDER="models/qwen3_thinking"         # REQUIRED: e.g. models/qwen3_baseline
-DATASET_FILE="data/preprocessing/commonsense_qa/train.jsonl"         # REQUIRED: path to .jsonl or .json
-OUTPUT_DIR="models/commonsense_qa"           # REQUIRED: where merged checkpoint will be written
+DATASET_FILE="data/preprocessing/ai2_arc_challenge/train.jsonl"         # REQUIRED: path to .jsonl or .json
+OUTPUT_DIR="models/ai2_arc_challenge"           # REQUIRED: where merged checkpoint will be written
 
 # Optional / defaults (match lora_post_train.py defaults)
-RUN_NAME="first_commonsense"
+RUN_NAME="first_ai2_arc_challenge"
 SEED=42
 MAX_SEQ_LENGTH=2048
 NUM_TRAIN_EPOCHS=1.0
@@ -47,7 +47,7 @@ LEARNING_RATE=0.0002
 PER_DEVICE_TRAIN_BATCH_SIZE=1
 GRADIENT_ACCUMULATION_STEPS=8
 LOGGING_STEPS=10
-SAVE_STRATEGY="epoch"
+SAVE_STRATEGY="steps"
 SAVE_STEPS=500
 LORA_R=16
 LORA_ALPHA=32
