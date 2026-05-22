@@ -45,7 +45,6 @@ DEFAULT_TEMPLATE = REPO / "multilingual" / "assets" / "chat_template.jinja"
 # Sentinel value used when --override_chat_template is passed with no argument
 # (meaning: fall back to Qwen3 default + system prompt patch)
 _QWEN_DEFAULT_SENTINEL = "__qwen_default__"
-
 DEFAULT_GENERATION_CONFIG = {
     "bos_token_id": 151643,
     "do_sample": False,

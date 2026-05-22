@@ -21,7 +21,7 @@ Dataset modes:
 
 Usage:
     python -m multilingual.train.build_sft_data
-    python -m multilingual.train.build_sft_data --config configs/v7.json --overwrite
+    python -m multilingual.train.build_sft_data --config configs/sft/v7.json --overwrite
     python -m multilingual.train.build_sft_data --debug
 """
 
