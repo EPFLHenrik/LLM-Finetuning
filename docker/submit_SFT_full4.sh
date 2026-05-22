@@ -96,9 +96,6 @@ MSYS_NO_PATHCONV=1 runai submit \
     --run_name sft_full4 \
     --datasets distillation_old/safetybench \
     --eval-interval 1000 && \
-    python -m huggingface.push_model \
-    --checkpoint_dir checkpoints/sft_full4/hf_model \
-    --commit_message 'sft_full4, SafetyBench Only' && \
     python -m benchmark.run \
     --benchmark advbench \
     --think \
