@@ -2,12 +2,8 @@
 
 LoRA SFT training using TRL SFTTrainer + SFTConfig (TRL 1.3.0).
 
-Chat template:
-  --chat_template <path>   use a custom .jinja file
-  (default)                multilingual/assets/chat_template.jinja
-
-The resolved template is applied to the tokenizer before training and
-saved to every checkpoint dir and to best_adapter/ after training.
+Uses Qwen3's default tokenizer chat template (TRL-compatible out of the box).
+The system prompt is embedded in every training example's messages field.
 
 Usage:
     # Debug run
@@ -17,10 +13,6 @@ Usage:
 
     # Full run
     python -m multilingual.train.sft --run_name sft_v7
-
-    # Custom chat template
-    python -m multilingual.train.sft --run_name sft_v7 \
-        --chat_template path/to/custom.jinja
 """
 
 from __future__ import annotations
@@ -28,7 +20,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
 import sys
 from pathlib import Path
 
@@ -36,7 +27,7 @@ import torch
 import wandb
 from datasets import Dataset
 from peft import LoraConfig, TaskType
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainerCallback
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import SFTConfig, SFTTrainer
 
 REPO = Path(__file__).resolve().parents[2]
@@ -50,9 +41,6 @@ from multilingual.config import REPO as MLREPO
 
 BASE_MODEL    = "Qwen/Qwen3-1.7B"
 WANDB_PROJECT = "MNLP-Multilingual"
-
-DEFAULT_TEMPLATE   = MLREPO / "multilingual" / "assets" / "chat_template.jinja"
-CHECKPOINT_TEMPLATE_NAME = "chat_template.jinja"
 
 SFT_DATA_DIR       = MLREPO / "multilingual" / "data" / "sft"
 DEFAULT_TRAIN_FILE = SFT_DATA_DIR / "mixed" / "train_mixed.jsonl"
@@ -76,30 +64,6 @@ DEFAULT_SAVE_STEPS   = 100
 DEFAULT_EVAL_STEPS   = 100
 DEFAULT_LOG_STEPS    = 10
 
-
-# ---------------------------------------------------------------------------
-# Chat template
-# ---------------------------------------------------------------------------
-
-def _save_template_to_checkpoint(template_path: Path, checkpoint_dir: Path) -> None:
-    """Copy the chat template into a checkpoint directory."""
-    dst = checkpoint_dir / CHECKPOINT_TEMPLATE_NAME
-    shutil.copy2(template_path, dst)
-
-
-class SaveTemplateCallback(TrainerCallback):
-    """Saves the chat template file into every checkpoint directory."""
-
-    def __init__(self, template_path: Path) -> None:
-        self.template_path = template_path
-
-    def on_save(self, args, state, control, **kwargs):  # type: ignore[override]
-        # Always save to the checkpoint currently being written
-        ckpt_dir = Path(args.output_dir or "") / f"checkpoint-{state.global_step}"
-        if ckpt_dir.exists():
-            _save_template_to_checkpoint(self.template_path, ckpt_dir)
-
-
 # ---------------------------------------------------------------------------
 # Data
 # ---------------------------------------------------------------------------
@@ -113,7 +77,6 @@ def _load_jsonl(path: Path) -> Dataset:
                 records.append(json.loads(line))
     return Dataset.from_list(records)
 
-
 # ---------------------------------------------------------------------------
 # Args
 # ---------------------------------------------------------------------------
@@ -124,10 +87,6 @@ def parse_args():
     parser.add_argument("--train_file", type=Path, default=DEFAULT_TRAIN_FILE)
     parser.add_argument("--val_file",   type=Path, default=DEFAULT_VAL_FILE)
     parser.add_argument("--output_dir", type=Path, default=None)
-    parser.add_argument(
-        "--chat_template", type=Path, default=DEFAULT_TEMPLATE,
-        help=f"Path to .jinja chat template. Default: assets/chat_template.jinja",
-    )
     parser.add_argument("--epochs",       type=int,   default=DEFAULT_EPOCHS)
     parser.add_argument("--batch_size",   type=int,   default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--grad_accum",   type=int,   default=DEFAULT_GRAD_ACCUM)
@@ -148,13 +107,11 @@ def parse_args():
     parser.add_argument("--skip_wandb",    action="store_true")
     return parser.parse_args()
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 def _disable_peft_bnb_dispatch() -> None:
-    """Prevent PEFT from importing bitsandbytes when not quantizing."""
     try:
         import peft.tuners.lora.model as lora_model
         lora_model.is_bnb_available      = lambda: False  # type: ignore[attr-defined]
@@ -163,7 +120,6 @@ def _disable_peft_bnb_dispatch() -> None:
     except Exception as e:
         print(f"[warn] Could not disable PEFT bitsandbytes dispatch: {e}")
 
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -171,7 +127,6 @@ def _disable_peft_bnb_dispatch() -> None:
 def main():
     args = parse_args()
 
-    # save_steps must equal eval_steps for load_best_model_at_end to work
     if args.save_steps != args.eval_steps:
         print(f"[warn] save_steps ({args.save_steps}) != eval_steps "
               f"({args.eval_steps}). Setting both to {args.eval_steps}.")
@@ -182,12 +137,6 @@ def main():
     )
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Resolve and validate chat template
-    template_path = args.chat_template
-    if not template_path.exists():
-        raise FileNotFoundError(f"Chat template not found: {template_path}")
-    print(f"[info] Chat template: {template_path}")
-
     if not args.skip_wandb:
         wandb.init(
             project=args.wandb_project,
@@ -197,14 +146,12 @@ def main():
         )
 
     hf_token  = os.environ.get("HF_TOKEN", "")
+
+    # Use Qwen3's default tokenizer — already TRL-compatible with assistant_only_loss
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, token=hf_token)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
     tokenizer.padding_side = "right"
-
-    # Apply chat template to tokenizer
-    tokenizer.chat_template = template_path.read_text(encoding="utf-8")
-    print("[info] Chat template applied to tokenizer.")
 
     def formatting_func(example: dict) -> str:
         return tokenizer.apply_chat_template(
@@ -281,19 +228,16 @@ def main():
         formatting_func=formatting_func,
         peft_config=lora_config,
         processing_class=tokenizer,
-        callbacks=[SaveTemplateCallback(template_path)],
     )
 
     trainer.train()
 
-    # Save best adapter + tokenizer + chat template
+    # Save best adapter + tokenizer
     best_adapter_dir = output_dir / "best_adapter"
     peft_model = trainer.model  # type: ignore[union-attr]
     peft_model.save_pretrained(best_adapter_dir)  # type: ignore[operator]
     tokenizer.save_pretrained(best_adapter_dir)
-    _save_template_to_checkpoint(template_path, best_adapter_dir)
     print(f"Best adapter saved: {best_adapter_dir}")
-    print(f"Chat template saved: {best_adapter_dir / CHECKPOINT_TEMPLATE_NAME}")
 
     if not args.skip_wandb:
         wandb.finish()
