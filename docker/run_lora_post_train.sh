@@ -40,26 +40,19 @@ OUTPUT_DIR="models/commonsense_qa"           # REQUIRED: where merged checkpoint
 
 # Optional / defaults (match lora_post_train.py defaults)
 RUN_NAME="first_commonsense"
-VALIDATION_FILE="data/preprocessing/commonsense_qa/validation.jsonl"
-VALIDATION_SPLIT=0.1
 SEED=42
 MAX_SEQ_LENGTH=2048
-MAX_NEW_TOKENS=16000
-TEMPERATURE=0.0
-TOP_P=0.95
 NUM_TRAIN_EPOCHS=1.0
 LEARNING_RATE=0.0002
 PER_DEVICE_TRAIN_BATCH_SIZE=1
-PER_DEVICE_EVAL_BATCH_SIZE=1
 GRADIENT_ACCUMULATION_STEPS=8
 LOGGING_STEPS=10
 SAVE_STRATEGY="epoch"
-EVAL_STEPS=0
+SAVE_STEPS=500
 LORA_R=16
 LORA_ALPHA=32
 LORA_DROPOUT=0.05
 MAX_TRAIN_SAMPLES=0
-MAX_EVAL_SAMPLES=0
 WANDB_PROJECT="cs552-mystery-machine"
 WANDB_ENTITY=""
 SKIP_WANDB=false
@@ -110,30 +103,23 @@ runai submit \
       --model-folder \"${MODEL_FOLDER}\" \
       --dataset-file \"${DATASET_FILE}\" \
       --output-dir \"${OUTPUT_DIR}\" \
-      --run-name \"${RUN_NAME}\" \
-      --validation-file \"${VALIDATION_FILE}\" \
-      --validation-split ${VALIDATION_SPLIT} \
+      --run-name "${RUN_NAME}" \
       --seed ${SEED} \
       --max-seq-length ${MAX_SEQ_LENGTH} \
-      --max-new-tokens ${MAX_NEW_TOKENS} \
-      --temperature ${TEMPERATURE} \
-      --top-p ${TOP_P} \
       --num-train-epochs ${NUM_TRAIN_EPOCHS} \
       --learning-rate ${LEARNING_RATE} \
       --per-device-train-batch-size ${PER_DEVICE_TRAIN_BATCH_SIZE} \
-      --per-device-eval-batch-size ${PER_DEVICE_EVAL_BATCH_SIZE} \
       --gradient-accumulation-steps ${GRADIENT_ACCUMULATION_STEPS} \
       --logging-steps ${LOGGING_STEPS} \
-      --save-strategy \"${SAVE_STRATEGY}\" \
-      --eval-steps ${EVAL_STEPS} \
+      --save-strategy "${SAVE_STRATEGY}" \
+      --save-steps ${SAVE_STEPS} \
       --lora-r ${LORA_R} \
       --lora-alpha ${LORA_ALPHA} \
       --lora-dropout ${LORA_DROPOUT} \
       --max-train-samples ${MAX_TRAIN_SAMPLES} \
-      --max-eval-samples ${MAX_EVAL_SAMPLES} \
-      --wandb-project \"${WANDB_PROJECT}\" \
-      --wandb-entity \"${WANDB_ENTITY}\" \
-      --wandb-key \"${WANDB_KEY}\" \
+      --wandb-project "${WANDB_PROJECT}" \
+      --wandb-entity "${WANDB_ENTITY}" \
+      --wandb-key "${WANDB_KEY}" \
       ${SKIP_WANDB_ARG} \
       ${OVERWRITE_OUTPUT_ARG} \
       ${MERGE_AND_SAVE_ARG}"

@@ -42,11 +42,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from evaluate.extract_answer import extract_boxed_answer_with_fallbacks, is_equiv
-
-
-PROMPT_KEYS = ("prompt", "question", "input", "text")
-ANSWER_KEYS = ("answer", "reference", "label", "target", "answerKey")
+# Evaluation utilities moved to scripts/evaluate_training.py
 
 DEFAULT_LORA_TARGET_MODULES = (
     "q_proj",
@@ -61,15 +57,6 @@ DEFAULT_LORA_TARGET_MODULES = (
 WANDB_PROJECT = "cs552-mystery-machine"
 
 CHAT_TEMPLATE_FILENAME = "chat_template.jinja"
-
-PENALTY_BY_STRATEGY = {
-    "boxed_exact_capital": 0.0,
-    "boxed_contains_capital": 0.5,
-    "last_letter_capital": 1.0,
-    "tail10_capital": 1.5,
-    "no_answer_found": 3.0,
-}
-
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
@@ -161,147 +148,6 @@ def _format_example(tokenizer, row: dict[str, Any]) -> str:
     return tokenizer.apply_chat_template(row["messages"], tokenize=False, add_generation_prompt=False)
 
 
-def _evaluation_penalty(strategy: str) -> float:
-    return PENALTY_BY_STRATEGY.get(strategy, PENALTY_BY_STRATEGY["no_answer_found"])
-
-
-def _extract_prediction_text(tokenizer, model, messages: list[dict[str, str]], *, max_new_tokens: int, temperature: float, top_p: float) -> str:
-    input_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
-    gen_kwargs: dict[str, Any] = {
-        "max_new_tokens": max_new_tokens,
-        "do_sample": temperature > 0,
-        "pad_token_id": tokenizer.eos_token_id,
-        "eos_token_id": tokenizer.eos_token_id,
-    }
-    if temperature > 0:
-        gen_kwargs["temperature"] = temperature
-        gen_kwargs["top_p"] = top_p
-    with torch.no_grad():
-        generated = model.generate(
-            **inputs,
-            **gen_kwargs,
-        )
-    prompt_length = inputs["input_ids"].shape[-1]
-    completion = generated[0][prompt_length:]
-    return tokenizer.decode(completion, skip_special_tokens=False)
-
-
-def _score_prediction(prediction: str, reference: str) -> tuple[bool, float, str, str | None]:
-    extracted, strategy = extract_boxed_answer_with_fallbacks(prediction)
-    reference = reference.strip()
-
-    if _is_choice_answer(reference):
-        correct = extracted is not None and extracted.upper() == reference.upper()
-        penalty = 0.0 if correct else _evaluation_penalty(strategy)
-        return correct, penalty, strategy, extracted
-
-    boxed_match = re.search(r"\\boxed\{(.*)\}", prediction)
-    if boxed_match:
-        candidate = boxed_match.group(1).strip()
-        correct = is_equiv(candidate, reference)
-    else:
-        candidate = extracted
-        correct = candidate is not None and is_equiv(candidate, reference)
-    penalty = 0.0 if correct else _evaluation_penalty(strategy)
-    return correct, penalty, strategy, extracted
-
-
-def _evaluate_model(
-    tokenizer,
-    model,
-    rows: list[dict[str, Any]],
-    *,
-    max_new_tokens: int,
-    temperature: float,
-    top_p: float,
-) -> dict[str, Any]:
-    if not rows:
-        return {
-            "n_examples": 0,
-            "accuracy": 0.0,
-            "mean_penalty": 0.0,
-            "strategy_counts": {},
-            "details": [],
-        }
-
-    model.eval()
-    correct_count = 0
-    penalty_sum = 0.0
-    strategy_counts: Counter[str] = Counter()
-    details: list[dict[str, Any]] = []
-
-    for row in rows:
-        prompt = _get_first(row, PROMPT_KEYS)
-        reference = _get_first(row, ANSWER_KEYS)
-        # Prefer using preprocessed `messages` from the dataset to ensure the
-        # system prompt and conversational context are preserved.
-        messages = row.get("messages")
-        if not isinstance(messages, list) or not messages:
-            # Minimal fallback: use only the user message (no system prompt).
-            messages = [{"role": "user", "content": prompt}]
-        prediction = _extract_prediction_text(
-            tokenizer,
-            model,
-            messages,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            top_p=top_p,
-        )
-        correct, penalty, strategy, extracted = _score_prediction(prediction, reference)
-        correct_count += int(correct)
-        penalty_sum += penalty
-        strategy_counts[strategy] += 1
-        details.append(
-            {
-                "prompt": prompt,
-                "reference": reference,
-                "prediction": prediction,
-                "extracted": extracted,
-                "strategy": strategy,
-                "correct": correct,
-                "penalty": penalty,
-            }
-        )
-
-    n_examples = len(rows)
-    return {
-        "n_examples": n_examples,
-        "accuracy": correct_count / n_examples,
-        "mean_penalty": penalty_sum / n_examples,
-        "strategy_counts": dict(strategy_counts),
-        "details": details,
-    }
-
-
-def _print_eval_summary(eval_report: dict[str, Any]) -> None:
-    n = eval_report.get("n_examples", 0)
-    accuracy = eval_report.get("accuracy", 0.0)
-    mean_penalty = eval_report.get("mean_penalty", 0.0)
-    strategy_counts = eval_report.get("strategy_counts", {})
-    details = eval_report.get("details", [])
-
-    boxed_count = 0
-    extracted_count = 0
-    for d in details:
-        pred = d.get("prediction", "") or ""
-        if "\\boxed{" in pred:
-            boxed_count += 1
-        if d.get("extracted") is not None:
-            extracted_count += 1
-
-    print("\n=== Evaluation Summary ===")
-    print(f"n_examples: {n}")
-    print(f"accuracy: {accuracy:.4f}")
-    print(f"mean_penalty: {mean_penalty:.4f}")
-    print("strategy_counts:")
-    for k, v in strategy_counts.items():
-        print(f"  {k}: {v}")
-    print(f"predictions_with_boxed_answer: {boxed_count}")
-    print(f"predictions_with_extracted_answer: {extracted_count}")
-    print("==========================\n")
-
-
 def _save_tokenizer_artifacts(tokenizer, output_dir: Path) -> None:
     tokenizer.save_pretrained(output_dir)
 
@@ -322,27 +168,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-folder", required=True, type=Path, help="Base model folder to train from")
     parser.add_argument("--dataset-file", required=True, type=Path, help="JSONL/JSON file with prompt/answer rows")
     parser.add_argument("--output-dir", required=True, type=Path, help="Where to write the merged checkpoint")
-    parser.add_argument("--validation-file", type=Path, default=None, help="Optional validation JSONL/JSON file")
-    parser.add_argument("--validation-split", type=float, default=0.1, help="Holdout fraction when no validation file is provided")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-seq-length", type=int, default=2048)
-    parser.add_argument("--max-new-tokens", type=int, default=16000)
-    parser.add_argument("--temperature", type=float, default=0.0, help="Generation temperature for evaluation")
-    parser.add_argument("--top-p", type=float, default=0.95, help="Generation top-p for evaluation")
     parser.add_argument("--num-train-epochs", type=float, default=1.0)
     parser.add_argument("--learning-rate", type=float, default=2e-4)
     parser.add_argument("--per-device-train-batch-size", type=int, default=1)
-    parser.add_argument("--per-device-eval-batch-size", type=int, default=1)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=8)
     parser.add_argument("--logging-steps", type=int, default=10)
     parser.add_argument("--save-strategy", choices=("epoch", "steps", "no"), default="epoch")
     parser.add_argument("--save-steps", type=int, default=500, help="Checkpoint save interval when save-strategy is steps")
-    parser.add_argument("--eval-steps", type=int, default=0, help="Only used when save-strategy is steps")
     parser.add_argument("--lora-r", type=int, default=16)
     parser.add_argument("--lora-alpha", type=int, default=32)
     parser.add_argument("--lora-dropout", type=float, default=0.05)
     parser.add_argument("--max-train-samples", type=int, default=0)
-    parser.add_argument("--max-eval-samples", type=int, default=0)
     parser.add_argument("--wandb-project", type=str, default=WANDB_PROJECT)
     parser.add_argument("--wandb-entity", type=str, default=None)
     parser.add_argument("--wandb-key", type=str, default=None, help="Optional W&B API key (sets WANDB_API_KEY and logs in)")
@@ -359,8 +197,6 @@ def main() -> None:
         raise SystemExit(f"Model folder not found: {args.model_folder}")
     if not args.dataset_file.exists():
         raise SystemExit(f"Dataset file not found: {args.dataset_file}")
-    if args.validation_file is not None and not args.validation_file.exists():
-        raise SystemExit(f"Validation file not found: {args.validation_file}")
 
     if args.output_dir.exists():
         if not args.overwrite_output:
@@ -385,8 +221,6 @@ def main() -> None:
 
     run_name = args.run_name or args.output_dir.name
     if not args.skip_wandb:
-        # If the user provided an API key on the CLI, set it and call wandb.login().
-        # This mirrors `wandb login` behaviour in non-interactive scripts.
         try:
             wandb.login(key=args.wandb_key)
         except Exception as exc:
@@ -424,14 +258,6 @@ def main() -> None:
     if args.max_train_samples > 0:
         train_rows = train_rows[: args.max_train_samples]
 
-    if args.validation_file is not None:
-        eval_rows = _load_rows(args.validation_file)
-    else:
-        train_rows, eval_rows = _split_rows(train_rows, args.validation_split, args.seed)
-
-    if args.max_eval_samples > 0:
-        eval_rows = eval_rows[: args.max_eval_samples]
-
     # For training, prefer purely conversational examples (no top-level 'prompt' key)
     train_rows_for_trainer: list[dict[str, Any]] = []
     for r in train_rows:
@@ -439,16 +265,8 @@ def main() -> None:
         copied.pop("prompt", None)
         train_rows_for_trainer.append(copied)
 
-    # For evaluation during training, provide conversational examples too, but keep
-    # the original `eval_rows` intact for the post-training scoring step below.
-    eval_rows_for_trainer: list[dict[str, Any]] = []
-    for r in eval_rows:
-        copied = dict(r)
-        copied.pop("prompt", None)
-        eval_rows_for_trainer.append(copied)
-
     train_dataset = Dataset.from_list(train_rows_for_trainer)
-    eval_dataset = Dataset.from_list(eval_rows_for_trainer) if eval_rows_for_trainer else None
+    eval_dataset = None
 
     if train_rows_for_trainer:
         preview_text = tokenizer.apply_chat_template(train_rows_for_trainer[0]["messages"], tokenize=False, add_generation_prompt=True)
@@ -461,7 +279,6 @@ def main() -> None:
         "num_train_epochs": args.num_train_epochs,
         "max_steps": -1,
         "per_device_train_batch_size": args.per_device_train_batch_size,
-        "per_device_eval_batch_size": args.per_device_eval_batch_size,
         "gradient_accumulation_steps": args.gradient_accumulation_steps,
         "learning_rate": args.learning_rate,
         "warmup_ratio": 0.03,
@@ -475,129 +292,36 @@ def main() -> None:
         "dataloader_num_workers": 0,
         "remove_unused_columns": False,
         "do_train": True,
-        "do_eval": eval_dataset is not None,
-        "eval_on_start": eval_dataset is not None,
+        "do_eval": False,
+        "eval_on_start": False,
         "seed": args.seed,
         "data_seed": args.seed,
         "max_length": args.max_seq_length,
         "packing": False,
         "assistant_only_loss": True,
     }
-    if eval_dataset is not None:
-        eval_strategy = "steps" if args.eval_steps > 0 else "epoch"
-        save_kwargs: dict[str, Any] = {"save_strategy": args.save_strategy}
-        if args.save_strategy == "steps":
-            save_steps = args.save_steps if args.save_steps > 0 else args.eval_steps
-            if save_steps <= 0:
-                save_steps = args.logging_steps
-            if save_steps <= 0:
-                raise SystemExit("--save-steps must be positive when --save-strategy is steps")
-            save_kwargs["save_steps"] = save_steps
-        sft_kwargs.update(
-            {
-                "eval_strategy": eval_strategy,
-                **({"eval_steps": args.eval_steps} if eval_strategy == "steps" else {}),
-                **save_kwargs,
-                "save_total_limit": 3,
-                "load_best_model_at_end": True,
-                "metric_for_best_model": "eval_loss",
-                "greater_is_better": False,
-            }
-        )
+    # Configure saving strategy independently of evaluation
+    if args.save_strategy == "steps":
+        save_steps = args.save_steps if args.save_steps > 0 else args.logging_steps
+        if save_steps <= 0:
+            raise SystemExit("--save-steps must be positive when --save-strategy is steps")
+        sft_kwargs.update({"save_strategy": "steps", "save_steps": save_steps, "save_total_limit": 3})
     else:
-        sft_kwargs.update(
-            {
-                "eval_strategy": "no",
-                "save_strategy": "no",
-                "load_best_model_at_end": False,
-            }
-        )
+        sft_kwargs.update({"save_strategy": args.save_strategy, "save_total_limit": 3})
 
     sft_config = SFTConfig(**sft_kwargs)
 
     _disable_peft_bnb_dispatch()
 
-
-class EvalSaverCallback(TrainerCallback):
-    """Runs the project's post-hoc evaluator on the validation rows and
-    saves a JSON report for each evaluation event (and appends to a history file).
-    """
-
-    def __init__(self, output_dir: Path, tokenizer, eval_rows: list[dict[str, Any]], max_new_tokens: int, temperature: float, top_p: float):
-        self.output_dir = Path(output_dir)
-        self.tokenizer = tokenizer
-        self.eval_rows = eval_rows or []
-        self.max_new_tokens = max_new_tokens
-        self.temperature = temperature
-        self.top_p = top_p
-
-    def on_evaluate(self, args, state, control, **kwargs):
-        model = kwargs.get("model")
-        if model is None or not self.eval_rows:
-            return
-        try:
-            eval_report = _evaluate_model(
-                self.tokenizer,
-                model,
-                self.eval_rows,
-                max_new_tokens=self.max_new_tokens,
-                temperature=self.temperature,
-                top_p=self.top_p,
-            )
-            # Write a step-specific file and append to history
-            step = int(state.global_step or 0)
-            out = {"step": step, "evaluation": eval_report}
-            step_path = self.output_dir / f"evaluation_step_{step}.json"
-            step_path.parent.mkdir(parents=True, exist_ok=True)
-            step_path.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-            hist_path = self.output_dir / "evaluation_history.jsonl"
-            with hist_path.open("a", encoding="utf-8") as fh:
-                fh.write(json.dumps(out, ensure_ascii=False) + "\n")
-            _print_eval_summary(eval_report)
-        except Exception as exc:
-            print(f"[warn] Evaluation callback failed: {exc}")
-
-    # Attach the periodic evaluation callback so we save evaluation reports
-    # across training when `eval_strategy` is set to `steps`.
-    eval_callback = EvalSaverCallback(
-        args.output_dir,
-        tokenizer,
-        eval_rows,
-        max_new_tokens=args.max_new_tokens,
-        temperature=args.temperature,
-        top_p=args.top_p,
-    )
-
     trainer = SFTTrainer(
         model=model,
         args=sft_config,
         train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
         formatting_func=lambda example: _format_example(tokenizer, example),
         processing_class=tokenizer,
-        callbacks=[eval_callback],
     )
 
     trainer.train()
-
-    eval_report: dict[str, Any] = {"n_examples": 0, "accuracy": 0.0, "mean_penalty": 0.0, "strategy_counts": {}, "details": []}
-    if eval_rows:
-        eval_report = _evaluate_model(
-            tokenizer,
-            trainer.model,
-            eval_rows,
-            max_new_tokens=args.max_new_tokens,
-            temperature=args.temperature,
-            top_p=args.top_p,
-        )
-
-    # Print a short human-readable summary and save the full evaluation
-    # results to the output directory for later inspection.
-    _print_eval_summary(eval_report)
-    try:
-        (args.output_dir / "evaluation.json").write_text(json.dumps(eval_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    except Exception as exc:
-        print(f"[warn] Could not write evaluation.json: {exc}")
 
     if args.merge_and_save:
         merged_model = trainer.model.merge_and_unload()
@@ -606,10 +330,8 @@ class EvalSaverCallback(TrainerCallback):
 
     report = {
         "dataset_file": str(args.dataset_file),
-        "validation_file": str(args.validation_file) if args.validation_file is not None else None,
         "n_train_examples": len(train_rows),
-        "n_eval_examples": len(eval_rows),
-        "evaluation": eval_report,
+        "n_eval_examples": 0,
         "lora": {
             "r": args.lora_r,
             "alpha": args.lora_alpha,
@@ -621,13 +343,6 @@ class EvalSaverCallback(TrainerCallback):
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     if not args.skip_wandb:
-        wandb.log(
-            {
-                "evaluation/accuracy": eval_report["accuracy"],
-                "evaluation/mean_penalty": eval_report["mean_penalty"],
-                "evaluation/n_examples": eval_report["n_examples"],
-            }
-        )
         wandb.finish()
 
     print(json.dumps(report, indent=2, ensure_ascii=False))
