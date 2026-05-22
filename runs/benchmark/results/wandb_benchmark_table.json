@@ -612,6 +612,32 @@
       "results_path": "runs/benchmark/results/wildguardmix/subcategory_mcq/sb_hidden_CoT_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T17:28:16+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "advbench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.9980769230769231,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.9980769230769231,
+      "results_path": "runs/benchmark/results/advbench/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T17:29:00+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "jbb-behaviors",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.705,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.705,
+      "results_path": "runs/benchmark/results/jbb-behaviors/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-13T12:08:10+00:00",
       "model_name": "sf_wgm_2500",
       "benchmark": "advbench",

@@ -20,18 +20,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
 from pathlib import Path
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from prompts.system_prompt import SYSTEM_PROMPT_MCQ
-
 
 DEFAULT_MODEL_ID = "Qwen/Qwen3-1.7B"
 DEFAULT_OUTPUT_DIR = Path("checkpoints") / "Qwen3-1.7B-base"
+STATIC_CHAT_TEMPLATE_PATH = Path("constants/chat_template.jinja")
 
 
 def parse_args() -> argparse.Namespace:
@@ -93,60 +91,10 @@ def ensure_clean_output_dir(path: Path, force: bool) -> None:
 	path.mkdir(parents=True, exist_ok=True)
 
 
-def force_thinking_on(chat_template: str) -> str:
-	"""Ensure the template defaults to Qwen thinking mode ON in CI.
-
-	The CI does not pass enable_thinking; setting this variable at template
-	level guarantees deterministic behavior.
-	"""
-	forced_line = "{%- set enable_thinking = true %}"
-	pattern = r"\{%-\s*set\s+enable_thinking\s*=\s*(true|false)\s*%\}"
-
-	if re.search(pattern, chat_template):
-		return re.sub(pattern, forced_line, chat_template, count=1)
-
-	return forced_line + "\n" + chat_template
-
-
-def inject_system_prompt(chat_template: str, system_message: str) -> str:
-	"""Inject a default system_message variable into the chat template.
-
-	Adds a {%- set system_message = "..." %} Jinja variable line immediately
-	after the enable_thinking line so that the system message is baked into
-	the template.  Also adds a fallback else-branch so the system message is
-	always emitted even when the caller does not include a system role message.
-	"""
-	escaped = system_message.replace("\\", "\\\\").replace('"', '\\"')
-	set_line = f'{{%- set system_message = "{escaped}" %}}'
-
-	# Replace an existing system_message set-line or insert after enable_thinking.
-	system_msg_pattern = r"\{%-\s*set\s+system_message\s*=.*?%\}"
-	thinking_pattern = r"(\{%-\s*set\s+enable_thinking\s*=\s*(?:true|false)\s*%\})"
-
-	if re.search(system_msg_pattern, chat_template):
-		chat_template = re.sub(system_msg_pattern, set_line, chat_template, count=1)
-	elif re.search(thinking_pattern, chat_template):
-		chat_template = re.sub(thinking_pattern, r"\1\n" + set_line, chat_template, count=1)
-	else:
-		chat_template = set_line + "\n" + chat_template
-
-	# Add fallback else-branch so the system message is always injected.
-	old_block = (
-		"    {%- if messages[0].role == 'system' %}\n"
-		"        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
-		"    {%- endif %}"
-	)
-	new_block = (
-		"    {%- if messages[0].role == 'system' %}\n"
-		"        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
-		"    {%- else %}\n"
-		"        {{- '<|im_start|>system\\n' + system_message + '<|im_end|>\\n' }}\n"
-		"    {%- endif %}"
-	)
-	if old_block in chat_template:
-		chat_template = chat_template.replace(old_block, new_block, 1)
-
-	return chat_template
+def load_static_chat_template(template_path: Path = STATIC_CHAT_TEMPLATE_PATH) -> str:
+	if not template_path.exists():
+		raise RuntimeError(f"Static chat template not found: {template_path}")
+	return template_path.read_text(encoding="utf-8")
 
 
 def write_chat_template_file(output_dir: Path, chat_template: str) -> None:
@@ -184,13 +132,10 @@ def validate_checkpoint(output_dir: Path) -> None:
 		raise RuntimeError("Tokenizer has no chat_template after save.")
 
 	template_text = (output_dir / "chat_template.jinja").read_text(encoding="utf-8")
-	if "set enable_thinking = true" not in template_text:
+	source_template_text = load_static_chat_template()
+	if template_text != source_template_text:
 		raise RuntimeError(
-			"chat_template.jinja does not explicitly force enable_thinking=true."
-		)
-	if "set system_message" not in template_text:
-		raise RuntimeError(
-			"chat_template.jinja does not contain a default system_message variable."
+			"chat_template.jinja in output checkpoint must exactly match constants/chat_template.jinja."
 		)
 
 
@@ -216,14 +161,8 @@ def main() -> None:
 
 	print(f"[info] Loading tokenizer: {args.model_id}")
 	tokenizer = AutoTokenizer.from_pretrained(args.model_id, trust_remote_code=True)
-
-	if not getattr(tokenizer, "chat_template", None):
-		raise RuntimeError(
-			"Base tokenizer has no chat_template. Cannot satisfy CI requirement."
-		)
-
-	tokenizer.chat_template = force_thinking_on(tokenizer.chat_template)
-	tokenizer.chat_template = inject_system_prompt(tokenizer.chat_template, SYSTEM_PROMPT_MCQ)
+	static_chat_template = load_static_chat_template()
+	tokenizer.chat_template = static_chat_template
 
 	print(f"[info] Loading model: {args.model_id}")
 	model = AutoModelForCausalLM.from_pretrained(
@@ -236,7 +175,7 @@ def main() -> None:
 	print(f"[info] Saving model + tokenizer to: {output_dir}")
 	model.save_pretrained(output_dir, safe_serialization=True)
 	tokenizer.save_pretrained(output_dir)
-	write_chat_template_file(output_dir, tokenizer.chat_template)
+	write_chat_template_file(output_dir, static_chat_template)
 	save_generation_config(model, output_dir, args.temperature, args.top_p, args.top_k)
 	write_manifest(output_dir, args.model_id)
 

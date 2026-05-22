@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 import shutil
 from pathlib import Path
 
@@ -9,46 +8,13 @@ from peft import PeftModel
 from transformers import AutoModelForCausalLM
 
 
-def force_thinking_on(chat_template: str) -> str:
-    forced_line = "{%- set enable_thinking = true %}"
-    pattern = r"\{%-\s*set\s+enable_thinking\s*=\s*(true|false)\s*%\}"
-
-    if re.search(pattern, chat_template):
-        return re.sub(pattern, forced_line, chat_template, count=1)
-
-    return forced_line + "\n" + chat_template
+STATIC_CHAT_TEMPLATE_PATH = Path("constants/chat_template.jinja")
 
 
-def inject_system_prompt(chat_template: str, system_message: str) -> str:
-    escaped = system_message.replace("\\", "\\\\").replace('"', '\\"')
-    set_line = f'{{%- set system_message = "{escaped}" %}}'
-
-    system_msg_pattern = r"\{%-\s*set\s+system_message\s*=.*?%\}"
-    thinking_pattern = r"(\{%-\s*set\s+enable_thinking\s*=\s*(?:true|false)\s*%\})"
-
-    if re.search(system_msg_pattern, chat_template):
-        chat_template = re.sub(system_msg_pattern, set_line, chat_template, count=1)
-    elif re.search(thinking_pattern, chat_template):
-        chat_template = re.sub(thinking_pattern, r"\1\n" + set_line, chat_template, count=1)
-    else:
-        chat_template = set_line + "\n" + chat_template
-
-    old_block = (
-        "    {%- if messages[0].role == 'system' %}\n"
-        "        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
-        "    {%- endif %}"
-    )
-    new_block = (
-        "    {%- if messages[0].role == 'system' %}\n"
-        "        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
-        "    {%- else %}\n"
-        "        {{- '<|im_start|>system\\n' + system_message + '<|im_end|>\\n' }}\n"
-        "    {%- endif %}"
-    )
-    if old_block in chat_template:
-        chat_template = chat_template.replace(old_block, new_block, 1)
-
-    return chat_template
+def load_static_chat_template(template_path: Path = STATIC_CHAT_TEMPLATE_PATH) -> str:
+    if not template_path.exists():
+        raise RuntimeError(f"Static chat template not found: {template_path}")
+    return template_path.read_text(encoding="utf-8")
 
 
 def write_manifest(output_dir: Path, base_model: str) -> None:
@@ -82,10 +48,11 @@ def validate_exported_checkpoint(output_dir: Path) -> None:
         raise RuntimeError("No .safetensors files found in exported checkpoint.")
 
     template_text = (output_dir / "chat_template.jinja").read_text(encoding="utf-8")
-    if "set enable_thinking = true" not in template_text:
-        raise RuntimeError("chat_template.jinja must force enable_thinking=true.")
-    if "set system_message" not in template_text:
-        raise RuntimeError("chat_template.jinja must contain a default system_message.")
+    source_template_text = load_static_chat_template()
+    if template_text != source_template_text:
+        raise RuntimeError(
+            "chat_template.jinja in exported checkpoint must exactly match constants/chat_template.jinja."
+        )
 
 
 def export_merged_checkpoint(
@@ -98,6 +65,7 @@ def export_merged_checkpoint(
     top_p: float,
     top_k: int,
 ) -> None:
+    _ = system_prompt  # Export now always uses constants/chat_template.jinja verbatim.
     output_dir = Path(output_dir)
     temp_adapter_dir = output_dir.parent / ".tmp_sft_adapter_export"
 
@@ -110,6 +78,8 @@ def export_merged_checkpoint(
     temp_adapter_dir.mkdir(parents=True, exist_ok=True)
 
     try:
+        static_chat_template = load_static_chat_template()
+
         model.save_pretrained(temp_adapter_dir)
 
         base = AutoModelForCausalLM.from_pretrained(
@@ -122,11 +92,10 @@ def export_merged_checkpoint(
         merged = peft_model.merge_and_unload()
         merged.save_pretrained(output_dir, safe_serialization=True)
 
-        tokenizer.chat_template = force_thinking_on(tokenizer.chat_template)
-        tokenizer.chat_template = inject_system_prompt(tokenizer.chat_template, system_prompt)
+        tokenizer.chat_template = static_chat_template
         tokenizer.save_pretrained(output_dir)
         (output_dir / "chat_template.jinja").write_text(
-            tokenizer.chat_template,
+            static_chat_template,
             encoding="utf-8",
         )
 

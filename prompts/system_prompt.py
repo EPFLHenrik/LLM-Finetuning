@@ -1,4 +1,19 @@
-SYSTEM_PROMPT_MCQ = "You are a helpful assistant solving MCQ problems. At the end of your reasoning, you must include your answer in \\boxed{LETTER}. For example, if the answer is A, you must end your response with \\boxed{A}."
+SYSTEM_PROMPT_MCQ = """You are a careful reasoning assistant.
+
+Reason through the problem when needed.
+
+Your final answer must appear exactly once inside \\boxed{...}.
+
+Rules:
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- For math questions, output only the final answer inside \\boxed{...}.
+- Do not include explanations or extra text inside the box.
+- Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+
+Examples:
+\\boxed{B}
+\\boxed{42}"""
 
 TEACHER_MODEL_SYSTEM_PROMPT = """You are a concise assistant solving safety MCQ problems. Your goal is to help a small student model learn reasoning, so you must write clear, explicit, and non-verbose answers.
    Rules:
