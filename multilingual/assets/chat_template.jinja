@@ -1,24 +1,8 @@
-{%- set enable_thinking = true %}
-{%- set system_prompt %}
-You are a careful reasoning assistant.
-
-Reason through the problem when needed.
-
-Your final answer must appear exactly once inside \boxed{...}.
-
-Rules:
-- For multiple-choice questions, output only the correct capital letter inside \boxed{...}.
-- For math questions, output only the final answer inside \boxed{...}.
-- Do not include explanations or extra text inside the box.
-- Never output multiple boxed answers.
-- Never leave the final answer unboxed.
-
-Examples:
-\boxed{B}
-\boxed{42}
-{%- endset %}
 {%- if tools %}
-    {{- '<|im_start|>system\n' + system_prompt + '\n\n' }}
+    {{- '<|im_start|>system\n' }}
+    {%- if messages[0].role == 'system' %}
+        {{- messages[0].content + '\n\n' }}
+    {%- endif %}
     {{- "# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>" }}
     {%- for tool in tools %}
         {{- "\n" }}
@@ -26,7 +10,26 @@ Examples:
     {%- endfor %}
     {{- "\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call><|im_end|>\n" }}
 {%- else %}
-    {{- '<|im_start|>system\n' + system_prompt + '\n<|im_end|>\n' }}
+    {%- if messages[0].role == 'system' %}
+        {{- '<|im_start|>system\n' + messages[0].content + '<|im_end|>\n' }}
+    {%- else %}
+        {{- '<|im_start|>system\nYou are a careful reasoning assistant.
+ 
+Reason through the problem when needed.
+ 
+Your final answer must appear exactly once inside \\boxed{...}.
+ 
+Rules:
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- For math questions, output only the final answer inside \\boxed{...}.
+- Do not include explanations or extra text inside the box.
+- Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+ 
+Examples:
+\\boxed{B}
+\\boxed{42}<|im_end|>\n' }}
+    {%- endif %}
 {%- endif %}
 {%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}
 {%- for message in messages[::-1] %}
@@ -56,15 +59,12 @@ Examples:
         {%- endif %}
         {%- if loop.index0 > ns.last_query_index %}
             {%- if loop.last or (not loop.last and reasoning_content) %}
-                {{- '<|im_start|>' + message.role + '\n' }}
-                {%- generation %}{{- '<think>\n' + reasoning_content.strip('\n') + '\n</think>\n\n' + content.lstrip('\n') }}{%- endgeneration %}
+                {{- '<|im_start|>' + message.role + '\n<think>\n' + reasoning_content.strip('\n') + '\n</think>\n\n' + content.lstrip('\n') }}
             {%- else %}
-                {{- '<|im_start|>' + message.role + '\n' }}
-                {%- generation %}{{- content }}{%- endgeneration %}
+                {{- '<|im_start|>' + message.role + '\n' + content }}
             {%- endif %}
         {%- else %}
-            {{- '<|im_start|>' + message.role + '\n' }}
-            {%- generation %}{{- content }}{%- endgeneration %}
+            {{- '<|im_start|>' + message.role + '\n' + content }}
         {%- endif %}
         {%- if message.tool_calls %}
             {%- for tool_call in message.tool_calls %}

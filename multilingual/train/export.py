@@ -39,6 +39,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
+from multilingual.config import SYSTEM_PROMPT
+
 BASE_MODEL       = "Qwen/Qwen3-1.7B"
 BEST_RUNS_LOG    = REPO / "multilingual" / "results" / "best_runs.json"
 DEFAULT_TEMPLATE = REPO / "multilingual" / "assets" / "chat_template.jinja"
@@ -106,6 +108,31 @@ def _should_push(run_name: str, current_loss: float | None, best_runs: dict) -> 
 # Export helpers
 # ---------------------------------------------------------------------------
 
+def _patch_system_prompt(tokenizer, system_prompt: str) -> None:
+    """Inject default system prompt into Qwen3 inference template."""
+    template = tokenizer.chat_template
+    if template is None:
+        raise ValueError("Tokenizer has no chat template.")
+    old_block = (
+        "{%- if messages[0].role == 'system' %}\n"
+        "        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
+        "    {%- endif %}"
+    )
+    escaped   = system_prompt.replace("\\", "\\\\").replace("'", "\\'")
+    new_block = (
+        "{%- if messages[0].role == 'system' %}\n"
+        "        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n"
+        "    {%- else %}\n"
+        f"        {{{{- '<|im_start|>system\\n{escaped}<|im_end|>\\n' }}}}\n"
+        "    {%- endif %}"
+    )
+    if old_block in template:
+        tokenizer.chat_template = template.replace(old_block, new_block)
+        print("[info] System prompt patched into inference template.")
+    else:
+        print("[warn] Could not find system block — saving template without patch.")
+
+
 def _disable_peft_bnb_dispatch() -> None:
     try:
         import peft.tuners.lora.model as lora_model
@@ -147,8 +174,9 @@ def _verify_export(output_dir: Path, hf_token: str) -> None:
         [{"role": "user", "content": "What is 2+2?"}],
         tokenize=False, add_generation_prompt=True,
     )
+    assert "<|im_start|>system" in rendered, "System block missing — default system prompt not injected!"
     assert "<|im_start|>assistant" in rendered, "Assistant turn missing!"
-    print("  apply_chat_template: OK")
+    print("  apply_chat_template (no system msg): OK — default system prompt injected")
     print(f"  Sample (last 200 chars): ...{rendered[-200:]}")
 
     import torch.nn as nn
@@ -238,10 +266,10 @@ def main():
     print("Saving merged model...")
     merged.save_pretrained(args.output_dir, safe_serialization=True)  # type: ignore[operator]
 
-    # Load tokenizer from checkpoint (has correct chat template from training)
-    # Then optionally override the chat template
+    # Load fresh inference tokenizer from base model (not the training template)
+    # and patch in the default system prompt, then optionally override
     print("Saving tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(str(args.output_dir), token=hf_token)
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model, token=hf_token)
     if args.override_chat_template is not None:
         tpl_path = args.override_chat_template
         if not tpl_path.exists():
@@ -249,7 +277,8 @@ def main():
         tokenizer.chat_template = tpl_path.read_text(encoding="utf-8")
         print(f"[info] Chat template overridden from: {tpl_path}")
     else:
-        print("[info] Using chat template from checkpoint.")
+        # Default: use Qwen3 inference template with system prompt patched in
+        _patch_system_prompt(tokenizer, SYSTEM_PROMPT)
     tokenizer.save_pretrained(args.output_dir)
 
     # Generation config
