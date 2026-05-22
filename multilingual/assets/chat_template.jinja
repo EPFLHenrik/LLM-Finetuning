@@ -56,15 +56,15 @@ Examples:
         {%- endif %}
         {%- if loop.index0 > ns.last_query_index %}
             {%- if loop.last or (not loop.last and reasoning_content) %}
-                {{- '<|im_start|>' + message.role + '\n<think>\n' + reasoning_content.strip('\n') + '\n</think>\n\n' + content.lstrip('\n') }}
+                {{- '<|im_start|>' + message.role + '\n' }}
+                {%- generation %}{{- '<think>\n' + reasoning_content.strip('\n') + '\n</think>\n\n' + content.lstrip('\n') }}{%- endgeneration %}
             {%- else %}
-                {{- '<|im_start|>' + message.role + '\n' + content }}
+                {{- '<|im_start|>' + message.role + '\n' }}
+                {%- generation %}{{- content }}{%- endgeneration %}
             {%- endif %}
         {%- else %}
             {{- '<|im_start|>' + message.role + '\n' }}
-            {%- generation %}
-            {{- content }}
-            {%- endgeneration %}
+            {%- generation %}{{- content }}{%- endgeneration %}
         {%- endif %}
         {%- if message.tool_calls %}
             {%- for tool_call in message.tool_calls %}
