@@ -1,117 +1,191 @@
-"""multilingual/loaders/ceval_loader.py"""
+"""multilingual/loaders/ceval_loader.py
 
-from typing import Any, Dict, List, Optional, Tuple
-from collections import defaultdict
+Loads C-Eval examples from the preprocessed local JSONL file.
+No HuggingFace calls at build time.
+
+Preprocessing was done once via notebook, producing:
+    multilingual/data/sft/preprocessed/ceval_chinese_all.jsonl
+
+Fields available for filtering:
+    category:    STEM | Humanities | Social Science | Law & Professional | Other
+    regionality: regional | regional_implicit | region_agnostic
+
+Pipeline order: read all → filter → stratified split → cap.
+"""
+
 import random
-from datasets import get_dataset_config_names, load_dataset
-from multilingual.utils import VAL_SEED
+from collections import defaultdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+REPO = Path(__file__).resolve().parents[2]
+PREPROCESSED_PATH = REPO / "multilingual" / "data" / "sft" / "preprocessed" / "ceval_chinese_all.jsonl"
+
+# Default split ratios (train / val)
+DEFAULT_VAL_FRACTION = 0.20
+
+# Default regionality weights for sampling (1.0 = keep all, 0.0 = skip)
+DEFAULT_REGIONALITY_WEIGHTS = {
+    "regional":          1.0,
+    "regional_implicit": 1.0,
+    "region_agnostic":   0.3,
+}
+
+# Default category weights
+DEFAULT_CATEGORY_WEIGHTS = {
+    "Law & Professional": 1.0,
+    "Social Science":     1.0,
+    "Humanities":         1.0,
+    "STEM":               0.3,
+    "Other":              0.5,
+}
+
+VAL_SEED = 42
 
 
-# C-Eval: one config per subject, 52 subjects total.
-# "val" has labels; "test" has no labels and should not be used.
-# "dev" has very few examples per subject and is skipped.
+def _load_all() -> List[Dict[str, Any]]:
+    """Load the full preprocessed CEval JSONL from disk."""
+    if not PREPROCESSED_PATH.exists():
+        raise FileNotFoundError(
+            f"CEval preprocessed file not found: {PREPROCESSED_PATH}\n"
+            f"Run the preprocessing notebook first."
+        )
+    import json
+    records = []
+    with open(PREPROCESSED_PATH, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+    return records
 
 
-def _get_all_subjects() -> List[str]:
-    return get_dataset_config_names("ceval/ceval-exam")
+def _apply_weights(
+    records: List[Dict[str, Any]],
+    regionality_weights: Dict[str, float],
+    category_weights: Dict[str, float],
+    rng: random.Random,
+) -> List[Dict[str, Any]]:
+    """Probabilistically filter records by regionality and category weights."""
+    kept = []
+    for r in records:
+        reg = r["metadata"].get("regionality", "region_agnostic")
+        cat = r["metadata"].get("category", "Other")
+        w   = regionality_weights.get(reg, 1.0) * category_weights.get(cat, 1.0)
+        if w >= 1.0 or rng.random() < w:
+            kept.append(r)
+    return kept
 
 
-def _format_example(ex: Dict[str, Any], subject: str, split: str, idx: int) -> Dict[str, Any]:
-    question = str(ex["question"]).strip()
-    options = "\n".join(f"{letter}) {str(ex[letter]).strip()}" for letter in ("A", "B", "C", "D"))
-    answer = str(ex["answer"]).strip().upper()
-    if answer not in {"A", "B", "C", "D"}:
-        raise ValueError(f"Unexpected C-Eval answer: {answer!r}")
+def _stratified_split(
+    records: List[Dict[str, Any]],
+    val_fraction: float,
+    rng: random.Random,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Stratified train/val split by subject, minimum 1 val example per subject."""
+    by_subject: Dict[str, List[Dict]] = defaultdict(list)
+    for r in records:
+        subject = r["metadata"].get("subject", "unknown")
+        by_subject[subject].append(r)
 
-    return {
-        "id": f"ceval_chinese_{split}_{subject}_{idx}",
-        "dataset": "ceval",
-        "language": "chinese",
-        "split": split,
-        "task_type": "mcq",
-        "prompt": f"{question}\n\n{options}",
-        "answer": answer,
-        "metadata": {"subject": subject, "explanation": ex.get("explanation", "")},
-    }
-
-
-def _load_subject_val(subject: str) -> List[Dict[str, Any]]:
-    """Load the labeled validation split for one subject."""
-    try:
-        ds = load_dataset("ceval/ceval-exam", name=subject)
-    except Exception as e:
-        print(f"[C-Eval] Failed to load subject {subject!r}: {e}")
-        return []
-
-    if "val" not in ds or len(ds["val"]) == 0:
-        return []
-
-    return list(ds["val"])
-
-
-def _load_all_labeled_rows() -> Tuple[List[Dict[str, Any]], List[str]]:
-    all_rows = []
-    subject_labels = []
-    for subject in _get_all_subjects():
-        rows = _load_subject_val(subject)
-        all_rows.extend(rows)
-        subject_labels.extend([subject] * len(rows))
-
-    return all_rows, subject_labels
-
-
-def _stratified_split(all_rows: List[Dict[str, Any]], subject_labels: List[str], val_fraction: float, seed: int) -> Tuple[List[Tuple[Dict[str, Any], str]], List[Tuple[Dict[str, Any], str]]]:
-    rng = random.Random(seed)
-    by_subject = defaultdict(list)
-    for row, subject in zip(all_rows, subject_labels):
-        by_subject[subject].append((row, subject))
-    train_pairs = []
-    val_pairs = []
+    train, val = [], []
     for pairs in by_subject.values():
         shuffled = pairs[:]
         rng.shuffle(shuffled)
         n_val = max(1, round(len(shuffled) * val_fraction))
-        val_pairs.extend(shuffled[:n_val])
-        train_pairs.extend(shuffled[n_val:])
-
-    return train_pairs, val_pairs
-
-
-def _load_ceval_pairs(val_fraction: float) -> Tuple[List[Tuple[Dict[str, Any], str]], List[Tuple[Dict[str, Any], str]]]:
-    all_rows, subject_labels = _load_all_labeled_rows()
-    return _stratified_split(all_rows, subject_labels, val_fraction, VAL_SEED)
+        val.extend(shuffled[:n_val])
+        train.extend(shuffled[n_val:])
+    return train, val
 
 
-def load_ceval_examples(n: Optional[int] = None, split: str = "val", val_fraction: float = 0.20) -> List[Dict[str, Any]]:
+def _reformat(r: Dict[str, Any], split: str, idx: int) -> Dict[str, Any]:
+    """Return record with correct split label and id."""
+    return {
+        **r,
+        "id":    f"ceval_chinese_{split}_{idx}",
+        "split": split,
+    }
+
+
+def _hard_filter(
+    records: List[Dict[str, Any]],
+    regionality: Optional[List[str]],
+    category: Optional[List[str]],
+) -> List[Dict[str, Any]]:
+    """Hard filter by regionality and/or category lists (exact match)."""
+    if regionality:
+        reg_set = set(regionality)
+        records = [r for r in records
+                   if r["metadata"].get("regionality") in reg_set]
+    if category:
+        cat_set = set(category)
+        records = [r for r in records
+                   if r["metadata"].get("category") in cat_set]
+    return records
+
+
+def load_ceval_examples(
+    n: Optional[int] = None,
+    split: str = "val",
+    val_fraction: float = DEFAULT_VAL_FRACTION,
+    regionality: Optional[List[str]] = None,
+    category: Optional[List[str]] = None,
+    regionality_weights: Optional[Dict[str, float]] = None,
+    category_weights: Optional[Dict[str, float]] = None,
+) -> List[Dict[str, Any]]:
     """
-    Load C-Eval examples for Chinese.
-    split="train" returns the training pool.
-    split="val" returns the validation pool.
+    Load C-Eval examples from disk.
+
+    Args:
+        n:                    Max examples to return (None = all).
+        split:                'train' or 'val'.
+        val_fraction:         Fraction of each subject reserved for val.
+        regionality:          Hard filter — keep only these regionality values,
+                              e.g. ["regional", "regional_implicit"].
+                              Applied before weight-based sampling.
+        category:             Hard filter — keep only these category values,
+                              e.g. ["Humanities", "Law & Professional"].
+        regionality_weights:  Probabilistic sampling weights per regionality (0–1).
+                              Applied after hard filter.
+        category_weights:     Probabilistic sampling weights per category (0–1).
+
+    Returns:
+        List of SFT-format example dicts.
     """
     if split not in {"train", "val"}:
         raise ValueError(f"split must be 'train' or 'val', got {split!r}")
-
-    train_pairs, val_pairs = _load_ceval_pairs(val_fraction)
-    pairs = val_pairs if split == "val" else train_pairs
-
-    rng = random.Random(VAL_SEED)
-    pairs = pairs[:]
-    rng.shuffle(pairs)
-
+    rng   = random.Random(VAL_SEED)
+    reg_w = regionality_weights or DEFAULT_REGIONALITY_WEIGHTS
+    cat_w = category_weights    or DEFAULT_CATEGORY_WEIGHTS
+    records = _load_all()
+    records = _hard_filter(records, regionality, category)
+    records = _apply_weights(records, reg_w, cat_w, rng)
+    train, val = _stratified_split(records, val_fraction, rng)
+    pool = val if split == "val" else train
+    rng.shuffle(pool)
     if n is not None:
-        pairs = pairs[:n]
+        pool = pool[:n]
 
-    return [_format_example(row, subject, split, idx) for idx, (row, subject) in enumerate(pairs)]
+    return [_reformat(r, split, i) for i, r in enumerate(pool)]
 
 
-def load_ceval_splits(val_fraction: float = 0.20) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Convenience: return (train_examples, val_examples), loading HF only once."""
-    train_pairs, val_pairs = _load_ceval_pairs(val_fraction)
-    rng = random.Random(VAL_SEED)
-    train_pairs = train_pairs[:]
-    val_pairs = val_pairs[:]
-    rng.shuffle(train_pairs)
-    rng.shuffle(val_pairs)
-    train = [_format_example(row, subject, "train", idx) for idx, (row, subject) in enumerate(train_pairs)]
-    val = [_format_example(row, subject, "val", idx) for idx, (row, subject) in enumerate(val_pairs)]
+def load_ceval_splits(
+    val_fraction: float = DEFAULT_VAL_FRACTION,
+    regionality: Optional[List[str]] = None,
+    category: Optional[List[str]] = None,
+    regionality_weights: Optional[Dict[str, float]] = None,
+    category_weights: Optional[Dict[str, float]] = None,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Convenience: return (train_examples, val_examples) in one pass."""
+    rng   = random.Random(VAL_SEED)
+    reg_w = regionality_weights or DEFAULT_REGIONALITY_WEIGHTS
+    cat_w = category_weights    or DEFAULT_CATEGORY_WEIGHTS
+    records = _load_all()
+    records = _hard_filter(records, regionality, category)
+    records = _apply_weights(records, reg_w, cat_w, rng)
+    train, val = _stratified_split(records, val_fraction, rng)
+    rng.shuffle(train)
+    rng.shuffle(val)
+    train = [_reformat(r, "train", i) for i, r in enumerate(train)]
+    val   = [_reformat(r, "val",   i) for i, r in enumerate(val)]
     return train, val

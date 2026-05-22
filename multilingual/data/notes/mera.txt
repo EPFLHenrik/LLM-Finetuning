@@ -12,13 +12,13 @@ Selected subsets:
   - ruopenbookqa
   - ruworldtree
   - parus
-  - rcb
-  - rwsd
-  - use
 - Excluded:
   - chegeka: inspected manually and excluded because it is open-answer quiz QA, not MCQ/numeric.
   - multiq: skipped because it is open-answer extractive QA.
   - rumultiar/simplear: skipped for now.
+  - rcb
+  - rwsd
+  - use
   - all diagnostic/safety/code/algorithmic tasks not aligned with multilingual MCQ SFT.
   - all test/public_test splits.
 
@@ -75,24 +75,18 @@ Final saved files:
   - mera_clean_mamuramu.csv
   - mera_clean_mathlogicqa.csv
   - mera_clean_parus.csv
-  - mera_clean_rcb.csv
   - mera_clean_ruopenbookqa.csv
   - mera_clean_ruworldtree.csv
-  - mera_clean_rwsd.csv
-  - mera_clean_use.csv
 
 Final subset distribution:
 - mamuramu: 285 mcq
 - mathlogicqa: 680 mcq
 - parus: 500 mcq
-- rcb: 658 mcq
 - ruopenbookqa: 2338 mcq
 - ruworldtree: 115 mcq
-- rwsd: 810 mcq after A/B reformatting
-- use: 2569 numeric
 
 Notes for caps later:
 - Do not cap in the notebook; cap in the SFT builder.
 - ruopenbookqa and use dominate MERA, so they may need moderate caps.
 - mamuramu and ruworldtree are small enough to keep fully.
-- rwsd/parus/rcb/mathlogicqa are useful structured reasoning tasks and can be moderately capped or kept depending on the total Russian budget.
+- parus are useful structured reasoning tasks and can be moderately capped or kept depending on the total Russian budget.

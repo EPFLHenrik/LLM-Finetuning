@@ -1,0 +1,44 @@
+MILU PREPROCESSING NOTES
+========================
+
+Dataset: ai4bharat/MILU, data_dir="Hindi"
+Date: May 2026
+
+HF splits:
+  "test"       → used as training pool (~14k examples)
+  "validation" → used as validation pool (~8,933 examples)
+  (no official train split)
+
+Preprocessing steps:
+  - Normalized text columns
+  - Mapped target: option1→A, option2→B, option3→C, option4→D
+  - Removed rows with empty question/options or invalid answers
+  - Deduplicated by question + option1-4
+
+Metadata fields kept:
+  subject, domain, is_translated, source_split, source_idx
+
+Added labels:
+  regionality (manual subject-level mapping):
+    regional:          4,126 examples  (India-specific knowledge)
+    regional_implicit: 7,037 examples  (Indian curriculum, implicit context)
+    region_agnostic:   4,459 examples  (pure STEM, abstract reasoning)
+  No separate "category" column — native "domain" field used instead.
+
+Saved files:
+  multilingual/data/sft/preprocessed/milu_hindi_all.jsonl    (all, split="all")
+  multilingual/data/sft/preprocessed/milu_hindi_train.jsonl  (source: HF "test")
+  multilingual/data/sft/preprocessed/milu_hindi_val.jsonl    (source: HF "validation")
+
+Loader:
+  milu_loader.py reads from disk, no HF calls at build time.
+  Supports: preserved splits | recarve mode | regionality/domain filtering |
+            stratified split by any metadata key | cap.
+  hf_token param kept for backwards compatibility (ignored).
+
+Distillation priority:
+  regional:          1.00 (full)
+  regional_implicit: 0.40 (sample)
+  region_agnostic:   0.05 (almost skip)
+
+Builder cap recommendation: raise to 3000+ (was 700, full pool is ~14k train).
