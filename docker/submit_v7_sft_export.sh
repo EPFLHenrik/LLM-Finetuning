@@ -94,9 +94,9 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
       --overwrite && \
     python -m multilingual.train.sft \
       --run_name ${RUN_NAME} \
-      --wandb_entity ${WANDB_ENTITY} \
       --train_file ${TRAIN_FILE} \
       --val_file ${VAL_FILE} \
+      --wandb_entity nutemmax-epfl \
       --epochs ${EPOCHS} \
       --batch_size ${BATCH_SIZE} \
       --grad_accum ${GRAD_ACCUM} \

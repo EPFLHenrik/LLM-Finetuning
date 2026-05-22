@@ -303,7 +303,7 @@ def main():
         "best_eval_loss": current_loss,
         "format":         "safetensors",
         "merged_lora":    True,
-        "thinking_mode":  "enabled",
+        "thinking_mode":  False
     }
     with open(args.output_dir / "checkpoint_manifest.json", "w") as f:
         json.dump(manifest, f, indent=2)
