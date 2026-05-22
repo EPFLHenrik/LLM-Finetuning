@@ -4,18 +4,9 @@ multilingual/results/*
 !multilingual/results/.gitkeep
 
 # large local data/cache
-multilingual/data/sft/*.jsonl
-multilingual/data/sft/*.json
-multilingual/data/sft/*.csv
-multilingual/data/distilled/*.jsonl
-multilingual/data/distilled/*.json
-multilingual/data/distilled/*.csv
-multilingual/data/processed/*.jsonl
-multilingual/data/processed/*.json
-multilingual/data/processed/*.csv
-multilingual/data/raw/*.jsonl
-multilingual/data/raw/*.json
-multilingual/data/raw/*.csv
+multilingual/data/**/*.jsonl
+multilingual/data/**/*.json
+multilingual/data/**/*.csv
 
 
 # Model checkpoints/adapters

@@ -1,0 +1,1038 @@
+
+
+====================================================================================================
+MAMURAMU | sampled 10 / 285 examples
+====================================================================================================
+
+
+--- Example 1 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_9
+task_type: mcq
+answer:    A
+metadata:  {"subject": "Математика", "domain": "high_school_mathematics", "id": 9}
+
+PROMPT:
+Как называется отношение длины окружности к диаметру?
+
+A) Число π
+B) Число e
+C) Число φ
+D) Число γ
+
+
+
+--- Example 2 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_249
+task_type: mcq
+answer:    C
+metadata:  {"subject": "Медицина", "domain": "virology", "id": 249}
+
+PROMPT:
+Clostridium tetani вызывает следующий тип инфекции
+
+A) бактериемию
+B) вирусемию
+C) токсинемию
+D) септицемию
+
+
+
+--- Example 3 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_157
+task_type: mcq
+answer:    A
+metadata:  {"subject": "Общество", "domain": "professional_psychology", "id": 157}
+
+PROMPT:
+Какую деятельность в наибольшей степени можно назвать практикой осознанности?
+
+A) Наблюдение за дыханием
+B) Вышивание
+C) Приготовление обеда
+D) Сочинение стихов
+
+
+
+--- Example 4 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_209
+task_type: mcq
+answer:    C
+metadata:  {"subject": "Бизнес", "domain": "business_ethics", "id": 209}
+
+PROMPT:
+Что не является стимулом, под влиянием которого бизнес принимает принципы корпоративной социальной ответственности?
+
+A) Этическое потребительство
+B) Глобализация и рыночные силы
+C) Интересы топ-менеджмента
+D) Законодательство и регулирование
+
+
+
+--- Example 5 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_75
+task_type: mcq
+answer:    A
+metadata:  {"subject": "Право", "domain": "international_law", "id": 75}
+
+PROMPT:
+Какие существуют виды иммунитета государства?
+
+A) Ограниченный, абсолютный
+B) Частичный, полный
+C) У государства не существует иммунитетов
+D) Международный, частно-правовой
+
+
+
+--- Example 6 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_232
+task_type: mcq
+answer:    B
+metadata:  {"subject": "Медицина", "domain": "medical_genetics", "id": 232}
+
+PROMPT:
+Определите тип наследования болезни. Известно, что она
+встречается у особей обоих полов, не в каждом
+поколении. Больные дети рождаются у больных и здоровых
+родителей.
+
+A) аутосомно-доминантный
+B) аутосомно-рецессивный
+C) Х-сцепленный доминантный
+D) Х-сцепленный рецессивный
+
+
+
+--- Example 7 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_264
+task_type: mcq
+answer:    A
+metadata:  {"subject": "Информационные технологии", "domain": "high_school_computer_science", "id": 264}
+
+PROMPT:
+Сколько строк напечатает этот код на Си?
+
+#include <stdio.h>
+
+void main()
+{
+    int k = 0;
+    int x = 11;
+    for (int i = 0; i < 10; i++)
+        for (int j = i; j < 10; j++)
+            printf("Строка\n", x);
+}
+
+A) 55
+B) 100
+C) 110
+D) 111
+
+
+
+--- Example 8 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_170
+task_type: mcq
+answer:    B
+metadata:  {"subject": "Политика", "domain": "high_school_government_and_politics", "id": 170}
+
+PROMPT:
+Сколько голосов должен набрать кандидат по мажоритарной системе абсолютного большинства для победы в первом туре выборов?
+
+A) Не менее, чем три четверти голосов
+B) Больше половины голосов
+C) Больше, чем все другие кандидаты, вместе взятые
+D) Больше, чем любой другой кандидат
+
+
+
+--- Example 9 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_42
+task_type: mcq
+answer:    A
+metadata:  {"subject": "Физика", "domain": "astronomy", "id": 42}
+
+PROMPT:
+Когда Земля находится ближе всего к Солнцу?
+
+A) 1–5 января
+B) 1–5 марта
+C) 1–5 июня
+D) 1–5 сентября
+
+
+
+--- Example 10 ---
+dataset:   mera
+subset:    mamuramu
+language:  russian
+split:     train
+source_id: MaMuRAMu_train_225
+task_type: mcq
+answer:    C
+metadata:  {"subject": "Медицина", "domain": "clinical_knowledge", "id": 225}
+
+PROMPT:
+Какое заболевание относится к зоонозным?
+
+A) Столбняк
+B) Муковисцидоз
+C) Бешенство
+D) Болезнь Гиршпрунга
+
+
+
+====================================================================================================
+MATHLOGICQA | sampled 10 / 680 examples
+====================================================================================================
+
+
+--- Example 1 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_647
+task_type: mcq
+answer:    A
+metadata:  {"task": "math", "id": 647}
+
+PROMPT:
+Если 1 равен d плюс 2. 2, умноженное на d, плюс 2 равно a. То следует вычислить значение a.
+
+A) 0
+B) 1
+C) -1
+D) 4
+
+
+
+--- Example 2 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_607
+task_type: mcq
+answer:    D
+metadata:  {"task": "logic", "id": 607}
+
+PROMPT:
+Семнадцать рабочих производят на 46 продуктов больше, чем 15 рабочих. Сколько продуктов произведут 20 рабочих?
+
+A) 500
+B) 440
+C) 450
+D) 460
+
+
+
+--- Example 3 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_63
+task_type: mcq
+answer:    B
+metadata:  {"task": "math", "id": 63}
+
+PROMPT:
+Если к 4, умноженному на c, прибавить u, получится -14. -u минус 8 равно 2 умножить на c. Вычислите c.
+
+A) 4
+B) -3
+C) -2
+D) -7
+
+
+
+--- Example 4 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_319
+task_type: mcq
+answer:    C
+metadata:  {"task": "math", "id": 319}
+
+PROMPT:
+Если из -m вычесть z, то получится 4. Разность -3, умноженного на m, и 8 равна z. Правда ли, что z равно m?
+
+A) невозможно ответить
+B) нет правильного ответа
+C) правда
+D) неправда
+
+
+
+--- Example 5 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_101
+task_type: mcq
+answer:    B
+metadata:  {"task": "math", "id": 101}
+
+PROMPT:
+Произведение x и разности 11 и 6 равно 45. Определите x.
+
+A) 2
+B) 9
+C) -9
+D) 5
+
+
+
+--- Example 6 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_542
+task_type: mcq
+answer:    C
+metadata:  {"task": "logic", "id": 542}
+
+PROMPT:
+Билеты в зоопарк стоят 4 доллара для детей, 5 долларов для подростков и 6 долларов для взрослых. В летний сезон в зоопарк ежедневно приходит 1200 человек. В среднем за день, общий доход зоопарка составляет 5300 долларов. На каждые три подростка, посещающих зоопарк, приходится восемь детей. Сколько подростков, детей и взрослых приходили в зоопарк в летний сезон?
+
+A) 250, 710, 240
+B) 130, 650, 420
+C) 100, 800, 300
+D) 200, 600, 400
+
+
+
+--- Example 7 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_260
+task_type: mcq
+answer:    D
+metadata:  {"task": "math", "id": 260}
+
+PROMPT:
+Если из 3, умноженных на z, вычесть 5, то получится 4. Найдите/вычислите/определите чему равна переменная z.
+
+A) 5
+B) 4
+C) -3
+D) 3
+
+
+
+--- Example 8 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_165
+task_type: mcq
+answer:    C
+metadata:  {"task": "math", "id": 165}
+
+PROMPT:
+3, умноженное на z, минус 8 равно l плюс z. 2, умноженное на z, равно 8. Правда ли, что z больше l?
+
+A) неправда
+B) нет правильного ответа
+C) правда
+D) невозможно ответить
+
+
+
+--- Example 9 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_659
+task_type: mcq
+answer:    B
+metadata:  {"task": "math", "id": 659}
+
+PROMPT:
+Известно, что -i равно -1. Произведение 2 и i равно произведению -2 и r. Определите r.
+
+A) 2
+B) -1
+C) -3
+D) 1
+
+
+
+--- Example 10 ---
+dataset:   mera
+subset:    mathlogicqa
+language:  russian
+split:     train
+source_id: MathLogicQA_train_485
+task_type: mcq
+answer:    B
+metadata:  {"task": "math", "id": 485}
+
+PROMPT:
+Сумма 7, умноженного на x, и 4, умноженного на x, равняется 55. Вычислите значение x.
+
+A) 5.5
+B) 5
+C) -5
+D) нет правильного ответа
+
+
+
+====================================================================================================
+RUOPENBOOKQA | sampled 10 / 2338 examples
+====================================================================================================
+
+
+--- Example 1 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_637
+task_type: mcq
+answer:    C
+metadata:  {"id": 637}
+
+PROMPT:
+Если растения собираются распространяться, их семена должны
+
+A) пройти тест
+B) быть съеденными
+C) отправиться в другое место
+D) быть промытыми
+
+
+
+--- Example 2 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_1419
+task_type: mcq
+answer:    A
+metadata:  {"id": 1419}
+
+PROMPT:
+Некоторые птицы находят дорогу по
+
+A) геомагнитным линиям
+B) дорожным знакам
+C) яйцам
+D) ориентирам
+
+
+
+--- Example 3 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_387
+task_type: mcq
+answer:    C
+metadata:  {"id": 387}
+
+PROMPT:
+Цветов станет больше, если
+
+A) стрекозы будут размножаться чаще
+B) опылители будут посещать их редко
+C) пчелы будут чаще посещать их
+D) им будут доставлять удобрения премиум-класса
+
+
+
+--- Example 4 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_2304
+task_type: mcq
+answer:    D
+metadata:  {"id": 2304}
+
+PROMPT:
+Примером предмета домашнего обихода, который способен быть изолятором, может быть
+
+A) бриллиантовая брошь
+B) серебряный подсвечник
+C) золототая чаша
+D) пластиковый половник
+
+
+
+--- Example 5 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_247
+task_type: mcq
+answer:    C
+metadata:  {"id": 247}
+
+PROMPT:
+Какой инструмент будет наиболее полезным для помощи комнатным растениям в фотосинтезе
+
+A) музыка
+B) тент
+C) большое окно
+D) удобрение
+
+
+
+--- Example 6 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_1572
+task_type: mcq
+answer:    C
+metadata:  {"id": 1572}
+
+PROMPT:
+Вещь может иметь текстуру, легко наблюдаемую и безглазым существом
+
+A) по запаху
+B) посредством зрения
+C) на ощупь
+D) по звуку
+
+
+
+--- Example 7 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_707
+task_type: mcq
+answer:    B
+metadata:  {"id": 707}
+
+PROMPT:
+Резина может защитить от
+
+A) холода
+B) электричества
+C) ожогов
+D) огня
+
+
+
+--- Example 8 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_948
+task_type: mcq
+answer:    D
+metadata:  {"id": 948}
+
+PROMPT:
+Что будет в результате разведения двух волков?
+
+A) котята
+B) страусята
+C) лисята
+D) волчата
+
+
+
+--- Example 9 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_2104
+task_type: mcq
+answer:    C
+metadata:  {"id": 2104}
+
+PROMPT:
+Если объект находится рядом с планетой, а планета вращается вокруг чего-то другого, то объект, вращающийся вокруг планеты, скорее всего,
+
+A) пчелы
+B) Солнце
+C) Луна
+D) уголь
+
+
+
+--- Example 10 ---
+dataset:   mera
+subset:    ruopenbookqa
+language:  russian
+split:     train
+source_id: ruOpenBookQA_train_2094
+task_type: mcq
+answer:    D
+metadata:  {"id": 2094}
+
+PROMPT:
+Лягушки зарываются в грязь, чтобы
+
+A) вздремнуть
+B) выносить детенышей
+C) найти еду
+D) сохранить энергию
+
+
+
+====================================================================================================
+RUWORLDTREE | sampled 10 / 115 examples
+====================================================================================================
+
+
+--- Example 1 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_81
+task_type: mcq
+answer:    B
+metadata:  {"id": 81, "exam_name": "NYSEDREGENTS", "school_grade": 4, "knowledge_type": "DEF"}
+
+PROMPT:
+Функции корней растения - поддерживать структуру растения и
+
+A) производить пищу
+B) принимать воду и питательные вещества
+C) производить фрукты
+D) помогать прорастанию
+
+
+
+--- Example 2 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_4
+task_type: mcq
+answer:    A
+metadata:  {"id": 4, "exam_name": "NYSEDREGENTS", "school_grade": 4, "knowledge_type": "CAUSAL"}
+
+PROMPT:
+Шарик падает в стакан с водой. Какая сила притягивает шарик ко дну стакана?
+
+A) гравитация
+B) трение
+C) электричество
+D) магнетизм
+
+
+
+--- Example 3 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_40
+task_type: mcq
+answer:    C
+metadata:  {"id": 40, "exam_name": "NYSEDREGENTS", "school_grade": 4, "knowledge_type": "DEF"}
+
+PROMPT:
+Какова основная функция чешуи рыб?
+
+A) помощь в поиске корма
+B) привлечение хищников
+C) защита рыбы
+D) дыхание
+
+
+
+--- Example 4 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_69
+task_type: mcq
+answer:    C
+metadata:  {"id": 69, "exam_name": "MEA", "school_grade": 5, "knowledge_type": "DEF,MODEL"}
+
+PROMPT:
+Сколько раз Земля вращается вокруг своей оси за один день?
+
+A) 24 раза
+B) дважды
+C) один раз
+D) 365 раз
+
+
+
+--- Example 5 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_10
+task_type: mcq
+answer:    B
+metadata:  {"id": 10, "exam_name": "NYSEDREGENTS", "school_grade": 4, "knowledge_type": "MODEL"}
+
+PROMPT:
+Какое животное готовится к сезонным изменениям окружающей среды?
+
+A) летучая мышь, летящая ночью
+B) белка, хранящая орехи
+C) сова, поедающая мышь
+D) олень, пьющий воду
+
+
+
+--- Example 6 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_45
+task_type: mcq
+answer:    A
+metadata:  {"id": 45, "exam_name": "California Standards Test - Science", "school_grade": 5, "knowledge_type": "DEF,PROP"}
+
+PROMPT:
+Студент пытается определить минерал с неметаллическим блеском черного цвета. Его также можно поцарапать ногтем. Согласно справочному листу минералов, неидентифицированный минерал, скорее всего, является
+
+A) слюдой
+B) магнетитом
+C) роговой обманкой
+D) кварцем
+
+
+
+--- Example 7 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_70
+task_type: mcq
+answer:    A
+metadata:  {"id": 70, "exam_name": "NYSEDREGENTS", "school_grade": 4, "knowledge_type": "EXAMPLE,CAUSAL"}
+
+PROMPT:
+Какой процесс заставляет листья растения увеличиваться в размерах?
+
+A) рост
+B) восстановление
+C) разложение
+D) прорастание
+
+
+
+--- Example 8 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_66
+task_type: mcq
+answer:    C
+metadata:  {"id": 66, "exam_name": "MCAS", "school_grade": 5, "knowledge_type": "CAUSAL,MODEL"}
+
+PROMPT:
+Тамара купила скейт и комплект для изготовления трамплина. Что из перечисленного наиболее важно для сборки трамплина?
+
+A) изображение, показывающее цвета различных частей трамплина
+B) диаграмма, показывающая некоторые способы использования трамплина
+C) набор инструкций к набору
+D) список цен на другие доступные комплекты
+
+
+
+--- Example 9 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_47
+task_type: mcq
+answer:    D
+metadata:  {"id": 47, "exam_name": "MCAS", "school_grade": 5, "knowledge_type": "MODEL"}
+
+PROMPT:
+Стальные банки отделяются от алюминиевых в центре переработки. Что из перечисленного является наилучшим способом отделения стальных банок от алюминиевых в центре переработки?
+
+A) отсортировать банки по размеру
+B) поместить банки в воду
+C) охладить банки до низкой температуры
+D) поместить банки под электромагнит
+
+
+
+--- Example 10 ---
+dataset:   mera
+subset:    ruworldtree
+language:  russian
+split:     train
+source_id: ruWorldTree_train_11
+task_type: mcq
+answer:    B
+metadata:  {"id": 11, "exam_name": "ACTAAP", "school_grade": 5, "knowledge_type": "NO TYPE"}
+
+PROMPT:
+Илона включает фонарик и подносит предмет к свету. Как она сможет определить непрозрачность объекта?
+
+A) Часть света будет отражаться
+B) Свет не будет проникать сквозь него
+C) Свет будет преломляться
+D) Свет будет четко просвечивать
+
+
+
+====================================================================================================
+PARUS | sampled 10 / 500 examples
+====================================================================================================
+
+
+--- Example 1 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_361
+task_type: mcq
+answer:    B
+metadata:  {"task": "effect", "id": 361, "raw_answer": "2", "option_a": "Он лез через забор.", "option_b": "Рукав порвался."}
+
+PROMPT:
+Мужчина зацепился рукавом за перекладину забора.
+
+Что является следствием описанной ситуации?
+
+A) Он лез через забор.
+B) Рукав порвался.
+
+
+
+--- Example 2 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_73
+task_type: mcq
+answer:    B
+metadata:  {"task": "cause", "id": 73, "raw_answer": "2", "option_a": "Он купил её на распродаже.", "option_b": "Он сбросил вес."}
+
+PROMPT:
+Его одежда сидит слишком свободно.
+
+Что является причиной описанной ситуации?
+
+A) Он купил её на распродаже.
+B) Он сбросил вес.
+
+
+
+--- Example 3 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_374
+task_type: mcq
+answer:    B
+metadata:  {"task": "cause", "id": 374, "raw_answer": "2", "option_a": "Его жена критикует его.", "option_b": "Его мать скончалась."}
+
+PROMPT:
+У человека наболело.
+
+Что является причиной описанной ситуации?
+
+A) Его жена критикует его.
+B) Его мать скончалась.
+
+
+
+--- Example 4 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_155
+task_type: mcq
+answer:    B
+metadata:  {"task": "cause", "id": 155, "raw_answer": "2", "option_a": "Я пошла наверх.", "option_b": "Я пробежала пять миль."}
+
+PROMPT:
+Я выпила кувшин воды.
+
+Что является причиной описанной ситуации?
+
+A) Я пошла наверх.
+B) Я пробежала пять миль.
+
+
+
+--- Example 5 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_104
+task_type: mcq
+answer:    A
+metadata:  {"task": "cause", "id": 104, "raw_answer": "1", "option_a": "Интервьюер задавал трудные вопросы.", "option_b": "Я была готова к вопросам интервьюера."}
+
+PROMPT:
+Я провалила собеседование.
+
+Что является причиной описанной ситуации?
+
+A) Интервьюер задавал трудные вопросы.
+B) Я была готова к вопросам интервьюера.
+
+
+
+--- Example 6 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_394
+task_type: mcq
+answer:    B
+metadata:  {"task": "cause", "id": 394, "raw_answer": "2", "option_a": "Я выключил свой телефон.", "option_b": "У меня зазвонил телефон."}
+
+PROMPT:
+Я вышел с занятия группы.
+
+Что является причиной описанной ситуации?
+
+A) Я выключил свой телефон.
+B) У меня зазвонил телефон.
+
+
+
+--- Example 7 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_377
+task_type: mcq
+answer:    B
+metadata:  {"task": "cause", "id": 377, "raw_answer": "2", "option_a": "Он перенёс эмоциональную травму.", "option_b": "Он страдал от повреждения головного мозга."}
+
+PROMPT:
+Пациент впал в кому.
+
+Что является причиной описанной ситуации?
+
+A) Он перенёс эмоциональную травму.
+B) Он страдал от повреждения головного мозга.
+
+
+
+--- Example 8 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_124
+task_type: mcq
+answer:    B
+metadata:  {"task": "cause", "id": 124, "raw_answer": "2", "option_a": "Она съела рыбу.", "option_b": "Она увидела хищника."}
+
+PROMPT:
+Черепаха спряталась в своём панцире.
+
+Что является причиной описанной ситуации?
+
+A) Она съела рыбу.
+B) Она увидела хищника.
+
+
+
+--- Example 9 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     train
+source_id: parus_train_68
+task_type: mcq
+answer:    B
+metadata:  {"task": "cause", "id": 68, "raw_answer": "2", "option_a": "Владелец помогал клиентам.", "option_b": "В магазине шёл ремонт."}
+
+PROMPT:
+Магазин был закрыт.
+
+Что является причиной описанной ситуации?
+
+A) Владелец помогал клиентам.
+B) В магазине шёл ремонт.
+
+
+
+--- Example 10 ---
+dataset:   mera
+subset:    parus
+language:  russian
+split:     val
+source_id: parus_val_50
+task_type: mcq
+answer:    A
+metadata:  {"task": "cause", "id": 50, "raw_answer": "1", "option_a": "Я наткнулась на ядовитый плющ у себя во дворе.", "option_b": "Я уничтожила ядовитый плющ у себя во дворе."}
+
+PROMPT:
+Мою кожу покрыла сыпь.
+
+Что является причиной описанной ситуации?
+
+A) Я наткнулась на ядовитый плющ у себя во дворе.
+B) Я уничтожила ядовитый плющ у себя во дворе.

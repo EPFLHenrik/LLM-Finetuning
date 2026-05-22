@@ -1,0 +1,99 @@
+{
+  "output_name": "v7",
+  "max_per_language": 1000,
+  "max_per_dataset": 5000,
+  "max_per_language_mixed": 3000,
+  "dataset_registry": {
+    "include": {
+      "languages": null,
+      "mode": "as_is",
+      "split_caps": {"train": 0, "val": null, "test": null}
+    },
+    "global_piqa": {
+      "languages": null,
+      "mode": "recarve",
+      "max_per_dataset": 0,
+      "split_caps": {"train": 0, "val": null, "test": null}
+    },
+    "mgsm": {
+        "languages": null,
+        "max_per_language": null,
+        "max_per_dataset": null,
+        "split_caps": {
+            "val": 100
+        }
+    },
+    "mmmlu": {
+      "languages": ["spanish", "hindi", "italian", "chinese"],
+      "max_per_language": 400,
+      "max_per_dataset": 1600,
+      "split_caps": {"val": 200}
+    },
+    "milu": {
+      "languages": ["hindi"],
+      "max_per_language": 1000,
+      "max_per_dataset": 1000,
+      "split_caps": {"val": 400}
+    },
+    "ceval": {
+      "languages": ["chinese"],
+      "language_caps": {"chinese": 2500},
+      "split_caps": {"val": 400}
+    },
+    "cultsportqa": {
+      "languages": ["chinese", "hindi"],
+      "max_per_language": 1000,
+      "max_per_dataset": 2000,
+      "split_caps": {"val": 350}
+    },
+    "belebele": {
+      "languages": null,
+      "max_per_language": 80,
+      "max_per_dataset": 400,
+      "split_caps": {"val": 100}
+    },
+    "xcopa": {
+      "languages": ["italian", "chinese"],
+      "max_per_dataset": 0
+    },
+    "exams": {
+      "languages": ["italian", "spanish"],
+      "max_per_language": 250,
+      "max_per_dataset": 500,
+      "split_caps": {"val": 120}
+    },
+    "head_qa": {
+      "languages": ["spanish", "italian"],
+      "language_caps": {"spanish": 800, "italian": 800},
+      "split_caps": {"val": 200}
+    },
+    "mera": {
+      "languages": ["russian"],
+      "max_per_language": 2000,
+      "max_per_dataset": 2000,
+      "stratify_by": "subset",
+      "subject_caps": {
+        "mamuramu": 285,
+        "ruopenbookqa": 600,
+        "ruworldtree": 115,
+        "mathlogicqa": 150,
+        "parus": 0,
+        "use": 0,
+        "rcb": 0,
+        "rwsd": 0
+      },
+      "split_caps": {"val": 200}
+    },
+    "global_mmlu": {
+      "languages": null,
+      "language_caps": {
+        "russian": 2200,
+        "chinese": 2200,
+        "hindi": 1500,
+        "italian": 1500,
+        "spanish": 1500
+      },
+      "split_caps": {"val": 600}
+    }
+  }
+}

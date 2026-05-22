@@ -3,15 +3,26 @@
 Builds SFT JSONL files from all loaders.
 
 Output layout:
-    data/sft/per_dataset/<dataset>_<language>_<split>.jsonl  -- full, no caps
-    data/sft/mixed/train_mixed.jsonl                         -- capped + shuffled
-    data/sft/mixed/val_mixed.jsonl                           -- capped + shuffled
-    data/sft/build_summary.csv
+    <output_dir>/per_dataset/<dataset>_<language>_<split>.jsonl
+    <output_dir>/mixed/train_mixed.jsonl
+    <output_dir>/mixed/val_mixed.jsonl
+    <output_dir>/mixed/test_mixed.jsonl   (if any dataset has test data)
+    <output_dir>/build_summary.csv
+
+Output dir:
+    Default: data/sft/
+    Override: set "output_name" in JSON config → data/sft/<output_name>/
+
+Dataset modes:
+    as_is   (default): load each split from HF directly.
+    recarve:           merge all non-train HF splits, recarve into val/test
+                       using split_caps sizes (default 50/50).
+                       Datasets with mode=recarve never produce a train split.
 
 Usage:
-    python -m multilingual.train.build_sft_data --debug
     python -m multilingual.train.build_sft_data
-    python -m multilingual.train.build_sft_data --max_per_language 500 --max_per_dataset 2000 --overwrite
+    python -m multilingual.train.build_sft_data --config configs/sft/v7.json --overwrite
+    python -m multilingual.train.build_sft_data --debug
 """
 
 import argparse
@@ -22,7 +33,7 @@ import os
 import random
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from multilingual.config import REPO, SYSTEM_PROMPT, TARGET_LANGUAGES
 from multilingual.loaders.belebele_loader import load_belebele_examples
@@ -30,205 +41,175 @@ from multilingual.loaders.ceval_loader import load_ceval_examples
 from multilingual.loaders.cultsportqa_loader import load_cultsportqa_examples
 from multilingual.loaders.exams_loader import load_exams_examples
 from multilingual.loaders.head_qa_loader import load_head_qa_examples
-from multilingual.loaders.include_loader import load_include_examples
+from multilingual.loaders.include_loader import load_include_recarved, load_include_examples
 from multilingual.loaders.mera_loader import load_mera_examples
 from multilingual.loaders.mgsm_loader import load_mgsm_examples
 from multilingual.loaders.milu_loader import load_milu_examples
 from multilingual.loaders.mmmlu_loader import load_mmmlu_examples
 from multilingual.loaders.xcopa_loader import load_xcopa_examples
 from multilingual.loaders.global_mmlu_loader import load_global_mmlu_examples
-from multilingual.loaders.global_piqa_loader import load_global_piqa_examples
-
-
+from multilingual.loaders.global_piqa_loader import load_global_piqa_recarved, load_global_piqa_examples
 
 # ---------------------------------------------------------------------------
 # Global defaults
 # ---------------------------------------------------------------------------
 
-DEFAULT_MAX_PER_LANGUAGE = 1000
-DEFAULT_MAX_PER_DATASET  = 5000
-DEFAULT_MAX_PER_LANGUAGE_MIXED = 2500
+DEFAULT_MAX_PER_LANGUAGE           = 1000
+DEFAULT_MAX_PER_DATASET            = 5000
+DEFAULT_MAX_PER_LANGUAGE_MIXED     = 2500
 DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL = 1000
-DEBUG_MAX_TRAIN = 20
-DEBUG_MAX_VAL   = 10
-SHUFFLE_SEED    = 42
-SFT_DATA_DIR = REPO / "multilingual" / "data" / "sft"
+DEFAULT_SFT_BASE_DIR = REPO / "multilingual" / "data" / "sft"
+DEBUG_MAX            = 20
+SHUFFLE_SEED         = 42
+ALL_SPLITS           = ("train", "val", "test")
 
 # ---------------------------------------------------------------------------
 # Dataset registry
 # ---------------------------------------------------------------------------
-# Each entry:
-#   languages:          list of language keys, or None for all TARGET_LANGUAGES
-#   max_per_language:   override global cap (None = use global)
-#   max_per_dataset:    override global cap (None = use global)
-#   stratify_by:        column in metadata to stratify sampling by (None = no stratification)
-#   subject_caps:       {subject: cap} overrides when stratify_by="subject"
-#                       None value means "keep all". Missing subjects use even distribution.
-# ---------------------------------------------------------------------------
 
 DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     "include": {
-        "languages": None,
-        "split_caps": {
-            "train": 0,
-            "val": None,
-        },
+        "languages":  None,
+        "mode":       "as_is",
+        "split_caps": {"train": 0, "val": None, "test": None},
+    },
+    "global_piqa": {
+        "languages":     None,
+        "mode":          "recarve",
+        "max_per_dataset": 0,
+        "split_caps":    {"train": 0, "val": None, "test": None},
     },
     "mgsm": {
         "languages": None,
+        "max_per_language": None,
+        "max_per_dataset": None,
         "split_caps": {
-            "val": 150,
+            "val": 100
         },
     },
     "mmmlu": {
-        "languages": ["spanish", "hindi", "italian", "chinese"],
-        "max_per_dataset": 0,  # disabled, replaced by global_mmlu
+        "languages":       ["spanish", "hindi", "italian", "chinese"],
+        "max_per_dataset": 0,
     },
     "milu": {
-        "languages": ["hindi"],
+        "languages":        ["hindi"],
         "max_per_language": 2000,
-        "split_caps": {
-            "val": 300,
-        },
+        "split_caps":       {"val": 300},
     },
     "ceval": {
-        "languages": ["chinese"],
-        "language_caps": {
-            "chinese": 2000,
-        },
-        "split_caps": {
-            "val": 300,
-        },
+        "languages":     ["chinese"],
+        "language_caps": {"chinese": 2000},
+        "split_caps":    {"val": 300},
     },
     "cultsportqa": {
-        "languages": ["chinese", "hindi"],
+        "languages":        ["chinese", "hindi"],
         "max_per_language": 1000,
-        "max_per_dataset": 2000,
-        "split_caps": {
-            "val": 400,
-        },
+        "max_per_dataset":  2000,
+        "split_caps":       {"val": 400},
     },
     "belebele": {
-        "languages": None,
-        "max_per_language": 500,
-        "split_caps": {
-            "val": 200,
-        },
+        "languages":        None,
+        "max_per_language": 300,
+        "max_per_dataset":  1500,
+        "split_caps":       {"val": 100},
     },
     "xcopa": {
-        "languages": ["italian", "chinese"],
-        "split_caps": {
-            "val": 100,
-        },
+        "languages":       ["italian", "chinese"],
+        "max_per_dataset": 0,
     },
     "exams": {
-        "languages": ["italian", "spanish"],
-        "max_per_language": None,
-        "max_per_dataset": None,
-        "split_caps": {
-            "val": 300,
-        },
+        "languages":  ["italian", "spanish"],
+        "split_caps": {"val": 300},
     },
     "head_qa": {
-        "languages": ["spanish", "italian"],
-        "language_caps": {
-            "spanish": 1000,
-            "italian": 400,
-        },
-        "split_caps": {
-            "val": 300,
-        },
+        "languages":     ["spanish", "italian"],
+        "language_caps": {"spanish": 800, "italian": 800},
+        "split_caps":    {"val": 300},
     },
     "mera": {
-        "languages": ["russian"],
-        "max_per_language": 8000,
-        "max_per_dataset": 8000,
-        "stratify_by": "subset",
+        "languages":        ["russian"],
+        "max_per_language": 2000,
+        "max_per_dataset":  2000,
+        "stratify_by":      "subset",
         "subject_caps": {
-            "use": 800,
-            "ruopenbookqa": 800,
-            "rwsd": None,
-            "rcb": None,
-            "mathlogicqa": None,
-            "parus": None,
-            "mamuramu": None,
-            "ruworldtree": None,
+            "mamuramu":     285,
+            "ruopenbookqa": 600,
+            "ruworldtree":  115,
+            "mathlogicqa":  150,
+            "parus":          0,
+            "use":            0,
+            "rcb":            0,
+            "rwsd":           0,
         },
-        "split_caps": {
-            "val": 500,
-        },
+        "split_caps": {"val": 200},
     },
     "global_mmlu": {
-        "languages": None,
+        "languages":     None,
         "language_caps": {
-            "russian": 1600,
-            "chinese": 1600,
-            "hindi": 800,
-            "italian": 400,
-            "spanish": 400,
+            "russian": 2200,
+            "chinese": 2200,
+            "hindi":    1500,
+            "italian":  1500,
+            "spanish":  1500,
         },
-        "split_caps": {
-            "val": 500,
-        },
-    },
-    "global_piqa": {
-        "languages": None,
-        "max_per_language": None,
-        "max_per_dataset": None,
-        "split_caps": {
-            "val": 80,
-        },
+        "split_caps": {"val": 600},
     },
 }
 
+# ---------------------------------------------------------------------------
+# Config helpers
+# ---------------------------------------------------------------------------
 
 def _dataset_cfg(dataset: str) -> Dict[str, Any]:
     return DATASET_REGISTRY.get(dataset, {})
 
 
 def _languages(dataset: str) -> List[str]:
-    cfg = _dataset_cfg(dataset)
+    cfg   = _dataset_cfg(dataset)
     langs = cfg.get("languages")
     return langs if langs is not None else list(TARGET_LANGUAGES.keys())
 
 
 def _max_per_language(dataset: str, language: str, global_cap: int) -> int:
-    cfg = _dataset_cfg(dataset)
-    # Per-language-per-dataset override takes highest priority
+    cfg       = _dataset_cfg(dataset)
     lang_caps = cfg.get("language_caps", {})
     if language in lang_caps:
         v = lang_caps[language]
         return v if v is not None else 10_000_000
-    # Dataset-level override
     v = cfg.get("max_per_language", global_cap)
     return v if v is not None else 10_000_000
 
 
-def _max_per_dataset(dataset: str, split: str, global_cap: int) -> int:
-    cfg = _dataset_cfg(dataset)
-
+def _split_cap(dataset: str, split: str, global_cap: int) -> int:
+    """Return the effective cap for dataset+split. 0 = disabled."""
+    cfg        = _dataset_cfg(dataset)
     split_caps = cfg.get("split_caps", {})
     if split in split_caps:
         v = split_caps[split]
         return v if v is not None else 10_000_000
-
+    if split == "test":
+        return 0  # test only produced if explicitly set
     v = cfg.get("max_per_dataset", global_cap)
     return v if v is not None else 10_000_000
 
 
+def _split_enabled(dataset: str, split: str) -> bool:
+    return _split_cap(dataset, split, 10_000_000) != 0
+
+
+def _is_recarve(dataset: str) -> bool:
+    return _dataset_cfg(dataset).get("mode") == "recarve"
+
 # ---------------------------------------------------------------------------
-# Helpers
+# SFT record helpers
 # ---------------------------------------------------------------------------
 
 def _hash_source_id(ex: Dict[str, Any]) -> str:
     raw = "\n".join([
-        str(ex["dataset"]),
-        str(ex["language"]),
-        str(ex["task_type"]),
-        str(ex["prompt"]).strip(),
+        str(ex["dataset"]), str(ex["language"]),
+        str(ex["task_type"]), str(ex["prompt"]).strip(),
     ])
-    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
-    return f"{ex['dataset']}_{ex['language']}_{digest}"
+    return f"{ex['dataset']}_{ex['language']}_{hashlib.sha1(raw.encode()).hexdigest()[:16]}"
 
 
 def _make_assistant_message(ex: Dict[str, Any]) -> str:
@@ -256,6 +237,11 @@ def _to_sft_record(ex: Dict[str, Any], split: str, idx: int) -> Dict[str, Any]:
         "metadata": ex.get("metadata", {}),
     }
 
+
+def _to_records(examples: List[Dict], split: str) -> List[Dict]:
+    return [_to_sft_record(ex, split, i) for i, ex in enumerate(examples)]
+
+
 def _dedupe(records: List[Dict]) -> List[Dict]:
     seen, out = set(), []
     for r in records:
@@ -264,9 +250,17 @@ def _dedupe(records: List[Dict]) -> List[Dict]:
             out.append(r)
     return out
 
-def _remove_overlap(train: List[Dict], val: List[Dict]) -> List[Dict]:
-    val_ids = {r["source_id"] for r in val}
-    return [r for r in train if r["source_id"] not in val_ids]
+
+def _remove_train_overlap(train: List[Dict], others: List[List[Dict]]) -> List[Dict]:
+    other_ids = {r["source_id"] for split in others for r in split}
+    return [r for r in train if r["source_id"] not in other_ids]
+
+
+def _reindex(records: List[Dict], split: str) -> List[Dict]:
+    for i, r in enumerate(records):
+        r["id"]    = f"{r['dataset']}_{split}_{r['language']}_{i}"
+        r["split"] = split
+    return records
 
 
 def _write_jsonl(records: List[Dict], path: Path, overwrite: bool) -> bool:
@@ -285,13 +279,6 @@ def _load_jsonl(path: Path) -> List[Dict]:
     with open(path, encoding="utf-8") as f:
         return [json.loads(line) for line in f if line.strip()]
 
-
-def _reindex(records: List[Dict], split: str) -> List[Dict]:
-    for i, r in enumerate(records):
-        r["id"] = f"{r['dataset']}_{split}_{r['language']}_{i}"
-        r["split"] = split
-    return records
-
 # ---------------------------------------------------------------------------
 # Loader dispatch
 # ---------------------------------------------------------------------------
@@ -300,22 +287,56 @@ def _load_examples(
     dataset: str, language: str, split: str,
     n: Optional[int], hf_token: str,
 ) -> List[Dict[str, Any]]:
-    kw = dict(language=language, n=n, split=split)
-    if dataset == "include":    return load_include_examples(**kw)
-    if dataset == "mgsm":       return load_mgsm_examples(**kw)
-    if dataset == "mmmlu":      return load_mmmlu_examples(**kw)
-    if dataset == "milu":       return load_milu_examples(n=n, split=split, hf_token=hf_token)
-    if dataset == "ceval":      return load_ceval_examples(n=n, split=split)
-    if dataset == "cultsportqa":return load_cultsportqa_examples(**kw)
-    if dataset == "belebele":   return load_belebele_examples(**kw)
-    if dataset == "xcopa":      return load_xcopa_examples(**kw)
-    if dataset == "exams":      return load_exams_examples(**kw)
-    if dataset == "head_qa":    return load_head_qa_examples(**kw)
-    if dataset == "mera":       return load_mera_examples(**kw)
-    if dataset == "global_mmlu": return load_global_mmlu_examples(**kw)
-    if dataset == "global_piqa": return load_global_piqa_examples(**kw)
+    """Load examples for a single dataset/language/split (as_is mode only)."""
+    mode = str(_dataset_cfg(dataset).get("mode", "as_is"))
+
+    if dataset == "include":
+        return load_include_examples(language=language, n=n, split=split, mode=mode)
+    if dataset == "global_piqa":
+        return load_global_piqa_examples(language=language, n=n, split=split, mode=mode)
+    if dataset == "mgsm":
+        return load_mgsm_examples(language=language, n=n, split=split)
+    if dataset == "mmmlu":
+        return load_mmmlu_examples(language=language, n=n, split=split)
+    if dataset == "milu":
+        return load_milu_examples(n=n, split=split, hf_token=hf_token)
+    if dataset == "ceval":
+        return load_ceval_examples(n=n, split=split)
+    if dataset == "cultsportqa":
+        return load_cultsportqa_examples(language=language, n=n, split=split)
+    if dataset == "belebele":
+        return load_belebele_examples(language=language, n=n, split=split)
+    if dataset == "xcopa":
+        return load_xcopa_examples(language=language, n=n, split=split)
+    if dataset == "exams":
+        return load_exams_examples(language=language, n=n, split=split)
+    if dataset == "head_qa":
+        return load_head_qa_examples(language=language, n=n, split=split)
+    if dataset == "mera":
+        return load_mera_examples(language=language, n=n, split=split)
+    if dataset == "global_mmlu":
+        return load_global_mmlu_examples(language=language, n=n, split=split)
     raise ValueError(f"Unknown dataset: {dataset}")
 
+
+def _load_recarved(
+    dataset: str, language: str,
+    n_val: Optional[int], n_test: Optional[int],
+) -> Dict[str, List[Dict]]:
+    """Load and recarve a dataset into {split: records}. Single HF download."""
+    if dataset == "include":
+        val_ex, test_ex = load_include_recarved(language, n_val=n_val, n_test=n_test)
+    elif dataset == "global_piqa":
+        val_ex, test_ex = load_global_piqa_recarved(language, n_val=n_val, n_test=n_test)
+    else:
+        raise ValueError(f"Recarve not implemented for dataset: {dataset}")
+
+    result = {}
+    if val_ex:
+        result["val"]  = _dedupe(_to_records(val_ex,  "val"))
+    if test_ex:
+        result["test"] = _dedupe(_to_records(test_ex, "test"))
+    return result
 
 # ---------------------------------------------------------------------------
 # Stratified sampling
@@ -328,44 +349,34 @@ def _stratified_sample(
     global_cap: int,
     rng: random.Random,
 ) -> List[Dict]:
-    """
-    Sample records stratified by a metadata field.
-
-    subject_caps: {subject: cap_or_None}. None means keep all.
-    Subjects not in subject_caps get an even share of the remaining global_cap.
-    """
     by_group: Dict[str, List[Dict]] = defaultdict(list)
     for r in records:
         key = str(r.get("metadata", {}).get(stratify_by, "unknown"))
         by_group[key].append(r)
 
-    # Shuffle within each group
     for g in by_group.values():
         rng.shuffle(g)
 
-    result = []
-    # First pass: apply explicit caps
-    uncapped_groups = []
-    used = 0
+    result, used, uncapped = [], 0, []
     for group, items in by_group.items():
         if group in subject_caps:
             cap = subject_caps[group]
+            if cap == 0:
+                continue
             take = items if cap is None else items[:cap]
             result.extend(take)
             used += len(take)
         else:
-            uncapped_groups.append((group, items))
+            uncapped.append((group, items))
 
-    # Second pass: distribute remaining capacity evenly among uncapped groups
     remaining = max(0, global_cap - used)
-    if uncapped_groups and remaining > 0:
-        per_group = max(1, remaining // len(uncapped_groups))
-        for _, items in uncapped_groups:
+    if uncapped and remaining > 0:
+        per_group = max(1, remaining // len(uncapped))
+        for _, items in uncapped:
             result.extend(items[:per_group])
 
     rng.shuffle(result)
     return result[:global_cap]
-
 
 # ---------------------------------------------------------------------------
 # Mixed file builder
@@ -382,11 +393,16 @@ def _build_mixed(
 ) -> List[Dict]:
     mixed: List[Dict] = []
 
-    for dataset, cfg in DATASET_REGISTRY.items():
-        languages = _languages(dataset)
-        lang_pools: Dict[str, List[Dict]] = {}
+    for dataset in DATASET_REGISTRY:
+        if not _split_enabled(dataset, split):
+            continue
 
-        for language in languages:
+        cfg          = _dataset_cfg(dataset)
+        stratify_by  = cfg.get("stratify_by")
+        subject_caps = cfg.get("subject_caps", {})
+        dataset_pool: List[Dict] = []
+
+        for language in _languages(dataset):
             path = per_dir / f"{dataset}_{language}_{split}.jsonl"
             if not path.exists():
                 continue
@@ -394,43 +410,32 @@ def _build_mixed(
             if not records:
                 continue
             rng.shuffle(records)
-            lang_pools[language] = records
 
-        if not lang_pools:
-            continue
+            if debug:
+                dataset_pool.extend(records)
+                continue
 
-        if debug:
-            for recs in lang_pools.values():
-                mixed.extend(recs)
-            continue
-
-        # per-language caps
-        cfg = _dataset_cfg(dataset)
-        stratify_by  = cfg.get("stratify_by")
-        subject_caps = cfg.get("subject_caps", {})
-
-        dataset_pool: List[Dict] = []
-        for language, records in lang_pools.items():
             cap = _max_per_language(dataset, language, global_max_per_language)
             if stratify_by:
-                sampled = _stratified_sample(
-                    records, stratify_by, subject_caps, cap, rng
-                )
+                sampled = _stratified_sample(records, stratify_by, subject_caps, cap, rng)
             else:
                 sampled = records[:cap]
             dataset_pool.extend(sampled)
 
-        # dataset cap
-        ds_cap = _max_per_dataset(dataset, split, global_max_per_dataset)
-        rng.shuffle(dataset_pool)
-        mixed.extend(dataset_pool[:ds_cap])
+        if not dataset_pool:
+            continue
+
+        if not debug:
+            ds_cap = _split_cap(dataset, split, global_max_per_dataset)
+            rng.shuffle(dataset_pool)
+            dataset_pool = dataset_pool[:ds_cap]
+
+        mixed.extend(dataset_pool)
 
     if not debug and max_per_language_mixed is not None:
-        # Final language balancing: cap each language's contribution
         by_lang: Dict[str, List[Dict]] = defaultdict(list)
         for r in mixed:
             by_lang[r["language"]].append(r)
-
         balanced: List[Dict] = []
         for lang, records in by_lang.items():
             rng.shuffle(records)
@@ -440,12 +445,12 @@ def _build_mixed(
     rng.shuffle(mixed)
     return mixed
 
-
 # ---------------------------------------------------------------------------
 # Main build
 # ---------------------------------------------------------------------------
 
 def build(
+    output_dir: Path,
     max_per_language: int,
     max_per_dataset: int,
     max_per_language_mixed: Optional[int],
@@ -453,57 +458,62 @@ def build(
     overwrite: bool,
     hf_token: str,
 ) -> None:
-    per_dir   = SFT_DATA_DIR / "per_dataset"
-    mixed_dir = SFT_DATA_DIR / "mixed"
+    per_dir   = output_dir / "per_dataset"
+    mixed_dir = output_dir / "mixed"
     rng       = random.Random(SHUFFLE_SEED)
     summary_rows: List[Dict] = []
 
-    # step 1: per-dataset/language files (full, no caps)
-    for dataset, cfg in DATASET_REGISTRY.items():
+    # Step 1: per-dataset/language files
+    for dataset in DATASET_REGISTRY:
         for language in _languages(dataset):
-            split_records: Dict[str, List[Dict]] = {}
+            print(f"\n── {dataset}/{language} ──")
 
-            for split in ("train", "val"):
-                if debug:
-                    n_cap = DEBUG_MAX_TRAIN if split == "train" else DEBUG_MAX_VAL
-                else:
-                    n_cap = None  # load full data; caps applied in _build_mixed
-                print(f"Loading {dataset}/{language}/{split} ...")
+            if _is_recarve(dataset):
+                # Single HF download → both val and test
+                n_val  = _split_cap(dataset, "val",  max_per_dataset)
+                n_test = _split_cap(dataset, "test", max_per_dataset)
+                n_val  = None if n_val  >= 10_000_000 else n_val
+                n_test = None if n_test >= 10_000_000 else n_test
+
                 try:
-                    examples = _load_examples(dataset, language, split, n_cap, hf_token)
+                    split_records = _load_recarved(dataset, language, n_val, n_test)
                 except Exception as e:
-                    print(f"  [SKIP] {e}")
-                    split_records[split] = []
+                    print(f"  [SKIP recarve] {e}")
                     continue
+            else:
+                # Normal per-split loading
+                active = [s for s in ALL_SPLITS if _split_enabled(dataset, s)]
+                raw: Dict[str, List[Dict]] = {}
 
-                if not examples:
-                    print(f"  [SKIP] empty")
-                    split_records[split] = []
-                    continue
+                for split in active:
+                    n_cap = DEBUG_MAX if debug else None
+                    print(f"  Loading {split} ...")
+                    try:
+                        examples = _load_examples(dataset, language, split, n_cap, hf_token)
+                    except Exception as e:
+                        print(f"  [SKIP] {e}")
+                        raw[split] = []
+                        continue
+                    if not examples:
+                        print(f"  [SKIP] empty")
+                        raw[split] = []
+                        continue
+                    records = _dedupe(_to_records(examples, split))
+                    raw[split] = records
 
-                records = [_to_sft_record(ex, split, i) for i, ex in enumerate(examples)]
+                # Remove train overlap with val + test
+                if raw.get("train"):
+                    others = [v for k, v in raw.items() if k != "train" and v]
+                    before = len(raw["train"])
+                    raw["train"] = _remove_train_overlap(raw["train"], others)
+                    removed = before - len(raw["train"])
+                    if removed:
+                        print(f"  Removed {removed} train/eval overlaps")
 
-                before = len(records)
-                records = _dedupe(records)
-                if len(records) < before:
-                    print(f"  Deduped {before - len(records)} rows")
+                split_records = {k: v for k, v in raw.items() if v}
 
-                split_records[split] = records
-
-            # remove train/val overlap
-            if split_records.get("train") and split_records.get("val"):
-                before = len(split_records["train"])
-                split_records["train"] = _remove_overlap(
-                    split_records["train"], split_records["val"]
-                )
-                removed = before - len(split_records["train"])
-                if removed:
-                    print(f"  Removed {removed} train/val overlaps from {dataset}/{language}")
-
-            for split in ("train", "val"):
-                records = split_records.get(split, [])
-                if not records:
-                    continue
+            # Write per-dataset files
+            for split, records in split_records.items():
                 records = _reindex(records, split)
                 out_path = per_dir / f"{dataset}_{language}_{split}.jsonl"
                 if _write_jsonl(records, out_path, overwrite):
@@ -512,18 +522,34 @@ def build(
                         "split": split, "n": len(records), "path": str(out_path),
                     })
 
-    # step 2: mixed files
-    for split in ("train", "val"):
-        cap = max_per_language_mixed if split == "train" else DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL
+    # Step 2: mixed files
+    produced_splits = set()
+    for dataset in DATASET_REGISTRY:
+        for split in ALL_SPLITS:
+            if _split_enabled(dataset, split):
+                produced_splits.add(split)
+
+    for split in ALL_SPLITS:
+        if split not in produced_splits:
+            continue
+        if split == "train":
+            lang_cap = max_per_language_mixed
+        elif split == "val":
+            lang_cap = DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL
+        else:
+            lang_cap = None  # no cap on test mixed
+
         mixed = _build_mixed(
             per_dir=per_dir,
             split=split,
             global_max_per_language=max_per_language,
             global_max_per_dataset=max_per_dataset,
-            max_per_language_mixed=cap,
+            max_per_language_mixed=lang_cap,
             rng=rng,
             debug=debug,
         )
+        if not mixed:
+            continue
         mixed_path = mixed_dir / f"{split}_mixed.jsonl"
         if _write_jsonl(mixed, mixed_path, overwrite):
             summary_rows.append({
@@ -531,8 +557,8 @@ def build(
                 "split": split, "n": len(mixed), "path": str(mixed_path),
             })
 
-    # step 3: summary CSV
-    summary_path = SFT_DATA_DIR / "build_summary.csv"
+    # Step 3: summary CSV
+    summary_path = output_dir / "build_summary.csv"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     with open(summary_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["dataset", "language", "split", "n", "path"])
@@ -540,26 +566,29 @@ def build(
         writer.writerows(summary_rows)
     print(f"\nSummary: {summary_path}")
 
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--max_per_language",       type=int, default=DEFAULT_MAX_PER_LANGUAGE)
     parser.add_argument("--max_per_dataset",        type=int, default=DEFAULT_MAX_PER_DATASET)
-    parser.add_argument("--max_per_language_mixed", type=int, default=DEFAULT_MAX_PER_LANGUAGE_MIXED,
-        help="Final per-language cap in the mixed file. Set 0 to disable.")
+    parser.add_argument("--max_per_language_mixed", type=int, default=DEFAULT_MAX_PER_LANGUAGE_MIXED)
     parser.add_argument("--debug",     action="store_true")
     parser.add_argument("--overwrite", action="store_true")
-    parser.add_argument("--config", type=Path, default=None,
-    help="Optional JSON file overriding DATASET_REGISTRY and global caps.")
+    parser.add_argument("--config",    type=Path, default=None,
+                        help="JSON config overriding DATASET_REGISTRY and global caps.")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    
+
     max_per_language = args.max_per_language
     max_per_dataset  = args.max_per_dataset
     max_mixed        = args.max_per_language_mixed if args.max_per_language_mixed > 0 else None
+    output_dir       = DEFAULT_SFT_BASE_DIR
 
     if args.config:
         with open(args.config) as f:
@@ -567,18 +596,21 @@ def main():
         max_per_language = cfg.get("max_per_language", max_per_language)
         max_per_dataset  = cfg.get("max_per_dataset",  max_per_dataset)
         max_mixed        = cfg.get("max_per_language_mixed", max_mixed)
+        if output_name := cfg.get("output_name"):
+            output_dir = DEFAULT_SFT_BASE_DIR / output_name
         if "dataset_registry" in cfg:
             DATASET_REGISTRY.update(cfg["dataset_registry"])
 
     hf_token = os.environ.get("HF_TOKEN", "")
-    print(f"Debug:     {args.debug}  Overwrite: {args.overwrite}")
-    print(f"Config:    {args.config or 'default'}")
-    print(f"Caps:      max_per_language={max_per_language}, "
+    print(f"Debug:      {args.debug}  Overwrite: {args.overwrite}")
+    print(f"Config:     {args.config or 'default'}")
+    print(f"Output dir: {output_dir}")
+    print(f"Caps:       max_per_language={max_per_language}, "
           f"max_per_dataset={max_per_dataset}, "
-          f"max_per_language_mixed={max_mixed}")
-    print(f"Output:    {SFT_DATA_DIR}\n")
+          f"max_per_language_mixed={max_mixed}\n")
 
     build(
+        output_dir=output_dir,
         max_per_language=max_per_language,
         max_per_dataset=max_per_dataset,
         max_per_language_mixed=max_mixed,

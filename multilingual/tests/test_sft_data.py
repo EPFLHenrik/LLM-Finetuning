@@ -11,7 +11,6 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
-
 import pytest
 
 # ---------------------------------------------------------------------------
@@ -20,6 +19,7 @@ import pytest
 
 MULTILINGUAL_DIR = Path(__file__).parents[1]
 SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft"
+# SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft" / "v7"
 REPO_DIR         = MULTILINGUAL_DIR.parent
 
 sys.path.insert(0, str(REPO_DIR))
@@ -29,14 +29,14 @@ from evaluate.extract_answer import extract_boxed_answer, last_boxed_only_string
 # Constants
 # ---------------------------------------------------------------------------
 
-REQUIRED_FIELDS  = {
+REQUIRED_FIELDS = {
     "id", "source_id", "loader_id", "dataset", "language", "split",
     "task_type", "messages", "answer", "metadata",
 }
-VALID_SPLITS      = {"train", "val"}
-VALID_TASK_TYPES  = {"mcq", "math"}
-VALID_ROLES       = ["system", "user", "assistant"]
-MCQ_ANSWER_RE     = re.compile(r"^[A-Z]$")
+VALID_SPLITS     = {"train", "val", "test"}   # test added for include/global_piqa
+VALID_TASK_TYPES = {"mcq", "math"}
+VALID_ROLES      = ["system", "user", "assistant"]
+MCQ_ANSWER_RE    = re.compile(r"^[A-Z]$")
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -67,7 +67,6 @@ def _summary_rows():
 
 
 def _ends_with_boxed(text: str) -> bool:
-    """Check text ends exactly with its last \\boxed{...} expression."""
     boxed_expr = last_boxed_only_string(text)
     if boxed_expr is None:
         return False
@@ -89,7 +88,6 @@ def _check_loader_id(records):
     for r in records:
         assert r.get("loader_id"), f"loader_id missing or empty in {r['id']}"
         assert r.get("source_id"), f"source_id missing or empty in {r['id']}"
-        # source_id is hash-based so we only check it's a non-empty string
         assert isinstance(r["source_id"], str) and len(r["source_id"]) > 0
 
 
@@ -107,34 +105,25 @@ def _check_messages(records):
 def _check_assistant_format(records):
     for r in records:
         assistant = r["messages"][2]["content"].strip()
-
-        # no placeholder reasoning blocks in first SFT baseline
         assert "<think>" not in assistant and "</think>" not in assistant, \
             f"Unexpected <think> block in {r['id']}"
-
-        # exactly one \boxed{} in the whole message
         all_boxed = re.findall(r"\\boxed\{", assistant)
         assert len(all_boxed) == 1, \
             f"Expected 1 \\boxed{{}}, found {len(all_boxed)} in {r['id']}"
-
-        # entire assistant message should be exactly the boxed expression
         boxed_expr = last_boxed_only_string(assistant)
         assert boxed_expr is not None, f"No boxed expression in {r['id']}"
         assert assistant == boxed_expr, \
             f"Assistant message should be exactly boxed answer in {r['id']}: '{assistant}'"
-
-        # boxed answer must be on the only/last line
         last_line = assistant.split("\n")[-1].strip()
         assert last_line == boxed_expr, \
             f"Last line is not exactly the boxed expression in {r['id']}: '{last_line}'"
-        
-        
+
+
 def _check_answer_normalization(records):
     for r in records:
         assistant = r["messages"][2]["content"]
         boxed = extract_boxed_answer(assistant)
         assert boxed is not None, f"No boxed answer in {r['id']}"
-
         if r["task_type"] == "mcq":
             assert MCQ_ANSWER_RE.match(str(r["answer"])), \
                 f"Bad MCQ answer field '{r['answer']}' in {r['id']}"
@@ -159,6 +148,7 @@ def test_per_dataset_files_exist():
 def test_mixed_files_exist():
     for split in ("train", "val"):
         assert _mixed_file(split).exists(), f"Missing: {split}_mixed.jsonl"
+    # test mixed is optional — only produced when at least one dataset has test split_caps
 
 
 def test_summary_csv_exists():
@@ -221,14 +211,14 @@ def test_no_empty_per_dataset_files():
 
 
 # ---------------------------------------------------------------------------
-# Train/val overlap (per-dataset)
+# Train/val overlap (per-dataset) — test split excluded, it's eval-only
 # ---------------------------------------------------------------------------
 
 def test_no_train_val_overlap_per_dataset():
     by_key: dict = defaultdict(lambda: {"train": set(), "val": set()})
     for path in _all_per_dataset_files():
         split = path.stem.rsplit("_", 1)[-1]
-        if split not in VALID_SPLITS:
+        if split not in {"train", "val"}:  # skip test split
             continue
         for r in _load_jsonl(path):
             by_key[(r["dataset"], r["language"])][split].add(r["source_id"])
@@ -239,7 +229,7 @@ def test_no_train_val_overlap_per_dataset():
 
 
 # ---------------------------------------------------------------------------
-# Summary CSV consistency (per-dataset and mixed)
+# Summary CSV consistency
 # ---------------------------------------------------------------------------
 
 def test_summary_counts_match_files():
@@ -253,54 +243,54 @@ def test_summary_counts_match_files():
 
 
 # ---------------------------------------------------------------------------
-# Mixed file checks
+# Mixed file checks — parametrized over all three splits, test skips if absent
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_schema(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     _check_schema(_load_jsonl(path), path)
 
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_loader_ids(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     _check_loader_id(_load_jsonl(path))
 
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_messages(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     _check_messages(_load_jsonl(path))
 
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_assistant_format(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     _check_assistant_format(_load_jsonl(path))
 
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_answer_normalization(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     _check_answer_normalization(_load_jsonl(path))
 
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_split_label_consistent(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     for r in _load_jsonl(path):
         assert r["split"] == split, \
             f"Row {r['id']} has split='{r['split']}' in {split}_mixed.jsonl"
@@ -324,13 +314,12 @@ def test_mixed_no_train_val_overlap():
 
 
 def test_mixed_counts_match_summary():
-    """Mixed file line counts must match build_summary.csv."""
     summary = {
         (row["dataset"], row["split"]): int(row["n"])
         for row in _summary_rows()
         if row["dataset"] == "mixed"
     }
-    for split in ("train", "val"):
+    for split in ("train", "val", "test"):
         path = _mixed_file(split)
         if not path.exists():
             continue
@@ -345,28 +334,32 @@ def test_mixed_counts_match_summary():
 # Distribution checks
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_multiple_datasets(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     datasets = {r["dataset"] for r in _load_jsonl(path)}
-    assert len(datasets) >= 3, f"Mixed {split} only has: {datasets}"
+    # test mixed is eval-only (include + global_piqa), so threshold is lower
+    min_datasets = 2 if split == "test" else 3
+    assert len(datasets) >= min_datasets, f"Mixed {split} only has: {datasets}"
 
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_multiple_languages(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     languages = {r["language"] for r in _load_jsonl(path)}
-    assert len(languages) >= 3, f"Mixed {split} only has: {languages}"
+    # test mixed may cover fewer languages depending on eval datasets
+    min_languages = 2 if split == "test" else 3
+    assert len(languages) >= min_languages, f"Mixed {split} only has: {languages}"
 
 
-@pytest.mark.parametrize("split", ["train", "val"])
+@pytest.mark.parametrize("split", ["train", "val", "test"])
 def test_mixed_no_unexpected_split_labels(split):
     path = _mixed_file(split)
     if not path.exists():
-        pytest.skip()
+        pytest.skip(f"No {split}_mixed.jsonl (optional)")
     bad = {r["split"] for r in _load_jsonl(path)} - VALID_SPLITS
     assert not bad, f"Unexpected split labels in mixed {split}: {bad}"

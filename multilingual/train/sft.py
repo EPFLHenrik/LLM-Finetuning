@@ -2,19 +2,33 @@
 
 LoRA SFT training using TRL SFTTrainer + SFTConfig (TRL 1.3.0).
 
+Chat template:
+  --chat_template <path>   use a custom .jinja file
+  (default)                multilingual/assets/chat_template.jinja
+
+The resolved template is applied to the tokenizer before training and
+saved to every checkpoint dir and to best_adapter/ after training.
+
 Usage:
     # Debug run
     python -m multilingual.train.sft \
         --run_name debug_run \
         --max_steps 20 --eval_steps 10 --save_steps 10 --log_steps 1 --skip_wandb
+
     # Full run
-    python -m multilingual.train.sft --run_name my_run
+    python -m multilingual.train.sft --run_name sft_v7
+
+    # Custom chat template
+    python -m multilingual.train.sft --run_name sft_v7 \
+        --chat_template path/to/custom.jinja
 """
 
 from __future__ import annotations
+
 import argparse
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -22,7 +36,7 @@ import torch
 import wandb
 from datasets import Dataset
 from peft import LoraConfig, TaskType
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainerCallback
 from trl import SFTConfig, SFTTrainer
 
 REPO = Path(__file__).resolve().parents[2]
@@ -37,13 +51,16 @@ from multilingual.config import REPO as MLREPO
 BASE_MODEL    = "Qwen/Qwen3-1.7B"
 WANDB_PROJECT = "MNLP-Multilingual"
 
+DEFAULT_TEMPLATE   = MLREPO / "multilingual" / "assets" / "chat_template.jinja"
+CHECKPOINT_TEMPLATE_NAME = "chat_template.jinja"
+
 SFT_DATA_DIR       = MLREPO / "multilingual" / "data" / "sft"
 DEFAULT_TRAIN_FILE = SFT_DATA_DIR / "mixed" / "train_mixed.jsonl"
 DEFAULT_VAL_FILE   = SFT_DATA_DIR / "mixed" / "val_mixed.jsonl"
 
 LORA_R              = 16
 LORA_ALPHA          = 32
-LORA_DROPOUT        = 0.05 #
+LORA_DROPOUT        = 0.05
 LORA_TARGET_MODULES = [
     "q_proj", "k_proj", "v_proj", "o_proj",
     "gate_proj", "up_proj", "down_proj",
@@ -58,6 +75,29 @@ DEFAULT_MAX_SEQ_LEN  = 4096
 DEFAULT_SAVE_STEPS   = 100
 DEFAULT_EVAL_STEPS   = 100
 DEFAULT_LOG_STEPS    = 10
+
+
+# ---------------------------------------------------------------------------
+# Chat template
+# ---------------------------------------------------------------------------
+
+def _save_template_to_checkpoint(template_path: Path, checkpoint_dir: Path) -> None:
+    """Copy the chat template into a checkpoint directory."""
+    dst = checkpoint_dir / CHECKPOINT_TEMPLATE_NAME
+    shutil.copy2(template_path, dst)
+
+
+class SaveTemplateCallback(TrainerCallback):
+    """Saves the chat template file into every checkpoint directory."""
+
+    def __init__(self, template_path: Path) -> None:
+        self.template_path = template_path
+
+    def on_save(self, args, state, control, **kwargs):  # type: ignore[override]
+        # Always save to the checkpoint currently being written
+        ckpt_dir = Path(args.output_dir or "") / f"checkpoint-{state.global_step}"
+        if ckpt_dir.exists():
+            _save_template_to_checkpoint(self.template_path, ckpt_dir)
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +124,10 @@ def parse_args():
     parser.add_argument("--train_file", type=Path, default=DEFAULT_TRAIN_FILE)
     parser.add_argument("--val_file",   type=Path, default=DEFAULT_VAL_FILE)
     parser.add_argument("--output_dir", type=Path, default=None)
+    parser.add_argument(
+        "--chat_template", type=Path, default=DEFAULT_TEMPLATE,
+        help=f"Path to .jinja chat template. Default: assets/chat_template.jinja",
+    )
     parser.add_argument("--epochs",       type=int,   default=DEFAULT_EPOCHS)
     parser.add_argument("--batch_size",   type=int,   default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--grad_accum",   type=int,   default=DEFAULT_GRAD_ACCUM)
@@ -98,7 +142,7 @@ def parse_args():
     parser.add_argument("--log_steps",    type=int,   default=DEFAULT_LOG_STEPS)
     parser.add_argument("--per_device_eval_batch_size", type=int, default=4)
     parser.add_argument("--max_steps",    type=int,   default=-1,
-                        help="Override epochs. Use with small values for debug runs.")
+                        help="Override epochs. Use small values for debug runs.")
     parser.add_argument("--wandb_project", type=str, default=WANDB_PROJECT)
     parser.add_argument("--wandb_entity",  type=str, default=None)
     parser.add_argument("--skip_wandb",    action="store_true")
@@ -106,33 +150,43 @@ def parse_args():
 
 
 # ---------------------------------------------------------------------------
-# Main
+# Helpers
 # ---------------------------------------------------------------------------
 
 def _disable_peft_bnb_dispatch() -> None:
     """Prevent PEFT from importing bitsandbytes when not quantizing."""
     try:
         import peft.tuners.lora.model as lora_model
-        lora_model.is_bnb_available = lambda: False
-        lora_model.is_bnb_4bit_available = lambda: False
+        lora_model.is_bnb_available      = lambda: False  # type: ignore[attr-defined]
+        lora_model.is_bnb_4bit_available = lambda: False  # type: ignore[attr-defined]
         print("[info] Disabled PEFT bitsandbytes dispatch.")
     except Exception as e:
         print(f"[warn] Could not disable PEFT bitsandbytes dispatch: {e}")
 
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
 def main():
     args = parse_args()
 
     # save_steps must equal eval_steps for load_best_model_at_end to work
     if args.save_steps != args.eval_steps:
-        print(f"[warn] save_steps ({args.save_steps}) != eval_steps ({args.eval_steps}). "
-              f"Setting save_steps = eval_steps = {args.eval_steps}.")
+        print(f"[warn] save_steps ({args.save_steps}) != eval_steps "
+              f"({args.eval_steps}). Setting both to {args.eval_steps}.")
         args.save_steps = args.eval_steps
 
     output_dir = args.output_dir or (
         MLREPO / "multilingual" / "results" / "checkpoints" / args.run_name
     )
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Resolve and validate chat template
+    template_path = args.chat_template
+    if not template_path.exists():
+        raise FileNotFoundError(f"Chat template not found: {template_path}")
+    print(f"[info] Chat template: {template_path}")
 
     if not args.skip_wandb:
         wandb.init(
@@ -142,13 +196,16 @@ def main():
             config=vars(args),
         )
 
-    hf_token = os.environ.get("HF_TOKEN", "")
+    hf_token  = os.environ.get("HF_TOKEN", "")
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, token=hf_token)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
     tokenizer.padding_side = "right"
 
-    # formatting_func defined here to capture tokenizer without a global
+    # Apply chat template to tokenizer
+    tokenizer.chat_template = template_path.read_text(encoding="utf-8")
+    print("[info] Chat template applied to tokenizer.")
+
     def formatting_func(example: dict) -> str:
         return tokenizer.apply_chat_template(
             example["messages"],
@@ -156,7 +213,6 @@ def main():
             add_generation_prompt=False,
         )
 
-    # Debug: print one formatted example to verify template output
     train_dataset = _load_jsonl(args.train_file)
     val_dataset   = _load_jsonl(args.val_file)
     print(f"Train: {len(train_dataset)} | Val: {len(val_dataset)}")
@@ -165,10 +221,8 @@ def main():
     print("--------------------------------\n")
 
     model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL,
-        dtype=torch.bfloat16,
-        device_map="auto",
-        token=hf_token,
+        BASE_MODEL, dtype=torch.bfloat16,
+        device_map="auto", token=hf_token,
     )
     model.config.use_cache = False
 
@@ -212,7 +266,6 @@ def main():
         eval_on_start=True,
         seed=42,
         data_seed=42,
-        # SFTConfig-specific
         max_length=args.max_seq_len,
         packing=False,
         assistant_only_loss=True,
@@ -228,14 +281,19 @@ def main():
         formatting_func=formatting_func,
         peft_config=lora_config,
         processing_class=tokenizer,
+        callbacks=[SaveTemplateCallback(template_path)],
     )
 
     trainer.train()
 
+    # Save best adapter + tokenizer + chat template
     best_adapter_dir = output_dir / "best_adapter"
-    trainer.model.save_pretrained(best_adapter_dir)
+    peft_model = trainer.model  # type: ignore[union-attr]
+    peft_model.save_pretrained(best_adapter_dir)  # type: ignore[operator]
     tokenizer.save_pretrained(best_adapter_dir)
+    _save_template_to_checkpoint(template_path, best_adapter_dir)
     print(f"Best adapter saved: {best_adapter_dir}")
+    print(f"Chat template saved: {best_adapter_dir / CHECKPOINT_TEMPLATE_NAME}")
 
     if not args.skip_wandb:
         wandb.finish()
