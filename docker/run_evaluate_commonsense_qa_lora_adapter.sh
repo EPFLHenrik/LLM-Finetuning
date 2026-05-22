@@ -76,7 +76,7 @@ runai submit \
       --checkpoints-dir \"${CHECKPOINTS_DIR}\" \
       --validation-file \"${VALIDATION_FILE}\" \
       --output-dir \"${OUTPUT_DIR}\" \
-      --max-new-tokens 512 \
+      --max-new-tokens 16000 \
       --temperature 0.0 \
       --top-p 0.95 \
       --wandb-key "${WANDB_KEY}" \
