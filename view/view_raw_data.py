@@ -6,7 +6,7 @@ from datetime import datetime
 import re
 from constants.global_variables import DatasetFieldNames
 
-from datasets import load_from_disk
+from datasets import Dataset, DatasetDict, concatenate_datasets, load_from_disk
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--ds", required=True, help="Path to the dataset directory")
@@ -55,7 +55,37 @@ def emit(text: str, file_text: str | None = None) -> None:
 
 
 raw_dir = Path(args.ds)
-dataset = load_from_disk(raw_dir)
+
+
+def load_dataset_with_fallback(dataset_dir: Path) -> Dataset:
+    try:
+        loaded = load_from_disk(dataset_dir)
+    except ValueError as exc:
+        # Some local dataset_info.json files can get out of sync with arrow shards.
+        msg = str(exc)
+        if "Keys mismatch" not in msg:
+            raise
+
+        arrow_files = sorted(dataset_dir.glob("data-*.arrow"))
+        if not arrow_files:
+            raise
+
+        shards = [Dataset.from_file(str(arrow_file)) for arrow_file in arrow_files]
+        if len(shards) == 1:
+            return shards[0]
+        return concatenate_datasets(shards)
+
+    if isinstance(loaded, DatasetDict):
+        split_names = list(loaded.keys())
+        if not split_names:
+            raise ValueError(f"DatasetDict at {dataset_dir} has no splits.")
+        # Preserve previous single-dataset behavior by selecting the first split.
+        return loaded[split_names[0]]
+
+    return loaded
+
+
+dataset = load_dataset_with_fallback(raw_dir)
 # shuffle the dataset to get a random sample of rows
 if args.shuffle:
     dataset = dataset.shuffle(seed=42)

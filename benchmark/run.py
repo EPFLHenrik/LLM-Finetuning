@@ -7,7 +7,7 @@ import json
 import os
 import torch
 import tqdm
-from evaluate.score import main as evaluate_score
+from evaluate.score import main as evaluate_score, score_generations
 from pathlib import Path
 from prompts.system_prompt import SYSTEM_PROMPT_MCQ
 
@@ -41,6 +41,9 @@ TABLE_COLUMNS = [
     "pass@1_among_extracted",
     "results_path",
 ]
+
+SAFETYBENCH_CATEGORY_FIELD = "category"
+SAFETYBENCH_NUM_OPTIONS_FIELD = "num_options"
 
 
 def infer_model_name(checkpoint_path: str, override_name: str | None = None) -> str:
@@ -135,6 +138,56 @@ def build_output_path(
     return output_dir / jsonl_filename
 
 
+def load_jsonl_rows(jsonl_path: Path) -> list[dict]:
+    rows: list[dict] = []
+    with open(jsonl_path, "r", encoding="utf-8") as f:
+        for line_no, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"Invalid JSONL at {jsonl_path}:{line_no}: {exc}") from exc
+    return rows
+
+
+def compute_safetybench_grouped_metrics(generations_path: Path) -> dict:
+    items = load_jsonl_rows(generations_path)
+
+    by_category: dict[str, list[dict]] = {}
+    by_num_options: dict[str, list[dict]] = {}
+
+    for item in items:
+        category_value = str(item.get(SAFETYBENCH_CATEGORY_FIELD, "UNKNOWN"))
+        num_options_value = str(item.get(SAFETYBENCH_NUM_OPTIONS_FIELD, "UNKNOWN"))
+        by_category.setdefault(category_value, []).append(item)
+        by_num_options.setdefault(num_options_value, []).append(item)
+
+    grouped_payload = {
+        "by_category": {},
+        "by_num_options": {},
+    }
+
+    for category, group_items in sorted(by_category.items()):
+        result = score_generations(group_items, method="boxed")
+        grouped_payload["by_category"][category] = {
+            "n_problems": result["n_problems"],
+            "n_completions": result["n_completions"],
+            "metrics": result["metrics"],
+        }
+
+    for num_options, group_items in sorted(by_num_options.items(), key=lambda kv: kv[0]):
+        result = score_generations(group_items, method="boxed")
+        grouped_payload["by_num_options"][num_options] = {
+            "n_problems": result["n_problems"],
+            "n_completions": result["n_completions"],
+            "metrics": result["metrics"],
+        }
+
+    return grouped_payload
+
+
 def run_single_benchmark(
     benchmark_name: str,
     benchmark_root: Path,
@@ -158,7 +211,7 @@ def run_single_benchmark(
         run_name_override=args.name,
     )
 
-    print("\\n" + "=" * 50)
+    print("\n" + "=" * 50)
     print(f"Running benchmark: {benchmark_name}")
     print(f"Dataset path: {dataset_path}")
     print(f"Saving outputs to: {output_path}")
@@ -195,6 +248,8 @@ def run_single_benchmark(
         metadata_list.append({
             "input": prompt_text,
             "answer": answer_text,
+            SAFETYBENCH_CATEGORY_FIELD: row_dict.get(SAFETYBENCH_CATEGORY_FIELD),
+            SAFETYBENCH_NUM_OPTIONS_FIELD: row_dict.get(SAFETYBENCH_NUM_OPTIONS_FIELD),
         })
 
     print(f"Generating outputs for {len(prompts_list)} examples...")
@@ -231,7 +286,11 @@ def run_single_benchmark(
                 DatasetFieldNames.BENCHMARK_COMPLETIONS: [completion],
                 DatasetFieldNames.BENCHMARK_ANSWER: metadata["answer"],
             }
-            f.write(json.dumps(output_row, ensure_ascii=False) + "\\n")
+            if metadata.get(SAFETYBENCH_CATEGORY_FIELD) is not None:
+                output_row[SAFETYBENCH_CATEGORY_FIELD] = metadata[SAFETYBENCH_CATEGORY_FIELD]
+            if metadata.get(SAFETYBENCH_NUM_OPTIONS_FIELD) is not None:
+                output_row[SAFETYBENCH_NUM_OPTIONS_FIELD] = metadata[SAFETYBENCH_NUM_OPTIONS_FIELD]
+            f.write(json.dumps(output_row, ensure_ascii=False) + "\n")
 
     print("Generation complete. Evaluating the outputs...")
     eval_argv = [
@@ -242,6 +301,16 @@ def run_single_benchmark(
     evaluate_score(eval_argv)
 
     results_path = Path(eval_argv[-1])
+    benchmark_suite, benchmark_subcategory = split_benchmark_name(benchmark_name)
+
+    if benchmark_suite == "safetybench":
+        grouped_metrics = compute_safetybench_grouped_metrics(output_path)
+        with open(results_path, "r", encoding="utf-8") as f:
+            results_payload = json.load(f)
+        results_payload["safetybench_grouped_metrics"] = grouped_metrics
+        with open(results_path, "w", encoding="utf-8") as f:
+            json.dump(results_payload, f, ensure_ascii=False, indent=2)
+        print(f"Added safetybench grouped metrics to: {results_path}")
 
     if not args.skip_wandb:
         if not HAS_WANDB:
@@ -251,7 +320,6 @@ def run_single_benchmark(
             results_payload = json.load(f)
 
         metrics = results_payload.get("metrics", {})
-        benchmark_suite, benchmark_subcategory = split_benchmark_name(benchmark_name)
         model_name = infer_model_name(checkpoint_path, args.name)
 
         row = {
@@ -289,6 +357,7 @@ def run_single_benchmark(
             name=run_name,
             group=f"benchmark/{model_name}",
             job_type="benchmark_eval",
+            reinit=True,
             config={
                 "benchmark": benchmark_name,
                 "model_name": model_name,
@@ -325,7 +394,8 @@ def main() -> None:
     parser.add_argument("--benchmark", type=str, default=None, help="Name of the benchmark to run. Ignored when --run_all is set.")
     parser.add_argument("--run_all", action="store_true", help="Run all benchmark dataset folders containing .arrow files under data/processed/benchmarks/ (with fallback to data/processed/benchmark/).")
     parser.add_argument("--limit", type=int, default=None, help="Limit the number of examples to run (for testing)")
-    parser.add_argument("--think", action="store_true", help="Whether to use think mode for the model. (default: False)")
+    parser.set_defaults(think=True)
+    parser.add_argument("--no_think", action="store_false", dest="think", help="Disable think mode for the model. (default: think mode enabled)")
     parser.add_argument("--name", type=str, default=None, help="Optional name to include in the output filename for easier identification. If not set, defaults to using the checkpoint name.")
 
     default_hf_home = Path(os.environ.get("HF_HOME", "/scratch/hf_cache"))
@@ -441,18 +511,33 @@ def main() -> None:
 
     print(f"Runtime device: {runtime_device}")
 
+    failures: list[tuple[str, str]] = []
     for benchmark_name in benchmark_names:
-        run_single_benchmark(
-            benchmark_name=benchmark_name,
-            benchmark_root=benchmark_root,
-            args=args,
-            tokenizer=tokenizer,
-            model=model,
-            llm=llm,
-            sampling_params=sampling_params,
-            checkpoint_path=checkpoint_path,
-            think_mode=think_mode,
-        )
+        try:
+            run_single_benchmark(
+                benchmark_name=benchmark_name,
+                benchmark_root=benchmark_root,
+                args=args,
+                tokenizer=tokenizer,
+                model=model,
+                llm=llm,
+                sampling_params=sampling_params,
+                checkpoint_path=checkpoint_path,
+                think_mode=think_mode,
+            )
+        except Exception as exc:
+            if not args.run_all:
+                raise
+            failures.append((benchmark_name, str(exc)))
+            print(f"[warn] Benchmark failed and will be skipped: {benchmark_name}")
+            print(f"[warn] Reason: {exc}")
+
+    if failures:
+        print("\n" + "=" * 50)
+        print(f"Completed with {len(failures)} benchmark failure(s):")
+        for benchmark_name, reason in failures:
+            print(f"  - {benchmark_name}: {reason}")
+        print("=" * 50)
 
 
 if __name__ == "__main__":
