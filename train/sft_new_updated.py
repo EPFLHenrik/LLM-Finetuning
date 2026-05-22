@@ -48,9 +48,10 @@ BASE_MODEL = "Qwen/Qwen3-1.7B"
 
 # Simple, conservative defaults.
 DEFAULT_EPOCHS = 3
-DEFAULT_BATCH_SIZE = 8
+DEFAULT_BATCH_SIZE = 1
 DEFAULT_LR = 2e-4
 DEFAULT_WARMUP_RATIO = 0.05
+DEFAULT_GRADIENT_ACCUMULATION_STEPS = 16
 
 # LoRA defaults (gold-standard starter values for 1-2B models).
 LORA_R = 16
@@ -68,36 +69,68 @@ LORA_TARGET_MODULES = [
 
 
 class HomogeneousBatchSampler(Sampler[list[int]]):
-    """Batch sampler that keeps each batch within a single dataset partition."""
+    """Batch sampler that keeps each optimizer update within one dataset partition."""
 
-    def __init__(self, dataset_sizes: list[int], batch_size: int, seed: int):
+    def __init__(
+        self,
+        dataset_sizes: list[int],
+        batch_size: int,
+        gradient_accumulation_steps: int,
+        seed: int,
+    ):
         self.dataset_sizes = dataset_sizes
         self.batch_size = batch_size
+        self.gradient_accumulation_steps = gradient_accumulation_steps
         self.seed = seed
         self._iter_count = 0
+        self._update_end_flags: list[bool] = []
 
     def __len__(self) -> int:
         return sum(math.ceil(size / self.batch_size) for size in self.dataset_sizes)
+
+    def optimizer_steps_per_epoch(self) -> int:
+        micro_batches_per_update = self.batch_size * self.gradient_accumulation_steps
+        return sum(math.ceil(size / micro_batches_per_update) for size in self.dataset_sizes)
+
+    def update_ends_at(self, batch_idx: int) -> bool:
+        if batch_idx < 0 or batch_idx >= len(self._update_end_flags):
+            return False
+        return self._update_end_flags[batch_idx]
 
     def __iter__(self):
         rng = random.Random(self.seed + self._iter_count)
         self._iter_count += 1
 
-        batches: list[list[int]] = []
+        update_blocks: list[list[list[int]]] = []
         offset = 0
         for size in self.dataset_sizes:
             dataset_indices = list(range(offset, offset + size))
             rng.shuffle(dataset_indices)
 
+            micro_batches: list[list[int]] = []
             for start in range(0, size, self.batch_size):
-                batch = dataset_indices[start : start + self.batch_size]
-                if batch:
-                    batches.append(batch)
+                micro_batch = dataset_indices[start : start + self.batch_size]
+                if micro_batch:
+                    micro_batches.append(micro_batch)
+
+            for start in range(0, len(micro_batches), self.gradient_accumulation_steps):
+                update_block = micro_batches[start : start + self.gradient_accumulation_steps]
+                if update_block:
+                    update_blocks.append(update_block)
 
             offset += size
 
-        rng.shuffle(batches)
-        yield from batches
+        rng.shuffle(update_blocks)
+
+        flattened_batches: list[list[int]] = []
+        update_end_flags: list[bool] = []
+        for block in update_blocks:
+            for idx, micro_batch in enumerate(block):
+                flattened_batches.append(micro_batch)
+                update_end_flags.append(idx == len(block) - 1)
+
+        self._update_end_flags = update_end_flags
+        yield from flattened_batches
 
 
 def disable_peft_bitsandbytes_dispatch() -> None:
@@ -152,6 +185,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", type=str, default=None)
     parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+    parser.add_argument(
+        "--gradient-accumulation-steps",
+        type=int,
+        default=DEFAULT_GRADIENT_ACCUMULATION_STEPS,
+        help=(
+            "Number of micro-batches to accumulate before an optimizer step. "
+            "Updates are dataset-homogeneous: all accumulated samples come from one dataset."
+        ),
+    )
     parser.add_argument("--lr", type=float, default=DEFAULT_LR)
     parser.add_argument("--warmup-ratio", type=float, default=DEFAULT_WARMUP_RATIO)
     parser.add_argument(
@@ -408,7 +450,11 @@ def apply_test_size_caps(
     return resized_bundles
 
 
-def build_mixed_train_loader(bundles: list[DatasetBundle], seed: int) -> DataLoader:
+def build_mixed_train_loader(
+    bundles: list[DatasetBundle],
+    seed: int,
+    gradient_accumulation_steps: int,
+) -> DataLoader:
     if not bundles:
         raise ValueError("At least one dataset bundle is required for training.")
 
@@ -422,6 +468,7 @@ def build_mixed_train_loader(bundles: list[DatasetBundle], seed: int) -> DataLoa
     batch_sampler = HomogeneousBatchSampler(
         dataset_sizes=[bundle.train_size for bundle in bundles],
         batch_size=batch_size,
+        gradient_accumulation_steps=gradient_accumulation_steps,
         seed=seed,
     )
 
@@ -671,6 +718,8 @@ def copy_best_checkpoint(
 def train(args: argparse.Namespace) -> None:
     if args.batch_size <= 0:
         raise ValueError("--batch-size must be > 0")
+    if args.gradient_accumulation_steps <= 0:
+        raise ValueError("--gradient-accumulation-steps must be > 0")
     if args.train_sizes is not None and len(args.train_sizes) != len(args.datasets):
         raise ValueError("--train-sizes must have the same number of values as --datasets.")
     if args.test_sizes is not None and len(args.test_sizes) != len(args.datasets):
@@ -689,6 +738,8 @@ def train(args: argparse.Namespace) -> None:
     print(f"  Datasets             : {args.datasets}")
     print(f"  Train sizes          : {args.train_sizes}")
     print(f"  Batch size           : {args.batch_size}")
+    print(f"  Grad accumulation    : {args.gradient_accumulation_steps}")
+    print(f"  Effective update size: {args.batch_size * args.gradient_accumulation_steps}")
     print(f"  Device               : {device}")
     print(f"  Run name             : {run_name}")
     print(f"  Epoch checkpoints    : {epoch_root}")
@@ -720,8 +771,14 @@ def train(args: argparse.Namespace) -> None:
             allow_val_change=True,
         )
 
-    mixed_train_loader = build_mixed_train_loader(bundles, seed=Random.SEED)
-    total_optimizer_steps = max(1, len(mixed_train_loader) * args.epochs)
+    mixed_train_loader = build_mixed_train_loader(
+        bundles,
+        seed=Random.SEED,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+    )
+    batch_sampler = cast(HomogeneousBatchSampler, mixed_train_loader.batch_sampler)
+    optimizer_steps_per_epoch = max(1, batch_sampler.optimizer_steps_per_epoch())
+    total_optimizer_steps = max(1, optimizer_steps_per_epoch * args.epochs)
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
     scheduler = get_cosine_schedule_with_warmup(
@@ -739,15 +796,16 @@ def train(args: argparse.Namespace) -> None:
         model.train()
         running_loss = 0.0
         n_batches = 0
+        optimizer.zero_grad(set_to_none=True)
 
-        for batch in mixed_train_loader:
+        for batch_idx, batch in enumerate(mixed_train_loader):
             outputs = model(
                 input_ids=batch["input_ids"].to(device),
                 attention_mask=batch["attention_mask"].to(device),
                 labels=batch["labels"].to(device),
             )
             raw_loss = float(outputs.loss.item())
-            outputs.loss.backward()
+            (outputs.loss / args.gradient_accumulation_steps).backward()
 
             batch_samples = int(batch["input_ids"].shape[0])
             samples_seen += batch_samples
@@ -764,22 +822,23 @@ def train(args: argparse.Namespace) -> None:
                     commit=True,
                 )
 
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
-            scheduler.step()
-            optimizer.zero_grad()
-            global_step += 1
+            if batch_sampler.update_ends_at(batch_idx):
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+                scheduler.step()
+                optimizer.zero_grad(set_to_none=True)
+                global_step += 1
 
-            if wb_run is not None:
-                wb_run.log(
-                    {
-                        "other/global_step": global_step,
-                        "other/epoch": epoch,
-                        "other/samples_seen": samples_seen,
-                        "other/learning_rate": scheduler.get_last_lr()[0],
-                    },
-                    commit=True,
-                )
+                if wb_run is not None:
+                    wb_run.log(
+                        {
+                            "other/global_step": global_step,
+                            "other/epoch": epoch,
+                            "other/samples_seen": samples_seen,
+                            "other/learning_rate": scheduler.get_last_lr()[0],
+                        },
+                        commit=True,
+                    )
 
         train_running = running_loss / n_batches if n_batches else float("inf")
         print(f"train_running_loss={train_running:.4f}")
