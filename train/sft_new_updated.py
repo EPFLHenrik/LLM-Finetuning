@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import math
 import random
 import shutil
 from datetime import datetime
@@ -25,7 +26,7 @@ from typing import Any, cast
 import torch
 from peft import LoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
-from torch.utils.data import ConcatDataset, DataLoader, Dataset, Subset
+from torch.utils.data import ConcatDataset, DataLoader, Sampler, Subset
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 
 from constants.global_variables import DatasetFieldNames, Random
@@ -47,8 +48,7 @@ BASE_MODEL = "Qwen/Qwen3-1.7B"
 
 # Simple, conservative defaults.
 DEFAULT_EPOCHS = 3
-DEFAULT_BATCH_SIZE = 1
-DEFAULT_GRAD_ACCUM = 16
+DEFAULT_BATCH_SIZE = 8
 DEFAULT_LR = 2e-4
 DEFAULT_WARMUP_RATIO = 0.05
 
@@ -67,18 +67,37 @@ LORA_TARGET_MODULES = [
 ]
 
 
-class NamedTrainDataset(Dataset):
-    def __init__(self, dataset: Dataset, dataset_name: str):
-        self.dataset = dataset
-        self.dataset_name = dataset_name
+class HomogeneousBatchSampler(Sampler[list[int]]):
+    """Batch sampler that keeps each batch within a single dataset partition."""
+
+    def __init__(self, dataset_sizes: list[int], batch_size: int, seed: int):
+        self.dataset_sizes = dataset_sizes
+        self.batch_size = batch_size
+        self.seed = seed
+        self._iter_count = 0
 
     def __len__(self) -> int:
-        return len(cast(Any, self.dataset))
+        return sum(math.ceil(size / self.batch_size) for size in self.dataset_sizes)
 
-    def __getitem__(self, idx: int) -> dict:
-        example = dict(self.dataset[idx])
-        example["dataset_name"] = self.dataset_name
-        return example
+    def __iter__(self):
+        rng = random.Random(self.seed + self._iter_count)
+        self._iter_count += 1
+
+        batches: list[list[int]] = []
+        offset = 0
+        for size in self.dataset_sizes:
+            dataset_indices = list(range(offset, offset + size))
+            rng.shuffle(dataset_indices)
+
+            for start in range(0, size, self.batch_size):
+                batch = dataset_indices[start : start + self.batch_size]
+                if batch:
+                    batches.append(batch)
+
+            offset += size
+
+        rng.shuffle(batches)
+        yield from batches
 
 
 def disable_peft_bitsandbytes_dispatch() -> None:
@@ -133,7 +152,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", type=str, default=None)
     parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
-    parser.add_argument("--grad-accum", type=int, default=DEFAULT_GRAD_ACCUM)
     parser.add_argument("--lr", type=float, default=DEFAULT_LR)
     parser.add_argument("--warmup-ratio", type=float, default=DEFAULT_WARMUP_RATIO)
     parser.add_argument(
@@ -394,37 +412,23 @@ def build_mixed_train_loader(bundles: list[DatasetBundle], seed: int) -> DataLoa
     if not bundles:
         raise ValueError("At least one dataset bundle is required for training.")
 
-    train_datasets = [
-        NamedTrainDataset(bundle.train_loader.dataset, bundle.name) for bundle in bundles
-    ]
+    train_datasets = [bundle.train_loader.dataset for bundle in bundles]
     mixed_dataset = ConcatDataset(train_datasets)
 
-    shuffle_generator = torch.Generator()
-    shuffle_generator.manual_seed(seed)
+    batch_size = bundles[0].train_loader.batch_size
+    if batch_size is None:
+        raise ValueError("Expected train DataLoader to define batch_size.")
 
-    def mixed_collate_fn(batch: list[dict]) -> dict:
-        dataset_names = [example["dataset_name"] for example in batch]
-        model_batch = cast(
-            dict[str, Any],
-            bundles[0].train_loader.collate_fn(
-            [
-                {
-                    "input_ids": example["input_ids"],
-                    "labels": example["labels"],
-                }
-                for example in batch
-            ]
-            ),
-        )
-        model_batch["dataset_name"] = dataset_names
-        return model_batch
+    batch_sampler = HomogeneousBatchSampler(
+        dataset_sizes=[bundle.train_size for bundle in bundles],
+        batch_size=batch_size,
+        seed=seed,
+    )
 
     return DataLoader(
         mixed_dataset,
-        batch_size=bundles[0].train_loader.batch_size,
-        shuffle=True,
-        generator=shuffle_generator,
-        collate_fn=mixed_collate_fn,
+        batch_sampler=batch_sampler,
+        collate_fn=bundles[0].train_loader.collate_fn,
     )
 
 
@@ -665,8 +669,8 @@ def copy_best_checkpoint(
 
 
 def train(args: argparse.Namespace) -> None:
-    if args.grad_accum <= 0:
-        raise ValueError("--grad-accum must be > 0")
+    if args.batch_size <= 0:
+        raise ValueError("--batch-size must be > 0")
     if args.train_sizes is not None and len(args.train_sizes) != len(args.datasets):
         raise ValueError("--train-sizes must have the same number of values as --datasets.")
     if args.test_sizes is not None and len(args.test_sizes) != len(args.datasets):
@@ -684,6 +688,7 @@ def train(args: argparse.Namespace) -> None:
     print(f"  Base model           : {BASE_MODEL}")
     print(f"  Datasets             : {args.datasets}")
     print(f"  Train sizes          : {args.train_sizes}")
+    print(f"  Batch size           : {args.batch_size}")
     print(f"  Device               : {device}")
     print(f"  Run name             : {run_name}")
     print(f"  Epoch checkpoints    : {epoch_root}")
@@ -716,8 +721,7 @@ def train(args: argparse.Namespace) -> None:
         )
 
     mixed_train_loader = build_mixed_train_loader(bundles, seed=Random.SEED)
-    total_micro_batches = len(mixed_train_loader) * args.epochs
-    total_optimizer_steps = max(1, total_micro_batches // args.grad_accum)
+    total_optimizer_steps = max(1, len(mixed_train_loader) * args.epochs)
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
     scheduler = get_cosine_schedule_with_warmup(
@@ -727,7 +731,6 @@ def train(args: argparse.Namespace) -> None:
     )
 
     global_step = 0
-    grad_counter = 0
     samples_seen = 0
     saved_epochs: list[int] = []
 
@@ -744,14 +747,12 @@ def train(args: argparse.Namespace) -> None:
                 labels=batch["labels"].to(device),
             )
             raw_loss = float(outputs.loss.item())
-            loss = outputs.loss / args.grad_accum
-            loss.backward()
+            outputs.loss.backward()
 
             batch_samples = int(batch["input_ids"].shape[0])
             samples_seen += batch_samples
             running_loss += raw_loss
             n_batches += 1
-            grad_counter += 1
 
             if wb_run is not None:
                 wb_run.log(
@@ -763,30 +764,22 @@ def train(args: argparse.Namespace) -> None:
                     commit=True,
                 )
 
-            if grad_counter % args.grad_accum == 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                optimizer.step()
-                scheduler.step()
-                optimizer.zero_grad()
-                global_step += 1
-
-                if wb_run is not None:
-                    wb_run.log(
-                        {
-                            "other/global_step": global_step,
-                            "other/epoch": epoch,
-                            "other/samples_seen": samples_seen,
-                            "other/learning_rate": scheduler.get_last_lr()[0],
-                        },
-                        commit=True,
-                    )
-
-        if grad_counter % args.grad_accum != 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             scheduler.step()
             optimizer.zero_grad()
             global_step += 1
+
+            if wb_run is not None:
+                wb_run.log(
+                    {
+                        "other/global_step": global_step,
+                        "other/epoch": epoch,
+                        "other/samples_seen": samples_seen,
+                        "other/learning_rate": scheduler.get_last_lr()[0],
+                    },
+                    commit=True,
+                )
 
         train_running = running_loss / n_batches if n_batches else float("inf")
         print(f"train_running_loss={train_running:.4f}")
