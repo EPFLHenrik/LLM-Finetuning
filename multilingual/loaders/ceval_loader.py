@@ -1,62 +1,72 @@
 """multilingual/loaders/ceval_loader.py"""
 
 from typing import Any, Dict, List, Optional, Tuple
-from datasets import get_dataset_config_names, load_dataset
-from multilingual.utils import VAL_SEED, select_at_most
-import random
 from collections import defaultdict
+import random
+from datasets import get_dataset_config_names, load_dataset
+from multilingual.utils import VAL_SEED
+
 
 # C-Eval: one config per subject, 52 subjects total.
-# 'val' split has labels (~1346 total); 'test' has NO labels — never use test.
-# 'dev' split (5 examples per subject) is few-shot only, skip for eval/train.
+# "val" has labels; "test" has no labels and should not be used.
+# "dev" has very few examples per subject and is skipped.
 
 
 def _get_all_subjects() -> List[str]:
     return get_dataset_config_names("ceval/ceval-exam")
 
 
-def _format_example(ex: Dict[str, Any], subject: str, idx: int) -> Dict[str, Any]:
-    question = str(ex["question"])
-    options = "\n".join(f"{letter}) {ex[letter]}" for letter in ("A", "B", "C", "D"))
+def _format_example(ex: Dict[str, Any], subject: str, split: str, idx: int) -> Dict[str, Any]:
+    question = str(ex["question"]).strip()
+    options = "\n".join(f"{letter}) {str(ex[letter]).strip()}" for letter in ("A", "B", "C", "D"))
+    answer = str(ex["answer"]).strip().upper()
+    if answer not in {"A", "B", "C", "D"}:
+        raise ValueError(f"Unexpected C-Eval answer: {answer!r}")
+
     return {
-        "id":        f"ceval_chinese_{idx}",
-        "dataset":   "ceval",
-        "language":  "chinese",
+        "id": f"ceval_chinese_{split}_{subject}_{idx}",
+        "dataset": "ceval",
+        "language": "chinese",
+        "split": split,
         "task_type": "mcq",
-        "prompt":    f"{question}\n\n{options}",
-        "answer":    str(ex["answer"]).strip().upper(),
-        "metadata":  {"subject": subject, "explanation": ex.get("explanation", "")},
+        "prompt": f"{question}\n\n{options}",
+        "answer": answer,
+        "metadata": {"subject": subject, "explanation": ex.get("explanation", "")},
     }
 
 
 def _load_subject_val(subject: str) -> List[Dict[str, Any]]:
-    """Load the val split for one subject (has labels)."""
+    """Load the labeled validation split for one subject."""
     try:
         ds = load_dataset("ceval/ceval-exam", name=subject)
     except Exception as e:
-        print(f"[C-Eval] Failed to load subject '{subject}': {e}")
+        print(f"[C-Eval] Failed to load subject {subject!r}: {e}")
         return []
+
     if "val" not in ds or len(ds["val"]) == 0:
         return []
+
     return list(ds["val"])
 
 
-def _stratified_split(
-    all_rows: List[Dict[str, Any]],
-    subject_labels: List[str],
-    val_fraction: float,
-    seed: int,
-) -> Tuple[List[Tuple[Dict, str]], List[Tuple[Dict, str]]]:
-    """
-    Split (row, subject) pairs into train/val, stratified by subject.
-    Returns lists of (row, subject) tuples.
-    """
-    rng = random.Random(seed)
-    by_subject: Dict[str, List[Tuple[Dict, str]]] = defaultdict(list)
-    for row, subj in zip(all_rows, subject_labels):
-        by_subject[subj].append((row, subj))
+def _load_all_labeled_rows() -> Tuple[List[Dict[str, Any]], List[str]]:
+    all_rows = []
+    subject_labels = []
+    for subject in _get_all_subjects():
+        rows = _load_subject_val(subject)
+        all_rows.extend(rows)
+        subject_labels.extend([subject] * len(rows))
 
-    val_pairs, train_pairs = [], []
+    return all_rows, subject_labels
+
+
+def _stratified_split(all_rows: List[Dict[str, Any]], subject_labels: List[str], val_fraction: float, seed: int) -> Tuple[List[Tuple[Dict[str, Any], str]], List[Tuple[Dict[str, Any], str]]]:
+    rng = random.Random(seed)
+    by_subject = defaultdict(list)
+    for row, subject in zip(all_rows, subject_labels):
+        by_subject[subject].append((row, subject))
+    train_pairs = []
+    val_pairs = []
     for pairs in by_subject.values():
         shuffled = pairs[:]
         rng.shuffle(shuffled)
@@ -66,39 +76,24 @@ def _stratified_split(
 
     return train_pairs, val_pairs
 
-def load_ceval_examples(
-    n: Optional[int] = None,
-    split: str = "val",
-    val_fraction: float = 0.20,
-) -> List[Dict[str, Any]]:
+
+def _load_ceval_pairs(val_fraction: float) -> Tuple[List[Tuple[Dict[str, Any], str]], List[Tuple[Dict[str, Any], str]]]:
+    all_rows, subject_labels = _load_all_labeled_rows()
+    return _stratified_split(all_rows, subject_labels, val_fraction, VAL_SEED)
+
+
+def load_ceval_examples(n: Optional[int] = None, split: str = "val", val_fraction: float = 0.20) -> List[Dict[str, Any]]:
     """
     Load C-Eval examples for Chinese.
-
-    C-Eval only has a labeled 'val' split (~1346 examples across 52 subjects).
-    We further split that into our own train/val pools.
-
-    split='val'   → held-out validation pool
-    split='train' → training pool
+    split="train" returns the training pool.
+    split="val" returns the validation pool.
     """
     if split not in {"train", "val"}:
         raise ValueError(f"split must be 'train' or 'val', got {split!r}")
 
-    subjects = _get_all_subjects()
-
-    all_rows, subject_labels = [], []
-    for subj in subjects:
-        rows = _load_subject_val(subj)
-        all_rows.extend(rows)
-        subject_labels.extend([subj] * len(rows))
-
-    train_pairs, val_pairs = _stratified_split(
-        all_rows, subject_labels, val_fraction, VAL_SEED
-    )
-
+    train_pairs, val_pairs = _load_ceval_pairs(val_fraction)
     pairs = val_pairs if split == "val" else train_pairs
 
-    # shuffle the final train/val pool before applying n.
-    # the split itself is already subject-stratified inside _stratified_split().
     rng = random.Random(VAL_SEED)
     pairs = pairs[:]
     rng.shuffle(pairs)
@@ -106,13 +101,17 @@ def load_ceval_examples(
     if n is not None:
         pairs = pairs[:n]
 
-    return [
-        _format_example(row, subj, idx)
-        for idx, (row, subj) in enumerate(pairs)
-    ]
+    return [_format_example(row, subject, split, idx) for idx, (row, subject) in enumerate(pairs)]
 
-def load_ceval_splits() -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Convenience: return (train_examples, val_examples)."""
-    train = load_ceval_examples(n=None, split="train")
-    val   = load_ceval_examples(n=None, split="val")
+
+def load_ceval_splits(val_fraction: float = 0.20) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Convenience: return (train_examples, val_examples), loading HF only once."""
+    train_pairs, val_pairs = _load_ceval_pairs(val_fraction)
+    rng = random.Random(VAL_SEED)
+    train_pairs = train_pairs[:]
+    val_pairs = val_pairs[:]
+    rng.shuffle(train_pairs)
+    rng.shuffle(val_pairs)
+    train = [_format_example(row, subject, "train", idx) for idx, (row, subject) in enumerate(train_pairs)]
+    val = [_format_example(row, subject, "val", idx) for idx, (row, subject) in enumerate(val_pairs)]
     return train, val

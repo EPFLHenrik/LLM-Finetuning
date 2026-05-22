@@ -1,7 +1,5 @@
 """multilingual/train/sft.py
-
 LoRA SFT training using TRL SFTTrainer + SFTConfig (TRL 1.3.0).
-
 Usage:
     # Debug run
     python -m multilingual.train.sft \
@@ -18,7 +16,6 @@ import json
 import os
 import sys
 from pathlib import Path
-
 import torch
 import wandb
 from datasets import Dataset
@@ -149,21 +146,27 @@ def main():
         tokenizer.pad_token_id = tokenizer.eos_token_id
     tokenizer.padding_side = "right"
 
+    # REMOVED, trl should hanfle this anyways!
     # formatting_func defined here to capture tokenizer without a global
-    def formatting_func(example: dict) -> str:
-        return tokenizer.apply_chat_template(
-            example["messages"],
-            tokenize=False,
-            add_generation_prompt=False,
-            enable_thinking=True,
-        )
+    # def formatting_func(example: dict) -> str:
+    #     return tokenizer.apply_chat_template(
+    #         example["messages"],
+    #         tokenize=False,
+    #         add_generation_prompt=False,
+    #         enable_thinking=True,
+    #     )
 
     # Debug: print one formatted example to verify template output
     train_dataset = _load_jsonl(args.train_file)
     val_dataset   = _load_jsonl(args.val_file)
     print(f"Train: {len(train_dataset)} | Val: {len(val_dataset)}")
     print("\n--- Sample formatted example ---")
-    print(formatting_func(train_dataset[0]))
+    print(tokenizer.apply_chat_template(
+        train_dataset[0]["messages"],
+        tokenize=False,
+        add_generation_prompt=False,
+        enable_thinking=True,
+    ))
     print("--------------------------------\n")
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -215,6 +218,7 @@ def main():
         seed=42,
         data_seed=42,
         # SFTConfig-specific
+        eos_token="<|im_end|>", # added NEW!
         max_length=args.max_seq_len,
         packing=False,
         assistant_only_loss=True,
@@ -227,7 +231,7 @@ def main():
         args=sft_config,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
-        formatting_func=formatting_func,
+        # formatting_func=formatting_func, # not needed
         peft_config=lora_config,
         processing_class=tokenizer,
     )

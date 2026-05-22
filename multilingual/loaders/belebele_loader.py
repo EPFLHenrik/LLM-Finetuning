@@ -11,11 +11,10 @@ BELEBELE_CONFIGS = {
     "spanish": "spa_Latn",
     "hindi":   "hin_Deva",
 }
-
 _NUM_TO_LETTER = {"1": "A", "2": "B", "3": "C", "4": "D"}
 
 
-def _format_example(ex: Dict[str, Any], language: str, idx: int) -> Dict[str, Any]:
+def _format_example(ex: Dict[str, Any], language: str, split: str, idx: int) -> Dict[str, Any]:
     passage  = str(ex["flores_passage"]).strip()
     question = str(ex["question"]).strip()
     options  = "\n".join(
@@ -30,7 +29,7 @@ def _format_example(ex: Dict[str, Any], language: str, idx: int) -> Dict[str, An
     answer = _NUM_TO_LETTER[answer_num]
 
     return {
-        "id":        f"belebele_{language}_{idx}",
+        "id":        f"belebele_{language}_{split}_{idx}",
         "dataset":   "belebele",
         "language":  language,
         "task_type": "mcq",
@@ -63,7 +62,7 @@ def load_belebele_examples(
 
     data = val_set if split == "val" else train_pool
     sampled = select_at_most(data, n)
-    return [_format_example(sampled[i], language, i) for i in range(len(sampled))]
+    return [_format_example(sampled[i], language, split, i) for i in range(len(sampled))]
 
 
 def load_belebele_splits(

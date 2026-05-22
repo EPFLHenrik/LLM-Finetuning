@@ -1,11 +1,11 @@
 """multilingual/train/export.py
-
 Merges a LoRA adapter into Qwen/Qwen3-1.7B, saves a vLLM-loadable
 checkpoint, and optionally pushes to HF Hub.
 
-The tokenizer (including chat template) is taken directly from the
-checkpoint — whatever was saved during training is what gets exported.
-Use --override_chat_template to swap it out if needed.
+Chat template behaviour:
+  (no flag)                      → use assets/chat_template.jinja  [DEFAULT]
+  --override_chat_template       → use Qwen3 default + system prompt patch
+  --override_chat_template PATH  → use the .jinja file at PATH
 
 Push behaviour:
   --push                push only if eval loss beats all previously logged runs
@@ -26,11 +26,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import shutil
 import sys
 from pathlib import Path
-
 import torch
 from huggingface_hub import HfApi
 from peft import PeftModel
@@ -38,12 +36,15 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
-
 from multilingual.config import SYSTEM_PROMPT
 
 BASE_MODEL       = "Qwen/Qwen3-1.7B"
 BEST_RUNS_LOG    = REPO / "multilingual" / "results" / "best_runs.json"
 DEFAULT_TEMPLATE = REPO / "multilingual" / "assets" / "chat_template.jinja"
+
+# Sentinel value used when --override_chat_template is passed with no argument
+# (meaning: fall back to Qwen3 default + system prompt patch)
+_QWEN_DEFAULT_SENTINEL = "__qwen_default__"
 
 DEFAULT_GENERATION_CONFIG = {
     "bos_token_id": 151643,
@@ -128,7 +129,7 @@ def _patch_system_prompt(tokenizer, system_prompt: str) -> None:
     )
     if old_block in template:
         tokenizer.chat_template = template.replace(old_block, new_block)
-        print("[info] System prompt patched into inference template.")
+        print("[info] System prompt patched into Qwen3 default template.")
     else:
         print("[warn] Could not find system block — saving template without patch.")
 
@@ -157,6 +158,37 @@ def _copy_checkpoint_files(adapter_path: Path, output_dir: Path) -> None:
             continue
         shutil.copy2(src, output_dir / src.name)
         print(f"  Copied {src.name}")
+
+
+def _apply_chat_template(tokenizer, override: str | None) -> None:
+    """
+    Apply the correct chat template to the tokenizer according to:
+
+      override is None (no flag)           → assets/chat_template.jinja  [DEFAULT]
+      override == _QWEN_DEFAULT_SENTINEL   → Qwen3 default + system prompt patch
+      override is a file path string       → load that .jinja file
+    """
+    if override is None:
+        # Default: use our custom assets/chat_template.jinja
+        if not DEFAULT_TEMPLATE.exists():
+            raise FileNotFoundError(
+                f"Default chat template not found: {DEFAULT_TEMPLATE}\n"
+                f"Either create it or pass --override_chat_template to use the Qwen3 default."
+            )
+        tokenizer.chat_template = DEFAULT_TEMPLATE.read_text(encoding="utf-8")
+        print(f"[info] Using custom chat template: {DEFAULT_TEMPLATE}")
+
+    elif override == _QWEN_DEFAULT_SENTINEL:
+        # --override_chat_template with no argument → Qwen3 default + patch
+        _patch_system_prompt(tokenizer, SYSTEM_PROMPT)
+
+    else:
+        # --override_chat_template /some/path.jinja
+        tpl_path = Path(override)
+        if not tpl_path.exists():
+            raise FileNotFoundError(f"Chat template not found: {tpl_path}")
+        tokenizer.chat_template = tpl_path.read_text(encoding="utf-8")
+        print(f"[info] Using custom chat template from: {tpl_path}")
 
 
 def _verify_export(output_dir: Path, hf_token: str) -> None:
@@ -200,13 +232,16 @@ def parse_args():
     parser.add_argument(
         "--override_chat_template",
         nargs="?",
-        const=DEFAULT_TEMPLATE,
-        default=None,
-        type=Path,
+        const=_QWEN_DEFAULT_SENTINEL,   # --override_chat_template (no arg) → Qwen3 default
+        default=None,                   # flag absent → use assets/chat_template.jinja
+        type=str,
         metavar="PATH",
-        help="Override the checkpoint's chat template. "
-             "No value → use assets/chat_template.jinja. "
-             "With path → use that .jinja file.",
+        help=(
+            "Chat template override.\n"
+            "  (no flag)      → use multilingual/assets/chat_template.jinja  [DEFAULT]\n"
+            "  (no argument)  → use Qwen3 default template + system prompt patch\n"
+            "  PATH           → use the .jinja file at PATH"
+        ),
     )
     parser.add_argument("--do_sample",   action="store_true")
     parser.add_argument("--temperature", type=float, default=0.6)
@@ -266,19 +301,10 @@ def main():
     print("Saving merged model...")
     merged.save_pretrained(args.output_dir, safe_serialization=True)  # type: ignore[operator]
 
-    # Load fresh inference tokenizer from base model (not the training template)
-    # and patch in the default system prompt, then optionally override
-    print("Saving tokenizer...")
+    # Load fresh inference tokenizer from base model and apply chat template
+    print("\nSaving tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, token=hf_token)
-    if args.override_chat_template is not None:
-        tpl_path = args.override_chat_template
-        if not tpl_path.exists():
-            raise FileNotFoundError(f"Chat template not found: {tpl_path}")
-        tokenizer.chat_template = tpl_path.read_text(encoding="utf-8")
-        print(f"[info] Chat template overridden from: {tpl_path}")
-    else:
-        # Default: use Qwen3 inference template with system prompt patched in
-        _patch_system_prompt(tokenizer, SYSTEM_PROMPT)
+    _apply_chat_template(tokenizer, args.override_chat_template)
     tokenizer.save_pretrained(args.output_dir)
 
     # Generation config
@@ -303,7 +329,7 @@ def main():
         "best_eval_loss": current_loss,
         "format":         "safetensors",
         "merged_lora":    True,
-        "thinking_mode":  False
+        "thinking_mode":  False,
     }
     with open(args.output_dir / "checkpoint_manifest.json", "w") as f:
         json.dump(manifest, f, indent=2)
