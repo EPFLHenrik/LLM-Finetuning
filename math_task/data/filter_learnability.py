@@ -138,36 +138,43 @@ def main() -> None:
         })
 
     scored = score_generations(score_inputs, method="boxed")
-    # score_generations returns per-problem details under scored["problems"]
-    # with a "completion_correct" list (n booleans).
-    per_problem = scored.get("problems") or scored.get("results") or []
+    # score_generations returns:
+    #   {benchmark_method, n_problems, n_completions, metrics,
+    #    detailed_results: [{index, prompt, reference, n, c, completions: [{extracted, correct}]}]}
+    per_problem = scored.get("detailed_results") or []
     if not per_problem:
         raise RuntimeError(
-            "score_generations returned no per-problem details. "
+            "score_generations returned no detailed_results. "
             f"Got keys: {list(scored.keys())}"
         )
+    print(f"[score] overall metrics on these {len(items)} problems: {scored.get('metrics')}")
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    kept = 0
-    pass_count_hist: Counter = Counter()
-    rollouts_fp = open(args.save_rollouts, "w") if args.save_rollouts else None
-
-    with open(args.output, "w") as f:
-        for it, prob, out in zip(items, per_problem, outputs):
-            flags = prob.get("completion_correct") or prob.get("correct") or []
-            n_pass = int(sum(bool(x) for x in flags))
-            pass_count_hist[n_pass] += 1
-
-            if rollouts_fp is not None:
+    # ---- 1. Persist rollouts FIRST so a downstream bug can never lose them.
+    if args.save_rollouts:
+        args.save_rollouts.parent.mkdir(parents=True, exist_ok=True)
+        with open(args.save_rollouts, "w") as rollouts_fp:
+            for it, prob, out in zip(items, per_problem, outputs):
+                comp_details = prob.get("completions") or []
                 rollouts_fp.write(json.dumps({
                     "prompt": it["prompt"],
                     "answer": it["answer"],
                     "source": it.get("source"),
-                    "n_pass": n_pass,
+                    "n_pass": int(prob.get("c", 0)),
+                    "n_sampled": args.n_samples,
                     "completions": [c.text for c in out.outputs],
-                    "completion_correct": [bool(x) for x in flags],
+                    "completion_correct": [bool(cd.get("correct")) for cd in comp_details],
+                    "extracted": [cd.get("extracted") for cd in comp_details],
                 }, ensure_ascii=False) + "\n")
+        print(f"[save] rollouts -> {args.save_rollouts}")
 
+    # ---- 2. Apply the learnability band and write the filtered JSONL.
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    kept = 0
+    pass_count_hist: Counter = Counter()
+    with open(args.output, "w") as f:
+        for it, prob in zip(items, per_problem):
+            n_pass = int(prob.get("c", 0))
+            pass_count_hist[n_pass] += 1
             if args.k_lo <= n_pass <= args.k_hi:
                 rec = {
                     "messages": [{"role": "user", "content": it["prompt"]}],
@@ -179,14 +186,12 @@ def main() -> None:
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 kept += 1
 
-    if rollouts_fp is not None:
-        rollouts_fp.close()
-        print(f"[save] rollouts -> {args.save_rollouts}")
-
     print(f"\n[filter] pass-count histogram (out of {args.n_samples}):")
+    max_count = max(pass_count_hist.values()) if pass_count_hist else 1
     for k in range(args.n_samples + 1):
-        bar = "#" * min(60, pass_count_hist.get(k, 0) // max(1, len(items) // 60))
-        print(f"  k={k:2d}  n={pass_count_hist.get(k, 0):6d}  {bar}")
+        n_k = pass_count_hist.get(k, 0)
+        bar = "#" * int(60 * n_k / max(1, max_count))
+        print(f"  k={k:2d}  n={n_k:6d}  {bar}")
     print(f"\n[filter] kept {kept}/{len(items)} problems "
           f"(band [{args.k_lo}, {args.k_hi}])")
     print(f"[save]   -> {args.output}")

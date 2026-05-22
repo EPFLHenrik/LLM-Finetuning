@@ -76,14 +76,22 @@ def main() -> None:
     tok = AutoTokenizer.from_pretrained(BASE_MODEL)
     tok.chat_template = template
 
-    # Sanity-render
+    # Sanity-render. The new template embeds a system prompt and lets the
+    # model emit <think> itself, so the prompt now ends with just
+    # "<|im_start|>assistant\n". We assert the looser invariant: must end with
+    # an open assistant turn, and must include our system-prompt boxed rules.
     rendered = tok.apply_chat_template(
         [{"role": "user", "content": "What is 2+2?"}],
         tokenize=False, add_generation_prompt=True,
     )
-    assert rendered.endswith("<|im_start|>assistant\n<think>\n"), (
-        f"Chat template doesn't end with thinking-ON generation prompt. "
+    assert rendered.rstrip().endswith("<|im_start|>assistant"), (
+        f"Chat template doesn't open an assistant turn at the end. "
         f"Got last 80 chars: {rendered[-80:]!r}"
+    )
+    assert "\\boxed{" in rendered, (
+        f"System prompt with \\boxed{{}} rules is missing from the rendered "
+        f"chat. Did the template lose its system block? "
+        f"First 200 chars: {rendered[:200]!r}"
     )
     print(f"[tokenizer] OK (renders to ...{rendered[-60:]!r})")
 
