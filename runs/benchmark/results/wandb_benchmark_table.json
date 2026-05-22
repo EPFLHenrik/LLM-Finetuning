@@ -1429,6 +1429,32 @@
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.6095238095238096,
       "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/sft_full4_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-21T15:27:14+00:00",
+      "model_name": "sft_full5",
+      "benchmark": "advbench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.9884615384615385,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.9884615384615385,
+      "results_path": "runs/benchmark/results/advbench/sft_full5_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-21T15:28:06+00:00",
+      "model_name": "sft_full5",
+      "benchmark": "jbb-behaviors",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.735,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.735,
+      "results_path": "runs/benchmark/results/jbb-behaviors/sft_full5_think_full_results.json"
     }
   ]
 }
