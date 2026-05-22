@@ -81,8 +81,7 @@
         "use": 0,
         "rcb": 0,
         "rwsd": 0
-      },
-      "split_caps": {"val": 200}
+      }
     },
     "global_mmlu": {
       "languages": null,

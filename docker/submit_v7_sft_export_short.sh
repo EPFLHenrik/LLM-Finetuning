@@ -52,6 +52,7 @@ NODE="${NODE:-a100-40g}"
 SUFFIX="${1:-sft-export}"
 JOB_NAME="cs552-${GASPAR}-${GROUP}-${SUFFIX}-$(date +%H%M%S)"
 PROJECT="course-cs-552-${GASPAR}"
+WANDB_ENTITY="nutemmax-epfl"
 
 IMAGE="ayushkumartarun/course-cs-552-standard:v1"
 SCRATCH_PVC="course-cs-552-scratch-${GROUP}"
@@ -93,6 +94,7 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
       --overwrite && \
     python -m multilingual.train.sft \
       --run_name ${RUN_NAME} \
+      --wandb_entity ${WANDB_ENTITY} \
       --train_file ${TRAIN_FILE} \
       --val_file ${VAL_FILE} \
       --epochs ${EPOCHS} \
