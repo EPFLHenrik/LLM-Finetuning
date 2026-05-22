@@ -61,7 +61,10 @@ Examples:
                 {{- '<|im_start|>' + message.role + '\n' + content }}
             {%- endif %}
         {%- else %}
-            {{- '<|im_start|>' + message.role + '\n' + content }}
+            {{- '<|im_start|>' + message.role + '\n' }}
+            {%- generation %}
+            {{- content }}
+            {%- endgeneration %}
         {%- endif %}
         {%- if message.tool_calls %}
             {%- for tool_call in message.tool_calls %}
@@ -97,9 +100,7 @@ Examples:
 {%- endfor %}
 {%- if add_generation_prompt %}
     {{- '<|im_start|>assistant\n' }}
-    {%- generation %}
     {%- if enable_thinking is defined and enable_thinking is false %}
         {{- '<think>\n\n</think>\n\n' }}
     {%- endif %}
-    {%- endgeneration %}
 {%- endif %}
