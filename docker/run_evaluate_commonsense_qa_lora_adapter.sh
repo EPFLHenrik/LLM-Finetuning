@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #!/bin/bash
 set -euo pipefail
 
@@ -33,19 +32,22 @@ SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
 # Default paths inside the repo
-CHECKPOINTS_DIR="models/commonsense_qa/lora_adapter"
+CHECKPOINTS_DIR="models/commonsense_qa/merged_checkpoints"
 OUTPUT_DIR="results/commonsense_qa/lora_adapter"
 VALIDATION_FILE="data/preprocessing/commonsense_qa/validation.jsonl"
-DEFAULT_BASE_MODEL="models/commonsense_qa/lora_adapter/base_model"
 
-# Local quick run: call the small runner script (uses DEFAULT_BASE_MODEL)
+# Local quick run: execute the evaluator directly.
 if [[ "${1:-}" == "--local" ]]; then
   shift || true
-  exec bash scripts/run_evaluate_commonsense_qa_lora_adapter.sh "$@"
+  exec python scripts/evaluate_training.py \
+    --checkpoints-dir "${CHECKPOINTS_DIR}" \
+    --validation-file "${VALIDATION_FILE}" \
+    --output-dir "${OUTPUT_DIR}" \
+    --max-new-tokens 512 \
+    --temperature 0.0 \
+    --top-p 0.95 \
+    --max-eval-samples 0 "$@"
 fi
-
-# Optional first arg overrides base model path
-BASE_MODEL="${1:-$DEFAULT_BASE_MODEL}"
 
 echo ">>> Submitting ${JOB_NAME} (evaluation job)"
 
@@ -74,7 +76,6 @@ runai submit \
     cd repo || cd \"${REPO_DIR:-/scratch/workspace/henrik/standard-project-m2-mystery-machine}\" && \
     python scripts/evaluate_training.py \
       --checkpoints-dir \"${CHECKPOINTS_DIR}\" \
-      --base-model \"${BASE_MODEL}\" \
       --validation-file \"${VALIDATION_FILE}\" \
       --output-dir \"${OUTPUT_DIR}\" \
       --max-new-tokens 512 \

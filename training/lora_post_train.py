@@ -33,7 +33,7 @@ from typing import Any
 import torch
 import wandb
 from datasets import Dataset
-from peft import LoraConfig, TaskType, get_peft_model
+from peft import LoraConfig, PeftModel, TaskType, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainerCallback
 from trl import SFTConfig, SFTTrainer
 
@@ -160,6 +160,39 @@ def _save_tokenizer_artifacts(tokenizer, output_dir: Path) -> None:
 
     if tokenizer.chat_template:
         (output_dir / "chat_template.jinja").write_text(tokenizer.chat_template, encoding="utf-8")
+
+
+def _merge_saved_adapter_checkpoints(base_model_folder: Path, adapter_root: Path, merged_root: Path, tokenizer, dtype: torch.dtype) -> list[Path]:
+    checkpoint_dirs = sorted(
+        path for path in adapter_root.iterdir()
+        if path.is_dir() and (path / "adapter_config.json").exists()
+    )
+    if not checkpoint_dirs:
+        print(f"[info] No adapter checkpoints found under {adapter_root}; skipping merged checkpoint export.")
+        return []
+
+    merged_root.mkdir(parents=True, exist_ok=True)
+    merged_dirs: list[Path] = []
+    for checkpoint_dir in checkpoint_dirs:
+        merged_dir = merged_root / checkpoint_dir.name
+        if merged_dir.exists():
+            shutil.rmtree(merged_dir)
+        print(f"[info] Merging {checkpoint_dir.name} -> {merged_dir}")
+        base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_folder,
+            torch_dtype=dtype,
+            trust_remote_code=True,
+        )
+        peft_model = PeftModel.from_pretrained(base_model, checkpoint_dir)
+        merged_model = peft_model.merge_and_unload()
+        merged_model.save_pretrained(merged_dir, safe_serialization=True)
+        merged_model.config.save_pretrained(merged_dir)
+        if getattr(merged_model, "generation_config", None) is not None:
+            merged_model.generation_config.save_pretrained(merged_dir)
+        _save_tokenizer_artifacts(tokenizer, merged_dir)
+        merged_dirs.append(merged_dir)
+
+    return merged_dirs
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -327,6 +360,16 @@ def main() -> None:
         merged_model = trainer.model.merge_and_unload()
         merged_model.save_pretrained(args.output_dir, safe_serialization=True)
         _save_tokenizer_artifacts(tokenizer, args.output_dir)
+        merged_checkpoints_dir = args.output_dir / "merged_checkpoints"
+        merged_checkpoint_dirs = _merge_saved_adapter_checkpoints(
+            args.model_folder,
+            args.output_dir / "lora_adapter",
+            merged_checkpoints_dir,
+            tokenizer,
+            dtype,
+        )
+        if merged_checkpoint_dirs:
+            print(f"[info] Wrote {len(merged_checkpoint_dirs)} merged checkpoints to {merged_checkpoints_dir}")
 
     report = {
         "dataset_file": str(args.dataset_file),

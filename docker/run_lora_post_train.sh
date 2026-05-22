@@ -47,14 +47,13 @@ LEARNING_RATE=0.0002
 PER_DEVICE_TRAIN_BATCH_SIZE=1
 GRADIENT_ACCUMULATION_STEPS=8
 LOGGING_STEPS=10
-SAVE_STRATEGY="epoch"
+SAVE_STRATEGY="steps"
 SAVE_STEPS=500
 LORA_R=16
 LORA_ALPHA=32
 LORA_DROPOUT=0.05
 MAX_TRAIN_SAMPLES=0
 WANDB_PROJECT="cs552-mystery-machine"
-WANDB_ENTITY=""
 SKIP_WANDB=false
 OVERWRITE_OUTPUT=true
 MERGE_AND_SAVE=true
@@ -118,7 +117,6 @@ runai submit \
       --lora-dropout ${LORA_DROPOUT} \
       --max-train-samples ${MAX_TRAIN_SAMPLES} \
       --wandb-project "${WANDB_PROJECT}" \
-      --wandb-entity "${WANDB_ENTITY}" \
       --wandb-key "${WANDB_KEY}" \
       ${SKIP_WANDB_ARG} \
       ${OVERWRITE_OUTPUT_ARG} \
