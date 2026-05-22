@@ -1,7 +1,8 @@
 """multilingual/config.py"""
 from pathlib import Path
 
-REPO = Path("/scratch/workspace/emma/standard-project-m2-mystery-machine")
+# REPO = Path("/scratch/workspace/emma/standard-project-m2-mystery-machine")
+REPO = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL_NAME = "Qwen/Qwen3-1.7B"
 SFT_DATA_DIR = REPO / "multilingual" / "data" / "sft"
 TARGET_LANGUAGES = {

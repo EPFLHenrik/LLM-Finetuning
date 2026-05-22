@@ -79,6 +79,7 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
   --environment HF_HOME=/scratch/hf_cache \
   --environment HF_HUB_ENABLE_HF_TRANSFER=1 \
   --environment HF_TOKEN="${HF_TOKEN}" \
+  --environment CSCS_SERVING_API="${CSCS_SERVING_API}" \
   --environment WANDB_API_KEY="${WANDB_API_KEY}" \
   --environment WANDB_DIR=/scratch/wandb \
   --existing-pvc "claimname=${SCRATCH_PVC},path=/scratch" \
@@ -96,6 +97,7 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
       --run_name ${RUN_NAME} \
       --train_file ${TRAIN_FILE} \
       --val_file ${VAL_FILE} \
+      --wandb_entity ${WANDB_ENTITY} \
       --epochs ${EPOCHS} \
       --batch_size ${BATCH_SIZE} \
       --grad_accum ${GRAD_ACCUM} \
@@ -111,7 +113,8 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
       --run_name ${RUN_NAME} \
       --hf_repo ${HF_REPO} \
       --push \
-      --force_push"
+      --force_push \
+      --skip_verify"
 
 cat <<EOF
 

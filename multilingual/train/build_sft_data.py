@@ -21,7 +21,7 @@ Dataset modes:
 
 Usage:
     python -m multilingual.train.build_sft_data
-    python -m multilingual.train.build_sft_data --config configs/sft/v7.json --overwrite
+    python -m multilingual.train.build_sft_data --config configs/v7.json --overwrite
     python -m multilingual.train.build_sft_data --debug
 """
 
@@ -70,22 +70,20 @@ ALL_SPLITS           = ("train", "val", "test")
 DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     "include": {
         "languages":  None,
-        "mode":       "as_is",
-        "split_caps": {"train": 0, "val": None, "test": None},
+        "mode":       "recarve",   # merge HF validation+test → recarve
+        "split_caps": {"train": 0, "val": None, "test": None},  # None = 50/50
     },
     "global_piqa": {
-        "languages":     None,
-        "mode":          "recarve",
-        "max_per_dataset": 0,
-        "split_caps":    {"train": 0, "val": None, "test": None},
+        "languages":  None,
+        "mode":       "recarve",   # merge HF test → recarve
+        "split_caps": {"train": 0, "val": None, "test": None},  # None = 50/50
+        "max_per_dataset": 0,      # excluded from mixed train
     },
     "mgsm": {
-        "languages": None,
-        "max_per_language": None,
-        "max_per_dataset": None,
-        "split_caps": {
-            "val": 100
-        },
+        "languages":        None,
+        "max_per_language": 50,
+        "max_per_dataset":  250,
+        "split_caps":       {"val": 100},
     },
     "mmmlu": {
         "languages":       ["spanish", "hindi", "italian", "chinese"],
@@ -97,9 +95,9 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
         "split_caps":       {"val": 300},
     },
     "ceval": {
-        "languages":     ["chinese"],
+        "languages":    ["chinese"],
         "language_caps": {"chinese": 2000},
-        "split_caps":    {"val": 300},
+        "split_caps":   {"val": 300},
     },
     "cultsportqa": {
         "languages":        ["chinese", "hindi"],
@@ -123,7 +121,7 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     },
     "head_qa": {
         "languages":     ["spanish", "italian"],
-        "language_caps": {"spanish": 800, "italian": 800},
+        "language_caps": {"spanish": 1000, "italian": 400},
         "split_caps":    {"val": 300},
     },
     "mera": {
@@ -148,9 +146,9 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
         "language_caps": {
             "russian": 2200,
             "chinese": 2200,
-            "hindi":    1500,
-            "italian":  1500,
-            "spanish":  1500,
+            "hindi":    600,
+            "italian":  300,
+            "spanish":  300,
         },
         "split_caps": {"val": 600},
     },
@@ -216,10 +214,17 @@ def _make_assistant_message(ex: Dict[str, Any]) -> str:
     answer = str(ex["answer"]).strip()
     if ex["task_type"] == "mcq":
         answer = answer.upper()
-    return f"\\boxed{{{answer}}}"
+    boxed = f"\\boxed{{{answer}}}"
+    cot = ex.get("cot") or ex.get("rationale") or ex.get("reasoning")
+    if cot:
+        cot = str(cot).strip()
+        return f"<think>\n{cot}\n</think>\n\n{boxed}"
+    return boxed
 
 
-def _to_sft_record(ex: Dict[str, Any], split: str, idx: int) -> Dict[str, Any]:
+def _to_sft_record(
+    ex: Dict[str, Any], split: str, idx: int,
+) -> Dict[str, Any]:
     return {
         "id":        f"{ex['dataset']}_{split}_{ex['language']}_{idx}",
         "source_id": _hash_source_id(ex),
@@ -238,7 +243,9 @@ def _to_sft_record(ex: Dict[str, Any], split: str, idx: int) -> Dict[str, Any]:
     }
 
 
-def _to_records(examples: List[Dict], split: str) -> List[Dict]:
+def _to_records(
+    examples: List[Dict], split: str,
+) -> List[Dict]:
     return [_to_sft_record(ex, split, i) for i, ex in enumerate(examples)]
 
 
@@ -587,8 +594,8 @@ def main():
 
     max_per_language = args.max_per_language
     max_per_dataset  = args.max_per_dataset
-    max_mixed        = args.max_per_language_mixed if args.max_per_language_mixed > 0 else None
-    output_dir       = DEFAULT_SFT_BASE_DIR
+    max_mixed         = args.max_per_language_mixed if args.max_per_language_mixed > 0 else None
+    output_dir        = DEFAULT_SFT_BASE_DIR
 
     if args.config:
         with open(args.config) as f:

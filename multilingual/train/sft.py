@@ -155,7 +155,7 @@ def main():
             example["messages"],
             tokenize=False,
             add_generation_prompt=False,
-            enable_thinking=False,
+            enable_thinking=True,
         )
 
     # Debug: print one formatted example to verify template output
