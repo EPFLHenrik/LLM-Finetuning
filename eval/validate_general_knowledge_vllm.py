@@ -90,7 +90,7 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=None, help="Optional maximum number of examples to evaluate.")
     parser.add_argument("--max-new-tokens", type=int, default=4096, help="Maximum number of generated tokens per example.")
     parser.add_argument("--tensor-parallel-size", type=int, default=1, help="vLLM tensor parallel degree.")
-    parser.add_argument("--gpu-memory-utilization", type=float, default=0.3, help="vLLM GPU memory utilization target.")
+    parser.add_argument("--gpu-memory-utilization", type=float, default=0.5, help="vLLM GPU memory utilization target.")
     parser.add_argument("--dtype", default="auto", help="vLLM dtype, for example auto, float16, or bfloat16.")
     args = parser.parse_args()
 

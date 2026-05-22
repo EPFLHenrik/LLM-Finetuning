@@ -56,8 +56,6 @@ DEFAULT_LORA_TARGET_MODULES = (
 
 WANDB_PROJECT = "cs552-mystery-machine"
 
-CHAT_TEMPLATE_FILENAME = "chat_template.jinja"
-
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     with path.open("r", encoding="utf-8") as handle:
@@ -120,28 +118,6 @@ def _disable_peft_bnb_dispatch() -> None:
         print("[info] Disabled PEFT bitsandbytes dispatch.")
     except Exception as exc:
         print(f"[warn] Could not disable PEFT bitsandbytes dispatch: {exc}")
-
-
-def _load_training_chat_template(model_folder: Path, tokenizer) -> str:
-    template_path = model_folder / CHAT_TEMPLATE_FILENAME
-    if template_path.exists():
-        template = template_path.read_text(encoding="utf-8")
-    elif tokenizer.chat_template:
-        template = tokenizer.chat_template
-    else:
-        raise SystemExit(f"Missing chat template: expected {template_path} or tokenizer.chat_template")
-
-    if "{% generation %}" in template:
-        return template
-    template = template.replace(
-        "{{- '<|im_start|>' + message.role + '\\n' + content }}",
-        "{{- '<|im_start|>' + message.role + '\\n' }}{% generation %}{{- content }}{% endgeneration %}",
-    )
-    template = template.replace(
-        "{{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}",
-        "{{- '<|im_start|>' + message.role + '\\n' }}{% generation %}{{- '<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}{% endgeneration %}",
-    )
-    return template
 
 
 def _format_example(tokenizer, row: dict[str, Any]) -> str:
@@ -248,7 +224,8 @@ def main() -> None:
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
-    tokenizer.chat_template = _load_training_chat_template(args.model_folder, tokenizer)
+    if not tokenizer.chat_template:
+        raise SystemExit(f"Tokenizer does not define a chat template: {args.model_folder}")
 
     _disable_peft_bnb_dispatch()
 
