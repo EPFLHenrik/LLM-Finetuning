@@ -32,9 +32,9 @@ SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
 # Default paths inside the repo
-CHECKPOINTS_DIR="models/commonsense_qa/merged_checkpoints"
-OUTPUT_DIR="results/commonsense_qa/lora_adapter"
-VALIDATION_FILE="data/preprocessing/commonsense_qa/validation.jsonl"
+CHECKPOINTS_DIR="models/ai2_arc_challenge/merged_checkpoints"
+OUTPUT_DIR="results/ai2_arc_challenge/lora_adapter"
+VALIDATION_FILE="data/preprocessing/ai2_arc_challenge/validation.jsonl"
 
 # Local quick run: execute the evaluator directly.
 if [[ "${1:-}" == "--local" ]]; then
