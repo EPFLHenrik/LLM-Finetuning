@@ -2,7 +2,7 @@
 
 Run with:
     python -m pip install --user pytest
-    pytest multilingual/tests/test_sft_data.py -v
+    python -m pytest multilingual/tests/test_sft_data.py -v
 """
 
 import csv
@@ -18,8 +18,8 @@ import pytest
 # ---------------------------------------------------------------------------
 
 MULTILINGUAL_DIR = Path(__file__).parents[1]
-SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft"
-# SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft" / "v7"
+# SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft"
+SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft" / "v8"
 REPO_DIR         = MULTILINGUAL_DIR.parent
 
 sys.path.insert(0, str(REPO_DIR))
@@ -101,22 +101,35 @@ def _check_messages(records):
             assert isinstance(msg["content"], str) and msg["content"].strip(), \
                 f"Empty content in {r['id']} role={msg['role']}"
 
-
 def _check_assistant_format(records):
     for r in records:
         assistant = r["messages"][2]["content"].strip()
-        assert "<think>" not in assistant and "</think>" not in assistant, \
-            f"Unexpected <think> block in {r['id']}"
-        all_boxed = re.findall(r"\\boxed\{", assistant)
-        assert len(all_boxed) == 1, \
-            f"Expected 1 \\boxed{{}}, found {len(all_boxed)} in {r['id']}"
-        boxed_expr = last_boxed_only_string(assistant)
-        assert boxed_expr is not None, f"No boxed expression in {r['id']}"
-        assert assistant == boxed_expr, \
-            f"Assistant message should be exactly boxed answer in {r['id']}: '{assistant}'"
         last_line = assistant.split("\n")[-1].strip()
-        assert last_line == boxed_expr, \
-            f"Last line is not exactly the boxed expression in {r['id']}: '{last_line}'"
+
+        if "<think>" in assistant or "</think>" in assistant:
+            # Distilled example — think block is expected
+            assert "</think>" in assistant, \
+                f"Has <think> but no </think> in {r['id']}"
+            after_think = assistant.split("</think>")[-1].strip()
+            # \boxed{} must appear after </think>
+            assert "\\boxed{" in after_think, \
+                f"No \\boxed{{}} after </think> in {r['id']}"
+            # Last line must be exactly \boxed{X}
+            boxed_expr = last_boxed_only_string(after_think)
+            assert boxed_expr is not None, \
+                f"No boxed expression after </think> in {r['id']}"
+            assert last_line == boxed_expr, \
+                f"Last line is not boxed answer in {r['id']}: '{last_line}'"
+        else:
+            # Raw example — no think block, just \boxed{A}
+            all_boxed = re.findall(r"\\boxed\{", assistant)
+            assert len(all_boxed) == 1, \
+                f"Expected 1 \\boxed{{}}, found {len(all_boxed)} in {r['id']}"
+            boxed_expr = last_boxed_only_string(assistant)
+            assert boxed_expr is not None, \
+                f"No boxed expression in {r['id']}"
+            assert assistant == boxed_expr, \
+                f"Raw assistant should be exactly boxed answer in {r['id']}: '{assistant}'"
 
 
 def _check_answer_normalization(records):

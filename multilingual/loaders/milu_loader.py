@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 REPO = Path(__file__).resolve().parents[2]
-PREPROC_DIR = REPO / "multilingual" / "data" / "sft" / "preprocessed"
+PREPROC_DIR = REPO / "multilingual" / "data" / "processed" / "milu"
 
 TRAIN_FILE = PREPROC_DIR / "milu_hindi_train.jsonl"
 VAL_FILE   = PREPROC_DIR / "milu_hindi_val.jsonl"

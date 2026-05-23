@@ -14,7 +14,9 @@ def _load_language(language: str) -> pd.DataFrame:
     df = pd.read_csv(CLEAN_CSV, encoding="utf-8")
     df = df[df["language"] == language].copy()
     if language == "chinese":
-        df = df[~df["question"].astype(str).str.contains(_HIRAGANA_KATAKANA, na=False)].copy()
+        df = df[~df["question"].astype(str).str.contains(
+            _HIRAGANA_KATAKANA.pattern, na=False, regex=True
+        )].copy()
     return df.sample(frac=1, random_state=VAL_SEED).reset_index(drop=True)
 
 

@@ -1,0 +1,65 @@
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Jobs (1):
+  head_qa_spanish_all.jsonl → head_qa_spanish
+
+── head_qa_spanish_all.jsonl ──
+  Resuming: 240 already done
+  Processing: 12149 remaining / 12389 total
+    20/12149 | valid=16 (80%) | 0.9 ex/s | ETA 12822s
+    40/12149 | valid=34 (85%) | 1.0 ex/s | ETA 12617s
+    60/12149 | valid=52 (86%) | 1.0 ex/s | ETA 12195s
+    80/12149 | valid=68 (85%) | 1.0 ex/s | ETA 12202s
+    100/12149 | valid=85 (85%) | 0.9 ex/s | ETA 12735s
+    120/12149 | valid=102 (85%) | 0.9 ex/s | ETA 13023s
+    140/12149 | valid=120 (85%) | 0.9 ex/s | ETA 12732s
+    160/12149 | valid=138 (86%) | 1.0 ex/s | ETA 12597s
+    180/12149 | valid=158 (87%) | 1.0 ex/s | ETA 12355s
+    200/12149 | valid=176 (88%) | 1.0 ex/s | ETA 12181s
+    220/12149 | valid=192 (87%) | 1.0 ex/s | ETA 12263s
+    240/12149 | valid=209 (87%) | 1.0 ex/s | ETA 12252s
+    260/12149 | valid=228 (87%) | 1.0 ex/s | ETA 12136s
+    280/12149 | valid=247 (88%) | 1.0 ex/s | ETA 11990s
+    300/12149 | valid=262 (87%) | 1.0 ex/s | ETA 12187s
+    320/12149 | valid=280 (87%) | 1.0 ex/s | ETA 12205s
+    340/12149 | valid=295 (86%) | 1.0 ex/s | ETA 12277s
+    360/12149 | valid=313 (86%) | 1.0 ex/s | ETA 12205s
+    380/12149 | valid=330 (86%) | 1.0 ex/s | ETA 12167s
+    400/12149 | valid=349 (87%) | 1.0 ex/s | ETA 12088s
+    420/12149 | valid=367 (87%) | 1.0 ex/s | ETA 11973s
+    440/12149 | valid=386 (87%) | 1.0 ex/s | ETA 12103s
+    460/12149 | valid=404 (87%) | 1.0 ex/s | ETA 12017s
+    480/12149 | valid=422 (87%) | 1.0 ex/s | ETA 12070s
+    500/12149 | valid=440 (88%) | 1.0 ex/s | ETA 12020s
+    520/12149 | valid=457 (87%) | 0.9 ex/s | ETA 12253s
+    540/12149 | valid=473 (87%) | 0.9 ex/s | ETA 12239s
+    560/12149 | valid=490 (87%) | 0.9 ex/s | ETA 12230s
+    580/12149 | valid=508 (87%) | 1.0 ex/s | ETA 12177s
+    600/12149 | valid=525 (87%) | 0.9 ex/s | ETA 12216s
+    620/12149 | valid=544 (87%) | 0.9 ex/s | ETA 12292s
+    640/12149 | valid=561 (87%) | 0.9 ex/s | ETA 12262s
+    660/12149 | valid=579 (87%) | 0.9 ex/s | ETA 12213s
+    680/12149 | valid=596 (87%) | 0.9 ex/s | ETA 12170s
+    700/12149 | valid=612 (87%) | 0.9 ex/s | ETA 12196s
+    720/12149 | valid=630 (87%) | 0.9 ex/s | ETA 12191s
+    740/12149 | valid=649 (87%) | 0.9 ex/s | ETA 12114s
+    760/12149 | valid=663 (87%) | 0.9 ex/s | ETA 12131s
+    780/12149 | valid=680 (87%) | 0.9 ex/s | ETA 12112s
+    800/12149 | valid=696 (87%) | 0.9 ex/s | ETA 12068s
+    820/12149 | valid=714 (87%) | 0.9 ex/s | ETA 11986s
+    840/12149 | valid=732 (87%) | 0.9 ex/s | ETA 11954s
+    860/12149 | valid=750 (87%) | 0.9 ex/s | ETA 11924s
+    880/12149 | valid=770 (87%) | 0.9 ex/s | ETA 11875s
+    900/12149 | valid=790 (87%) | 1.0 ex/s | ETA 11832s
+  Valid: 1000/1139 (87%)
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 963, 'none': 139, 'swiss-ai/Apertus-70B-Instruct-2509': 37}
+  Invalid reasons: {'wrong_answer:A': 49, 'wrong_answer:B': 30, 'wrong_answer:C': 31, 'wrong_answer:D': 22, 'wrong_answer:E': 5, 'not_sure': 2}
+  Done in 947.0s
+
+============================================================
+DISTILLATION SUMMARY
+============================================================
+  head_qa_spanish_all.jsonl                           total=1139  valid=1000 (87%)  stop=valid_cap_reached  (947.0s)
+
+  TOTAL: 1139 → valid 1000 (87%)
+Summary: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/head_qa_spanish_1stage_cap1000_seed42/distill_summary.json

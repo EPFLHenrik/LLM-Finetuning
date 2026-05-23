@@ -91,6 +91,30 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
     "mera_mamuramu": [
         ("mera/mera_clean_mamuramu.jsonl", "mera_russian_mamuramu"),
     ],
+    "global_mmlu_regional": [
+        ("global_mmlu/global_mmlu_russian_regional.jsonl",  "global_mmlu_russian_regional"),
+        ("global_mmlu/global_mmlu_chinese_regional.jsonl",  "global_mmlu_chinese_regional"),
+        ("global_mmlu/global_mmlu_italian_regional.jsonl",  "global_mmlu_italian_regional"),
+        ("global_mmlu/global_mmlu_spanish_regional.jsonl",  "global_mmlu_spanish_regional"),
+        ("global_mmlu/global_mmlu_hindi_regional.jsonl",    "global_mmlu_hindi_regional"),
+    ],
+    "include": [
+        ("include/include_russian_all.jsonl",  "include_russian_all"),
+        ("include/include_chinese_all.jsonl",  "include_chinese_all"),
+        ("include/include_italian_all.jsonl",  "include_italian_all"),
+        ("include/include_spanish_all.jsonl",  "include_spanish_all"),
+        ("include/include_hindi_all.jsonl",    "include_hindi_all"),
+    ],
+    "cultsportqa": [
+        ("cultsportqa/cultsportqa_hindi_all.jsonl",   "cultsportqa_hindi"),
+        ("cultsportqa/cultsportqa_chinese_all.jsonl", "cultsportqa_chinese"),
+    ],
+    "head_qa_spanish": [
+        ("head_qa/head_qa_spanish_all.jsonl", "head_qa_spanish"),
+    ],
+    "head_qa_italian": [
+        ("head_qa/head_qa_italian_all.jsonl", "head_qa_italian"),
+    ],
 }
 
 # ---------------------------------------------------------------------------

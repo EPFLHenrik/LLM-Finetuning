@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 REPO = Path(__file__).resolve().parents[2]
-PREPROCESSED_PATH = REPO / "multilingual" / "data" / "sft" / "preprocessed" / "ceval_chinese_all.jsonl"
+PREPROCESSED_PATH = REPO / "multilingual" / "data" / "processed" / "ceval" / "ceval_chinese_all.jsonl"
 
 # Default split ratios (train / val)
 DEFAULT_VAL_FRACTION = 0.20
@@ -154,14 +154,18 @@ def load_ceval_examples(
     """
     if split not in {"train", "val"}:
         raise ValueError(f"split must be 'train' or 'val', got {split!r}")
+
     rng   = random.Random(VAL_SEED)
     reg_w = regionality_weights or DEFAULT_REGIONALITY_WEIGHTS
     cat_w = category_weights    or DEFAULT_CATEGORY_WEIGHTS
+
     records = _load_all()
     records = _hard_filter(records, regionality, category)
     records = _apply_weights(records, reg_w, cat_w, rng)
+
     train, val = _stratified_split(records, val_fraction, rng)
     pool = val if split == "val" else train
+
     rng.shuffle(pool)
     if n is not None:
         pool = pool[:n]
@@ -180,12 +184,15 @@ def load_ceval_splits(
     rng   = random.Random(VAL_SEED)
     reg_w = regionality_weights or DEFAULT_REGIONALITY_WEIGHTS
     cat_w = category_weights    or DEFAULT_CATEGORY_WEIGHTS
+
     records = _load_all()
     records = _hard_filter(records, regionality, category)
     records = _apply_weights(records, reg_w, cat_w, rng)
     train, val = _stratified_split(records, val_fraction, rng)
+
     rng.shuffle(train)
     rng.shuffle(val)
+
     train = [_reformat(r, "train", i) for i, r in enumerate(train)]
     val   = [_reformat(r, "val",   i) for i, r in enumerate(val)]
     return train, val

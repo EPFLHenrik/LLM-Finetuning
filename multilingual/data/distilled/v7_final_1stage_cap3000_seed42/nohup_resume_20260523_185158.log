@@ -1,0 +1,378 @@
+nohup: ignoring input
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Jobs (5):
+  ceval_chinese_regional.jsonl → ceval_chinese_regional
+  ceval_chinese_regional_implicit.jsonl → ceval_chinese_regional_implicit
+  milu_hindi_train_regional.jsonl → milu_hindi_regional
+  milu_hindi_train_regional_implicit.jsonl → milu_hindi_regional_implicit
+  mera_clean_mamuramu.jsonl → mera_russian_mamuramu
+
+── ceval_chinese_regional.jsonl ──
+  Resuming: 3347 already done
+  Processing: 0 remaining / 3347 total
+  Already complete. Valid: 2644/3347
+  Done in 0.1s
+
+── ceval_chinese_regional_implicit.jsonl ──
+  Resuming: 3946 already done
+  Valid cap already reached: 3000/3000
+  Done in 0.2s
+
+── milu_hindi_train_regional.jsonl ──
+  Resuming: 1280 already done
+  Processing: 2651 remaining / 3931 total
+    20/2651 | valid=14 (70%) | 1.9 ex/s | ETA 1421s
+    40/2651 | valid=30 (75%) | 1.8 ex/s | ETA 1469s
+    60/2651 | valid=45 (75%) | 1.8 ex/s | ETA 1407s
+    80/2651 | valid=62 (77%) | 1.8 ex/s | ETA 1450s
+    100/2651 | valid=78 (78%) | 1.8 ex/s | ETA 1437s
+    120/2651 | valid=98 (81%) | 1.8 ex/s | ETA 1398s
+    140/2651 | valid=113 (80%) | 1.8 ex/s | ETA 1380s
+    160/2651 | valid=130 (81%) | 1.8 ex/s | ETA 1356s
+    180/2651 | valid=148 (82%) | 1.8 ex/s | ETA 1357s
+    200/2651 | valid=165 (82%) | 1.8 ex/s | ETA 1345s
+    220/2651 | valid=182 (82%) | 1.7 ex/s | ETA 1394s
+    240/2651 | valid=200 (83%) | 1.7 ex/s | ETA 1386s
+    260/2651 | valid=215 (82%) | 1.7 ex/s | ETA 1369s
+    280/2651 | valid=232 (82%) | 1.8 ex/s | ETA 1343s
+    300/2651 | valid=246 (82%) | 1.8 ex/s | ETA 1314s
+    320/2651 | valid=261 (81%) | 1.8 ex/s | ETA 1305s
+    340/2651 | valid=276 (81%) | 1.8 ex/s | ETA 1284s
+    360/2651 | valid=294 (81%) | 1.8 ex/s | ETA 1263s
+    380/2651 | valid=310 (81%) | 1.8 ex/s | ETA 1250s
+    400/2651 | valid=326 (81%) | 1.8 ex/s | ETA 1236s
+    420/2651 | valid=342 (81%) | 1.8 ex/s | ETA 1220s
+    440/2651 | valid=358 (81%) | 1.8 ex/s | ETA 1205s
+    460/2651 | valid=372 (80%) | 1.8 ex/s | ETA 1204s
+    480/2651 | valid=385 (80%) | 1.8 ex/s | ETA 1207s
+    500/2651 | valid=400 (80%) | 1.8 ex/s | ETA 1200s
+    520/2651 | valid=415 (79%) | 1.8 ex/s | ETA 1195s
+    540/2651 | valid=429 (79%) | 1.8 ex/s | ETA 1185s
+    560/2651 | valid=443 (79%) | 1.8 ex/s | ETA 1195s
+    580/2651 | valid=463 (79%) | 1.8 ex/s | ETA 1178s
+    600/2651 | valid=480 (80%) | 1.8 ex/s | ETA 1170s
+    620/2651 | valid=499 (80%) | 1.8 ex/s | ETA 1158s
+    640/2651 | valid=516 (80%) | 1.8 ex/s | ETA 1145s
+    660/2651 | valid=530 (80%) | 1.7 ex/s | ETA 1141s
+    680/2651 | valid=546 (80%) | 1.7 ex/s | ETA 1127s
+    700/2651 | valid=565 (80%) | 1.8 ex/s | ETA 1114s
+    720/2651 | valid=581 (80%) | 1.7 ex/s | ETA 1111s
+    740/2651 | valid=598 (80%) | 1.7 ex/s | ETA 1103s
+    760/2651 | valid=616 (81%) | 1.7 ex/s | ETA 1089s
+    780/2651 | valid=635 (81%) | 1.7 ex/s | ETA 1072s
+    800/2651 | valid=653 (81%) | 1.7 ex/s | ETA 1059s
+    820/2651 | valid=671 (81%) | 1.7 ex/s | ETA 1050s
+    840/2651 | valid=685 (81%) | 1.7 ex/s | ETA 1039s
+    860/2651 | valid=702 (81%) | 1.8 ex/s | ETA 1021s
+    880/2651 | valid=720 (81%) | 1.8 ex/s | ETA 1007s
+    900/2651 | valid=735 (81%) | 1.8 ex/s | ETA 992s
+    920/2651 | valid=755 (82%) | 1.8 ex/s | ETA 977s
+    940/2651 | valid=772 (82%) | 1.8 ex/s | ETA 970s
+    960/2651 | valid=791 (82%) | 1.8 ex/s | ETA 955s
+    980/2651 | valid=806 (82%) | 1.8 ex/s | ETA 944s
+    1000/2651 | valid=821 (82%) | 1.8 ex/s | ETA 932s
+    1020/2651 | valid=837 (82%) | 1.8 ex/s | ETA 922s
+    1040/2651 | valid=855 (82%) | 1.8 ex/s | ETA 910s
+    1060/2651 | valid=871 (82%) | 1.8 ex/s | ETA 897s
+    1080/2651 | valid=888 (82%) | 1.8 ex/s | ETA 889s
+    1100/2651 | valid=903 (82%) | 1.8 ex/s | ETA 881s
+    1120/2651 | valid=917 (81%) | 1.8 ex/s | ETA 871s
+    1140/2651 | valid=933 (81%) | 1.8 ex/s | ETA 856s
+    1160/2651 | valid=951 (81%) | 1.8 ex/s | ETA 843s
+    1180/2651 | valid=967 (81%) | 1.8 ex/s | ETA 830s
+    1200/2651 | valid=984 (82%) | 1.8 ex/s | ETA 817s
+    1220/2651 | valid=1000 (81%) | 1.8 ex/s | ETA 804s
+    1240/2651 | valid=1016 (81%) | 1.8 ex/s | ETA 792s
+    1260/2651 | valid=1033 (81%) | 1.8 ex/s | ETA 780s
+    1280/2651 | valid=1049 (81%) | 1.8 ex/s | ETA 768s
+    1300/2651 | valid=1063 (81%) | 1.8 ex/s | ETA 759s
+    1320/2651 | valid=1081 (81%) | 1.8 ex/s | ETA 747s
+    1340/2651 | valid=1098 (81%) | 1.8 ex/s | ETA 736s
+    1360/2651 | valid=1114 (81%) | 1.8 ex/s | ETA 724s
+    1380/2651 | valid=1132 (82%) | 1.8 ex/s | ETA 712s
+    1400/2651 | valid=1147 (81%) | 1.8 ex/s | ETA 701s
+    1420/2651 | valid=1162 (81%) | 1.8 ex/s | ETA 691s
+    1440/2651 | valid=1177 (81%) | 1.8 ex/s | ETA 680s
+    1460/2651 | valid=1193 (81%) | 1.8 ex/s | ETA 667s
+    1480/2651 | valid=1207 (81%) | 1.8 ex/s | ETA 656s
+    1500/2651 | valid=1220 (81%) | 1.8 ex/s | ETA 645s
+    1520/2651 | valid=1236 (81%) | 1.8 ex/s | ETA 633s
+    1540/2651 | valid=1255 (81%) | 1.8 ex/s | ETA 621s
+    1560/2651 | valid=1268 (81%) | 1.8 ex/s | ETA 615s
+    1580/2651 | valid=1279 (80%) | 1.8 ex/s | ETA 605s
+    1600/2651 | valid=1296 (81%) | 1.8 ex/s | ETA 593s
+    1620/2651 | valid=1313 (81%) | 1.8 ex/s | ETA 581s
+    1640/2651 | valid=1332 (81%) | 1.8 ex/s | ETA 570s
+    1660/2651 | valid=1349 (81%) | 1.8 ex/s | ETA 560s
+    1680/2651 | valid=1364 (81%) | 1.8 ex/s | ETA 548s
+    1700/2651 | valid=1379 (81%) | 1.8 ex/s | ETA 537s
+    1720/2651 | valid=1397 (81%) | 1.8 ex/s | ETA 525s
+    1740/2651 | valid=1413 (81%) | 1.8 ex/s | ETA 513s
+    1760/2651 | valid=1432 (81%) | 1.8 ex/s | ETA 501s
+    1780/2651 | valid=1446 (81%) | 1.8 ex/s | ETA 489s
+    1800/2651 | valid=1465 (81%) | 1.8 ex/s | ETA 477s
+    1820/2651 | valid=1483 (81%) | 1.8 ex/s | ETA 468s
+    1840/2651 | valid=1502 (81%) | 1.8 ex/s | ETA 456s
+    1860/2651 | valid=1519 (81%) | 1.8 ex/s | ETA 447s
+    1880/2651 | valid=1535 (81%) | 1.8 ex/s | ETA 436s
+    1900/2651 | valid=1551 (81%) | 1.8 ex/s | ETA 426s
+    1920/2651 | valid=1567 (81%) | 1.8 ex/s | ETA 415s
+    1940/2651 | valid=1586 (81%) | 1.8 ex/s | ETA 403s
+    1960/2651 | valid=1601 (81%) | 1.8 ex/s | ETA 393s
+    1980/2651 | valid=1614 (81%) | 1.8 ex/s | ETA 381s
+    2000/2651 | valid=1628 (81%) | 1.8 ex/s | ETA 369s
+    2020/2651 | valid=1646 (81%) | 1.8 ex/s | ETA 358s
+    2040/2651 | valid=1660 (81%) | 1.8 ex/s | ETA 347s
+    2060/2651 | valid=1677 (81%) | 1.8 ex/s | ETA 335s
+    2080/2651 | valid=1692 (81%) | 1.8 ex/s | ETA 324s
+    2100/2651 | valid=1710 (81%) | 1.8 ex/s | ETA 313s
+    2120/2651 | valid=1726 (81%) | 1.8 ex/s | ETA 301s
+    2140/2651 | valid=1738 (81%) | 1.8 ex/s | ETA 290s
+    2160/2651 | valid=1755 (81%) | 1.8 ex/s | ETA 279s
+    2180/2651 | valid=1770 (81%) | 1.8 ex/s | ETA 267s
+    2200/2651 | valid=1784 (81%) | 1.8 ex/s | ETA 256s
+    2220/2651 | valid=1798 (80%) | 1.8 ex/s | ETA 245s
+    2240/2651 | valid=1814 (80%) | 1.8 ex/s | ETA 234s
+    2260/2651 | valid=1829 (80%) | 1.8 ex/s | ETA 223s
+    2280/2651 | valid=1846 (80%) | 1.8 ex/s | ETA 211s
+    2300/2651 | valid=1863 (81%) | 1.8 ex/s | ETA 200s
+    2320/2651 | valid=1878 (80%) | 1.8 ex/s | ETA 189s
+    2340/2651 | valid=1893 (80%) | 1.8 ex/s | ETA 177s
+    2360/2651 | valid=1909 (80%) | 1.8 ex/s | ETA 166s
+    2380/2651 | valid=1928 (81%) | 1.8 ex/s | ETA 155s
+    2400/2651 | valid=1946 (81%) | 1.8 ex/s | ETA 143s
+  Valid: 3901/4780 (81%)
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 3641, 'swiss-ai/Apertus-70B-Instruct-2509': 260, 'none': 879}
+  Invalid reasons: {'wrong_answer:C': 187, 'wrong_answer:A': 298, 'wrong_answer:D': 141, 'wrong_answer:B': 188, 'not_ending_with_boxed': 48, 'wrong_answer:None': 9, 'not_sure': 5, 'too_long': 2, 'wrong_answer:U': 1}
+  Done in 1368.8s
+
+── milu_hindi_train_regional_implicit.jsonl ──
+  Processing: 6639 remaining / 6639 total
+    20/6639 | valid=15 (75%) | 1.2 ex/s | ETA 5333s
+    40/6639 | valid=32 (80%) | 1.4 ex/s | ETA 4793s
+    60/6639 | valid=47 (78%) | 1.5 ex/s | ETA 4515s
+    80/6639 | valid=63 (78%) | 1.5 ex/s | ETA 4308s
+    100/6639 | valid=82 (82%) | 1.6 ex/s | ETA 4102s
+    120/6639 | valid=100 (83%) | 1.7 ex/s | ETA 3920s
+    140/6639 | valid=112 (80%) | 1.6 ex/s | ETA 4154s
+    160/6639 | valid=124 (77%) | 1.5 ex/s | ETA 4405s
+    180/6639 | valid=138 (76%) | 1.5 ex/s | ETA 4319s
+    200/6639 | valid=154 (77%) | 1.5 ex/s | ETA 4257s
+    220/6639 | valid=170 (77%) | 1.5 ex/s | ETA 4200s
+    240/6639 | valid=187 (77%) | 1.5 ex/s | ETA 4292s
+    260/6639 | valid=206 (79%) | 1.5 ex/s | ETA 4185s
+    280/6639 | valid=223 (79%) | 1.5 ex/s | ETA 4165s
+    300/6639 | valid=239 (79%) | 1.5 ex/s | ETA 4107s
+    320/6639 | valid=256 (80%) | 1.5 ex/s | ETA 4208s
+    340/6639 | valid=270 (79%) | 1.5 ex/s | ETA 4203s
+    360/6639 | valid=287 (79%) | 1.5 ex/s | ETA 4135s
+    380/6639 | valid=302 (79%) | 1.5 ex/s | ETA 4185s
+    400/6639 | valid=317 (79%) | 1.5 ex/s | ETA 4183s
+    420/6639 | valid=333 (79%) | 1.5 ex/s | ETA 4125s
+    440/6639 | valid=352 (80%) | 1.5 ex/s | ETA 4084s
+    460/6639 | valid=369 (80%) | 1.5 ex/s | ETA 4045s
+    480/6639 | valid=386 (80%) | 1.5 ex/s | ETA 4085s
+    500/6639 | valid=401 (80%) | 1.5 ex/s | ETA 4044s
+    520/6639 | valid=418 (80%) | 1.5 ex/s | ETA 4005s
+    540/6639 | valid=436 (80%) | 1.5 ex/s | ETA 3977s
+    560/6639 | valid=448 (80%) | 1.5 ex/s | ETA 4011s
+    580/6639 | valid=465 (80%) | 1.5 ex/s | ETA 3989s
+    600/6639 | valid=482 (80%) | 1.5 ex/s | ETA 3980s
+    620/6639 | valid=501 (80%) | 1.5 ex/s | ETA 3952s
+    640/6639 | valid=518 (80%) | 1.5 ex/s | ETA 3927s
+    660/6639 | valid=532 (80%) | 1.5 ex/s | ETA 3922s
+    680/6639 | valid=547 (80%) | 1.5 ex/s | ETA 3901s
+    700/6639 | valid=561 (80%) | 1.5 ex/s | ETA 3886s
+    720/6639 | valid=577 (80%) | 1.5 ex/s | ETA 3865s
+    740/6639 | valid=593 (80%) | 1.5 ex/s | ETA 3848s
+    760/6639 | valid=606 (79%) | 1.5 ex/s | ETA 3820s
+    780/6639 | valid=620 (79%) | 1.5 ex/s | ETA 3799s
+    800/6639 | valid=637 (79%) | 1.5 ex/s | ETA 3775s
+    820/6639 | valid=650 (79%) | 1.5 ex/s | ETA 3771s
+    840/6639 | valid=669 (79%) | 1.6 ex/s | ETA 3735s
+    860/6639 | valid=686 (79%) | 1.5 ex/s | ETA 3749s
+    880/6639 | valid=701 (79%) | 1.5 ex/s | ETA 3722s
+    900/6639 | valid=716 (79%) | 1.5 ex/s | ETA 3713s
+    920/6639 | valid=730 (79%) | 1.5 ex/s | ETA 3726s
+    940/6639 | valid=747 (79%) | 1.5 ex/s | ETA 3710s
+    960/6639 | valid=762 (79%) | 1.5 ex/s | ETA 3686s
+    980/6639 | valid=780 (79%) | 1.5 ex/s | ETA 3654s
+    1000/6639 | valid=792 (79%) | 1.5 ex/s | ETA 3651s
+    1020/6639 | valid=809 (79%) | 1.5 ex/s | ETA 3672s
+    1040/6639 | valid=827 (79%) | 1.5 ex/s | ETA 3649s
+    1060/6639 | valid=843 (79%) | 1.5 ex/s | ETA 3649s
+    1080/6639 | valid=858 (79%) | 1.5 ex/s | ETA 3627s
+    1100/6639 | valid=873 (79%) | 1.5 ex/s | ETA 3601s
+    1120/6639 | valid=888 (79%) | 1.5 ex/s | ETA 3586s
+    1140/6639 | valid=903 (79%) | 1.5 ex/s | ETA 3573s
+    1160/6639 | valid=916 (78%) | 1.5 ex/s | ETA 3566s
+    1180/6639 | valid=933 (79%) | 1.5 ex/s | ETA 3556s
+    1200/6639 | valid=950 (79%) | 1.5 ex/s | ETA 3536s
+    1220/6639 | valid=969 (79%) | 1.5 ex/s | ETA 3517s
+    1240/6639 | valid=987 (79%) | 1.5 ex/s | ETA 3492s
+    1260/6639 | valid=999 (79%) | 1.5 ex/s | ETA 3491s
+    1280/6639 | valid=1014 (79%) | 1.5 ex/s | ETA 3471s
+    1300/6639 | valid=1032 (79%) | 1.5 ex/s | ETA 3461s
+    1320/6639 | valid=1044 (79%) | 1.5 ex/s | ETA 3471s
+    1340/6639 | valid=1058 (78%) | 1.5 ex/s | ETA 3451s
+    1360/6639 | valid=1075 (79%) | 1.5 ex/s | ETA 3427s
+    1380/6639 | valid=1090 (78%) | 1.5 ex/s | ETA 3420s
+    1400/6639 | valid=1108 (79%) | 1.5 ex/s | ETA 3394s
+    1420/6639 | valid=1125 (79%) | 1.5 ex/s | ETA 3374s
+    1440/6639 | valid=1136 (78%) | 1.5 ex/s | ETA 3360s
+    1460/6639 | valid=1153 (78%) | 1.6 ex/s | ETA 3337s
+    1480/6639 | valid=1168 (78%) | 1.6 ex/s | ETA 3325s
+    1500/6639 | valid=1182 (78%) | 1.5 ex/s | ETA 3328s
+    1520/6639 | valid=1197 (78%) | 1.5 ex/s | ETA 3320s
+    1540/6639 | valid=1215 (78%) | 1.5 ex/s | ETA 3310s
+    1560/6639 | valid=1232 (78%) | 1.5 ex/s | ETA 3305s
+    1580/6639 | valid=1249 (79%) | 1.5 ex/s | ETA 3290s
+    1600/6639 | valid=1266 (79%) | 1.5 ex/s | ETA 3287s
+    1620/6639 | valid=1284 (79%) | 1.5 ex/s | ETA 3269s
+    1640/6639 | valid=1300 (79%) | 1.5 ex/s | ETA 3268s
+    1660/6639 | valid=1314 (79%) | 1.5 ex/s | ETA 3259s
+    1680/6639 | valid=1329 (79%) | 1.5 ex/s | ETA 3269s
+    1700/6639 | valid=1345 (79%) | 1.5 ex/s | ETA 3257s
+    1720/6639 | valid=1357 (78%) | 1.5 ex/s | ETA 3260s
+    1740/6639 | valid=1372 (78%) | 1.5 ex/s | ETA 3254s
+    1760/6639 | valid=1390 (78%) | 1.5 ex/s | ETA 3234s
+    1780/6639 | valid=1406 (78%) | 1.5 ex/s | ETA 3219s
+    1800/6639 | valid=1422 (79%) | 1.5 ex/s | ETA 3215s
+    1820/6639 | valid=1439 (79%) | 1.5 ex/s | ETA 3215s
+    1840/6639 | valid=1453 (78%) | 1.5 ex/s | ETA 3198s
+    1860/6639 | valid=1472 (79%) | 1.5 ex/s | ETA 3189s
+    1880/6639 | valid=1485 (78%) | 1.5 ex/s | ETA 3185s
+    1900/6639 | valid=1502 (79%) | 1.5 ex/s | ETA 3181s
+    1920/6639 | valid=1518 (79%) | 1.5 ex/s | ETA 3165s
+    1940/6639 | valid=1533 (79%) | 1.5 ex/s | ETA 3164s
+    1960/6639 | valid=1551 (79%) | 1.5 ex/s | ETA 3147s
+    1980/6639 | valid=1566 (79%) | 1.5 ex/s | ETA 3139s
+    2000/6639 | valid=1583 (79%) | 1.5 ex/s | ETA 3125s
+    2020/6639 | valid=1600 (79%) | 1.5 ex/s | ETA 3110s
+    2040/6639 | valid=1618 (79%) | 1.5 ex/s | ETA 3090s
+    2060/6639 | valid=1637 (79%) | 1.5 ex/s | ETA 3071s
+    2080/6639 | valid=1652 (79%) | 1.5 ex/s | ETA 3059s
+    2100/6639 | valid=1669 (79%) | 1.5 ex/s | ETA 3039s
+    2120/6639 | valid=1686 (79%) | 1.5 ex/s | ETA 3019s
+    2140/6639 | valid=1703 (79%) | 1.5 ex/s | ETA 3013s
+    2160/6639 | valid=1718 (79%) | 1.5 ex/s | ETA 3005s
+    2180/6639 | valid=1736 (79%) | 1.5 ex/s | ETA 2997s
+    2200/6639 | valid=1753 (79%) | 1.5 ex/s | ETA 2979s
+    2220/6639 | valid=1768 (79%) | 1.5 ex/s | ETA 2979s
+    2240/6639 | valid=1783 (79%) | 1.5 ex/s | ETA 2978s
+    2260/6639 | valid=1797 (79%) | 1.5 ex/s | ETA 2967s
+    2280/6639 | valid=1814 (79%) | 1.5 ex/s | ETA 2962s
+    2300/6639 | valid=1830 (79%) | 1.5 ex/s | ETA 2946s
+    2320/6639 | valid=1843 (79%) | 1.5 ex/s | ETA 2936s
+    2340/6639 | valid=1860 (79%) | 1.5 ex/s | ETA 2917s
+    2360/6639 | valid=1875 (79%) | 1.5 ex/s | ETA 2901s
+    2380/6639 | valid=1893 (79%) | 1.5 ex/s | ETA 2882s
+    2400/6639 | valid=1905 (79%) | 1.5 ex/s | ETA 2867s
+    2420/6639 | valid=1920 (79%) | 1.5 ex/s | ETA 2863s
+    2440/6639 | valid=1937 (79%) | 1.5 ex/s | ETA 2846s
+    2460/6639 | valid=1953 (79%) | 1.5 ex/s | ETA 2839s
+    2480/6639 | valid=1969 (79%) | 1.5 ex/s | ETA 2829s
+    2500/6639 | valid=1984 (79%) | 1.5 ex/s | ETA 2821s
+    2520/6639 | valid=2001 (79%) | 1.5 ex/s | ETA 2806s
+    2540/6639 | valid=2017 (79%) | 1.5 ex/s | ETA 2800s
+    2560/6639 | valid=2033 (79%) | 1.5 ex/s | ETA 2782s
+    2580/6639 | valid=2046 (79%) | 1.5 ex/s | ETA 2775s
+    2600/6639 | valid=2060 (79%) | 1.5 ex/s | ETA 2757s
+    2620/6639 | valid=2077 (79%) | 1.5 ex/s | ETA 2739s
+    2640/6639 | valid=2093 (79%) | 1.5 ex/s | ETA 2723s
+    2660/6639 | valid=2110 (79%) | 1.5 ex/s | ETA 2713s
+    2680/6639 | valid=2126 (79%) | 1.5 ex/s | ETA 2701s
+    2700/6639 | valid=2143 (79%) | 1.5 ex/s | ETA 2687s
+    2720/6639 | valid=2158 (79%) | 1.5 ex/s | ETA 2667s
+    2740/6639 | valid=2173 (79%) | 1.5 ex/s | ETA 2655s
+    2760/6639 | valid=2187 (79%) | 1.5 ex/s | ETA 2642s
+    2780/6639 | valid=2204 (79%) | 1.5 ex/s | ETA 2625s
+    2800/6639 | valid=2222 (79%) | 1.5 ex/s | ETA 2607s
+    2820/6639 | valid=2238 (79%) | 1.5 ex/s | ETA 2591s
+    2840/6639 | valid=2255 (79%) | 1.5 ex/s | ETA 2577s
+    2860/6639 | valid=2270 (79%) | 1.5 ex/s | ETA 2563s
+    2880/6639 | valid=2285 (79%) | 1.5 ex/s | ETA 2547s
+    2900/6639 | valid=2301 (79%) | 1.5 ex/s | ETA 2531s
+    2920/6639 | valid=2317 (79%) | 1.5 ex/s | ETA 2515s
+    2940/6639 | valid=2335 (79%) | 1.5 ex/s | ETA 2498s
+    2960/6639 | valid=2352 (79%) | 1.5 ex/s | ETA 2480s
+    2980/6639 | valid=2369 (79%) | 1.5 ex/s | ETA 2463s
+    3000/6639 | valid=2384 (79%) | 1.5 ex/s | ETA 2451s
+    3020/6639 | valid=2397 (79%) | 1.5 ex/s | ETA 2436s
+    3040/6639 | valid=2413 (79%) | 1.5 ex/s | ETA 2419s
+    3060/6639 | valid=2426 (79%) | 1.5 ex/s | ETA 2410s
+    3080/6639 | valid=2440 (79%) | 1.5 ex/s | ETA 2403s
+    3100/6639 | valid=2454 (79%) | 1.5 ex/s | ETA 2394s
+    3120/6639 | valid=2467 (79%) | 1.5 ex/s | ETA 2384s
+    3140/6639 | valid=2485 (79%) | 1.5 ex/s | ETA 2374s
+    3160/6639 | valid=2503 (79%) | 1.5 ex/s | ETA 2360s
+    3180/6639 | valid=2520 (79%) | 1.5 ex/s | ETA 2346s
+    3200/6639 | valid=2536 (79%) | 1.5 ex/s | ETA 2330s
+    3220/6639 | valid=2553 (79%) | 1.5 ex/s | ETA 2315s
+    3240/6639 | valid=2570 (79%) | 1.5 ex/s | ETA 2301s
+    3260/6639 | valid=2587 (79%) | 1.5 ex/s | ETA 2288s
+    3280/6639 | valid=2603 (79%) | 1.5 ex/s | ETA 2276s
+    3300/6639 | valid=2618 (79%) | 1.5 ex/s | ETA 2261s
+    3320/6639 | valid=2631 (79%) | 1.5 ex/s | ETA 2253s
+    3340/6639 | valid=2650 (79%) | 1.5 ex/s | ETA 2236s
+    3360/6639 | valid=2667 (79%) | 1.5 ex/s | ETA 2219s
+    3380/6639 | valid=2686 (79%) | 1.5 ex/s | ETA 2204s
+    3400/6639 | valid=2703 (79%) | 1.5 ex/s | ETA 2192s
+    3420/6639 | valid=2720 (79%) | 1.5 ex/s | ETA 2176s
+    3440/6639 | valid=2735 (79%) | 1.5 ex/s | ETA 2165s
+    3460/6639 | valid=2751 (79%) | 1.5 ex/s | ETA 2149s
+    3480/6639 | valid=2764 (79%) | 1.5 ex/s | ETA 2134s
+    3500/6639 | valid=2781 (79%) | 1.5 ex/s | ETA 2118s
+    3520/6639 | valid=2795 (79%) | 1.5 ex/s | ETA 2109s
+    3540/6639 | valid=2811 (79%) | 1.5 ex/s | ETA 2094s
+    3560/6639 | valid=2829 (79%) | 1.5 ex/s | ETA 2080s
+    3580/6639 | valid=2847 (79%) | 1.5 ex/s | ETA 2068s
+    3600/6639 | valid=2864 (79%) | 1.5 ex/s | ETA 2059s
+    3620/6639 | valid=2881 (79%) | 1.5 ex/s | ETA 2044s
+    3640/6639 | valid=2897 (79%) | 1.5 ex/s | ETA 2033s
+    3660/6639 | valid=2913 (79%) | 1.5 ex/s | ETA 2019s
+    3680/6639 | valid=2927 (79%) | 1.5 ex/s | ETA 2004s
+    3700/6639 | valid=2945 (79%) | 1.5 ex/s | ETA 1987s
+    3720/6639 | valid=2959 (79%) | 1.5 ex/s | ETA 1972s
+    3740/6639 | valid=2974 (79%) | 1.5 ex/s | ETA 1957s
+    3760/6639 | valid=2990 (79%) | 1.5 ex/s | ETA 1941s
+    3780/6639 | valid=3008 (79%) | 1.5 ex/s | ETA 1930s
+  Valid: 3517/4431 (79%)
+  Teachers used: {'none': 914, 'meta-llama/Llama-3.3-70B-Instruct': 3294, 'swiss-ai/Apertus-70B-Instruct-2509': 223}
+  Invalid reasons: {'wrong_answer:C': 191, 'wrong_answer:B': 232, 'not_sure': 20, 'wrong_answer:D': 130, 'wrong_answer:A': 265, 'wrong_answer:None': 26, 'not_ending_with_boxed': 46, 'wrong_answer:E': 1, 'too_long': 3}
+  Done in 2551.4s
+
+── mera_clean_mamuramu.jsonl ──
+  Processing: 285 remaining / 285 total
+    20/285 | valid=19 (95%) | 2.6 ex/s | ETA 102s
+    40/285 | valid=38 (95%) | 2.8 ex/s | ETA 89s
+    60/285 | valid=57 (95%) | 2.8 ex/s | ETA 80s
+    80/285 | valid=74 (92%) | 2.8 ex/s | ETA 72s
+    100/285 | valid=92 (92%) | 2.7 ex/s | ETA 70s
+    120/285 | valid=111 (92%) | 2.6 ex/s | ETA 63s
+    140/285 | valid=130 (92%) | 2.7 ex/s | ETA 54s
+    160/285 | valid=149 (93%) | 2.7 ex/s | ETA 46s
+    180/285 | valid=166 (92%) | 2.6 ex/s | ETA 40s
+    200/285 | valid=185 (92%) | 2.5 ex/s | ETA 33s
+    220/285 | valid=201 (91%) | 2.6 ex/s | ETA 25s
+    240/285 | valid=220 (91%) | 2.6 ex/s | ETA 17s
+    260/285 | valid=236 (90%) | 2.4 ex/s | ETA 10s
+    280/285 | valid=255 (91%) | 2.5 ex/s | ETA 2s
+    285/285 | valid=260 (91%) | 2.5 ex/s | ETA 0s
+  Valid: 260/285 (91%)
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 247, 'none': 25, 'swiss-ai/Apertus-70B-Instruct-2509': 13}
+  Invalid reasons: {'wrong_answer:D': 4, 'wrong_answer:C': 6, 'wrong_answer:B': 5, 'wrong_answer:A': 9, 'not_sure': 1}
+  Done in 114.7s
+
+============================================================
+DISTILLATION SUMMARY
+============================================================
+  ceval_chinese_regional.jsonl                        total=3347  valid=2644 (78%)  stop=unknown  (0.1s)
+  ceval_chinese_regional_implicit.jsonl               total=3946  valid=3000 (76%)  stop=valid_cap_reached  (0.2s)
+  milu_hindi_train_regional.jsonl                     total=4780  valid=3901 (81%)  stop=valid_cap_reached  (1368.8s)
+  milu_hindi_train_regional_implicit.jsonl            total=4431  valid=3517 (79%)  stop=valid_cap_reached  (2551.4s)
+  mera_clean_mamuramu.jsonl                           total= 285  valid= 260 (91%)  stop=exhausted  (114.7s)
+
+  TOTAL: 16789 → valid 13322 (79%)
+Summary: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/v7_final_1stage_cap3000_seed42/distill_summary.json

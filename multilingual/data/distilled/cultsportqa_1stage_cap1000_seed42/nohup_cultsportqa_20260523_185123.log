@@ -1,0 +1,58 @@
+nohup: ignoring input
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Jobs (2):
+  cultsportqa_hindi_all.jsonl → cultsportqa_hindi
+  cultsportqa_chinese_all.jsonl → cultsportqa_chinese
+
+── cultsportqa_hindi_all.jsonl ──
+  Resuming: 1305 already done
+  Valid cap already reached: 1000/1000
+  Done in 0.3s
+
+── cultsportqa_chinese_all.jsonl ──
+  Resuming: 500 already done
+  Processing: 1929 remaining / 2429 total
+    20/1929 | valid=18 (90%) | 1.6 ex/s | ETA 1177s
+    40/1929 | valid=37 (92%) | 1.6 ex/s | ETA 1218s
+    60/1929 | valid=54 (90%) | 1.5 ex/s | ETA 1235s
+    80/1929 | valid=74 (92%) | 1.5 ex/s | ETA 1211s
+    100/1929 | valid=92 (92%) | 1.5 ex/s | ETA 1246s
+    120/1929 | valid=109 (90%) | 1.4 ex/s | ETA 1266s
+    140/1929 | valid=127 (90%) | 1.4 ex/s | ETA 1246s
+    160/1929 | valid=144 (90%) | 1.5 ex/s | ETA 1212s
+    180/1929 | valid=163 (90%) | 1.5 ex/s | ETA 1199s
+    200/1929 | valid=181 (90%) | 1.5 ex/s | ETA 1188s
+    220/1929 | valid=201 (91%) | 1.5 ex/s | ETA 1166s
+    240/1929 | valid=219 (91%) | 1.5 ex/s | ETA 1155s
+    260/1929 | valid=234 (90%) | 1.4 ex/s | ETA 1152s
+    280/1929 | valid=252 (90%) | 1.4 ex/s | ETA 1147s
+    300/1929 | valid=272 (90%) | 1.5 ex/s | ETA 1122s
+    320/1929 | valid=292 (91%) | 1.5 ex/s | ETA 1101s
+    340/1929 | valid=311 (91%) | 1.5 ex/s | ETA 1085s
+    360/1929 | valid=330 (91%) | 1.5 ex/s | ETA 1070s
+    380/1929 | valid=347 (91%) | 1.5 ex/s | ETA 1055s
+    400/1929 | valid=365 (91%) | 1.5 ex/s | ETA 1039s
+    420/1929 | valid=384 (91%) | 1.5 ex/s | ETA 1019s
+    440/1929 | valid=402 (91%) | 1.5 ex/s | ETA 1014s
+    460/1929 | valid=419 (91%) | 1.5 ex/s | ETA 1006s
+    480/1929 | valid=439 (91%) | 1.5 ex/s | ETA 988s
+    500/1929 | valid=457 (91%) | 1.5 ex/s | ETA 973s
+    520/1929 | valid=476 (91%) | 1.5 ex/s | ETA 958s
+    540/1929 | valid=496 (91%) | 1.5 ex/s | ETA 943s
+    560/1929 | valid=516 (92%) | 1.5 ex/s | ETA 928s
+    580/1929 | valid=536 (92%) | 1.5 ex/s | ETA 911s
+    600/1929 | valid=553 (92%) | 1.5 ex/s | ETA 895s
+  Valid: 1000/1089 (91%)
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 945, 'none': 89, 'swiss-ai/Apertus-70B-Instruct-2509': 55}
+  Invalid reasons: {'wrong_answer:D': 17, 'wrong_answer:B': 30, 'wrong_answer:A': 23, 'wrong_answer:C': 18, 'wrong_answer:A, C, D': 1}
+  Done in 404.4s
+
+============================================================
+DISTILLATION SUMMARY
+============================================================
+  cultsportqa_hindi_all.jsonl                         total=1305  valid=1000 (76%)  stop=valid_cap_reached  (0.3s)
+  cultsportqa_chinese_all.jsonl                       total=1089  valid=1000 (91%)  stop=valid_cap_reached  (404.4s)
+
+  TOTAL: 2394 → valid 2000 (83%)
+Summary: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/cultsportqa_1stage_cap1000_seed42/distill_summary.json
