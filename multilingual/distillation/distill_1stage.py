@@ -106,9 +106,11 @@ SYSTEM_MESSAGE = (
     "You are an expert teacher helping a much smaller, 1.7B parameter language model learn how to reason. "
     "Solve the following multiple-choice question using simple, direct sentences, "
     "basic vocabulary, and short, linear logical steps. "
-    "Do not write a PhD-level essay. "
-    "Explain it as if you are leaving a concise breadcrumb trail for a smaller model to follow. "
     "Write your explanation in {language}. "
+    "Keep the explanation short: 2 to 4 sentences. Do not write a PhD-level essay. "
+    "Do not write headings, bullet points, numbered steps, markdown, drafts, or a thinking process. "
+    "Do not analyze every option unless it is necessary. "
+    "Make sure the explanation supports the same option as the final boxed answer. "
     "If you are not confident that your explanation is factually correct, write only: NOT_SURE. "
     "Otherwise, end with the final answer in \\boxed{{}} — for example \\boxed{{A}} if A is the correct answer."
 )
