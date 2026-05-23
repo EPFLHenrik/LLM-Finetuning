@@ -106,6 +106,13 @@ def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def _append_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
 def _build_messages(prompt: str, args) -> list[dict[str, str]]:
     if args.student:
         return [
@@ -196,6 +203,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.9, help="vLLM GPU memory utilization target")
     parser.add_argument("--dtype", default="auto", help="vLLM dtype, for example auto, float16, or bfloat16")
     parser.add_argument("--student", action="store_true", help="Student model")
+    parser.add_argument(
+        "--start-index",
+        type=int,
+        default=0,
+        help="Start generating from this input row index and append results to the output file",
+    )
+    parser.add_argument(
+        "--save-every",
+        type=int,
+        default=1000,
+        help="Save progress to the output file every N prompts (0 to disable)",
+    )
     args = parser.parse_args(argv)
 
     input_path = args.input.expanduser().resolve()
@@ -205,6 +224,11 @@ def main(argv: list[str] | None = None) -> int:
     rows = _read_json_input(input_path)
     if not rows:
         raise SystemExit(f"{input_path}: no rows found")
+    if args.start_index < 0 or args.start_index > len(rows):
+        raise SystemExit(f"--start-index must be between 0 and {len(rows)}")
+
+    if args.start_index:
+        rows = rows[args.start_index :]
 
     if not model_dir.exists():
         raise FileNotFoundError(f"Teacher model directory not found: {model_dir}")
@@ -242,6 +266,13 @@ def main(argv: list[str] | None = None) -> int:
 
     results: list[dict[str, Any]] = []
     correct_count = 0
+    save_every = int(args.save_every) if getattr(args, "save_every", None) is not None else 0
+    append_mode = args.start_index > 0
+    last_saved_count = 0
+
+    if append_mode:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.touch(exist_ok=True)
 
     for index, (row, completion) in enumerate(zip(rows, completions), start=1):
         if "prompt" not in row or "answer" not in row:
@@ -267,7 +298,21 @@ def main(argv: list[str] | None = None) -> int:
 
         print(f"[{index}/{len(rows)}] correct={correct} reason={reason} extracted={extracted!r}")
 
-    _write_jsonl(output_path, results)
+        # Periodically save progress so long runs can be resumed / inspected.
+        if save_every and index % save_every == 0:
+            new_rows = results[last_saved_count:]
+            if append_mode:
+                _append_jsonl(output_path, new_rows)
+            else:
+                _write_jsonl(output_path, results)
+            last_saved_count = len(results)
+            print(f"Checkpoint: wrote progress at {index} rows to {output_path}")
+
+    remaining_rows = results[last_saved_count:]
+    if append_mode:
+        _append_jsonl(output_path, remaining_rows)
+    else:
+        _write_jsonl(output_path, results)
     accuracy = correct_count / len(results)
     print(f"Wrote {output_path}")
     print(f"Accuracy: {correct_count}/{len(results)} ({accuracy:.2%})")
