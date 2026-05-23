@@ -1,0 +1,80 @@
+[distill-pod] Started at Sat May 23 02:33:25 UTC 2026
+[distill-pod] Datasets: ceval milu mera_mamuramu
+[distill-pod] Processed dir: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/processed
+[distill-pod] Output dir: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/v7_final
+Jobs to distill (5):
+  ceval_chinese_regional.jsonl → ceval_chinese_regional
+  ceval_chinese_regional_implicit.jsonl → ceval_chinese_regional_implicit
+  milu_hindi_train_regional.jsonl → milu_hindi_train_regional
+  milu_hindi_train_regional_implicit.jsonl → milu_hindi_train_regional_implicit
+  mera_clean_mamuramu.jsonl → mera_russian_mamuramu
+
+── ceval_chinese_regional.jsonl ──
+  Stage 1: 3347 remaining / 3347 total
+    [stage1] 25/3347 | correct 8 (32%) | 0.2 ex/s | ETA 18365s
+    [stage1] 50/3347 | correct 17 (34%) | 0.2 ex/s | ETA 15649s
+    [stage1] 75/3347 | correct 23 (30%) | 0.2 ex/s | ETA 16361s
+    [stage1] 100/3347 | correct 31 (31%) | 0.2 ex/s | ETA 16586s
+    [stage1] 125/3347 | correct 44 (35%) | 0.2 ex/s | ETA 16920s
+    [stage1] 150/3347 | correct 56 (37%) | 0.2 ex/s | ETA 16395s
+    [stage1] 175/3347 | correct 63 (36%) | 0.2 ex/s | ETA 16174s
+    [stage1] 200/3347 | correct 72 (36%) | 0.2 ex/s | ETA 15735s
+    [stage1] 225/3347 | correct 87 (38%) | 0.2 ex/s | ETA 15448s
+    [stage1] 250/3347 | correct 96 (38%) | 0.2 ex/s | ETA 15351s
+    [stage1] 275/3347 | correct 102 (37%) | 0.2 ex/s | ETA 15104s
+    [stage1] 300/3347 | correct 119 (39%) | 0.2 ex/s | ETA 14877s
+    [stage1] 325/3347 | correct 137 (42%) | 0.2 ex/s | ETA 14550s
+    [stage1] 350/3347 | correct 157 (44%) | 0.2 ex/s | ETA 14403s
+    [stage1] 375/3347 | correct 174 (46%) | 0.2 ex/s | ETA 14152s
+    [stage1] 400/3347 | correct 190 (47%) | 0.2 ex/s | ETA 13953s
+    [stage1] 425/3347 | correct 209 (49%) | 0.2 ex/s | ETA 13851s
+    [stage1] 450/3347 | correct 224 (49%) | 0.2 ex/s | ETA 13700s
+    [stage1] 475/3347 | correct 236 (49%) | 0.2 ex/s | ETA 13554s
+    [stage1] 500/3347 | correct 252 (50%) | 0.2 ex/s | ETA 13408s
+    [stage1] 525/3347 | correct 268 (51%) | 0.2 ex/s | ETA 13506s
+    [stage1] 550/3347 | correct 286 (52%) | 0.2 ex/s | ETA 13329s
+    [stage1] 575/3347 | correct 299 (52%) | 0.2 ex/s | ETA 13153s
+    [stage1] 600/3347 | correct 313 (52%) | 0.2 ex/s | ETA 13009s
+    [stage1] 625/3347 | correct 327 (52%) | 0.2 ex/s | ETA 13014s
+    [stage1] 650/3347 | correct 348 (53%) | 0.2 ex/s | ETA 12878s
+    [stage1] 675/3347 | correct 370 (54%) | 0.2 ex/s | ETA 12648s
+    [stage1] 700/3347 | correct 393 (56%) | 0.2 ex/s | ETA 12396s
+    [stage1] 725/3347 | correct 412 (56%) | 0.2 ex/s | ETA 12213s
+    [stage1] 750/3347 | correct 433 (57%) | 0.2 ex/s | ETA 11997s
+    [stage1] 775/3347 | correct 450 (58%) | 0.2 ex/s | ETA 11792s
+    [stage1] 800/3347 | correct 465 (58%) | 0.2 ex/s | ETA 11707s
+    [stage1] 825/3347 | correct 472 (57%) | 0.2 ex/s | ETA 11616s
+    [stage1] 850/3347 | correct 481 (56%) | 0.2 ex/s | ETA 11569s
+    [stage1] 875/3347 | correct 490 (56%) | 0.2 ex/s | ETA 11416s
+    [stage1] 900/3347 | correct 494 (54%) | 0.2 ex/s | ETA 11320s
+    [stage1] 925/3347 | correct 506 (54%) | 0.2 ex/s | ETA 11197s
+    [stage1] 950/3347 | correct 512 (53%) | 0.2 ex/s | ETA 11094s
+    [stage1] 975/3347 | correct 515 (52%) | 0.2 ex/s | ETA 11007s
+    [stage1] 1000/3347 | correct 521 (52%) | 0.2 ex/s | ETA 10928s
+    [stage1] 1025/3347 | correct 524 (51%) | 0.2 ex/s | ETA 10832s
+    [stage1] 1050/3347 | correct 529 (50%) | 0.2 ex/s | ETA 10674s
+    [stage1] 1075/3347 | correct 534 (49%) | 0.2 ex/s | ETA 10535s
+    [stage1] 1100/3347 | correct 555 (50%) | 0.2 ex/s | ETA 10382s
+    [stage1] 1125/3347 | correct 579 (51%) | 0.2 ex/s | ETA 10219s
+    [stage1] 1150/3347 | correct 601 (52%) | 0.2 ex/s | ETA 10108s
+    [stage1] 1175/3347 | correct 624 (53%) | 0.2 ex/s | ETA 9943s
+    [stage1] 1200/3347 | correct 648 (54%) | 0.2 ex/s | ETA 9781s
+    [stage1] 1225/3347 | correct 667 (54%) | 0.2 ex/s | ETA 9629s
+    [stage1] 1250/3347 | correct 685 (54%) | 0.2 ex/s | ETA 9495s
+    [stage1] 1275/3347 | correct 707 (55%) | 0.2 ex/s | ETA 9339s
+    [stage1] 1300/3347 | correct 729 (56%) | 0.2 ex/s | ETA 9185s
+    [stage1] 1325/3347 | correct 749 (56%) | 0.2 ex/s | ETA 9045s
+    [stage1] 1350/3347 | correct 770 (57%) | 0.2 ex/s | ETA 8940s
+    [stage1] 1375/3347 | correct 792 (57%) | 0.2 ex/s | ETA 8815s
+    [stage1] 1400/3347 | correct 815 (58%) | 0.2 ex/s | ETA 8685s
+    [stage1] 1425/3347 | correct 836 (58%) | 0.2 ex/s | ETA 8526s
+    [stage1] 1450/3347 | correct 858 (59%) | 0.2 ex/s | ETA 8397s
+    [stage1] 1475/3347 | correct 880 (59%) | 0.2 ex/s | ETA 8259s
+    [stage1] 1500/3347 | correct 903 (60%) | 0.2 ex/s | ETA 8108s
+    [stage1] 1525/3347 | correct 928 (60%) | 0.2 ex/s | ETA 7999s
+    [stage1] 1550/3347 | correct 946 (61%) | 0.2 ex/s | ETA 7852s
+    [stage1] 1575/3347 | correct 965 (61%) | 0.2 ex/s | ETA 7726s
+    [stage1] 1600/3347 | correct 988 (61%) | 0.2 ex/s | ETA 7586s
+    [stage1] 1625/3347 | correct 1012 (62%) | 0.2 ex/s | ETA 7457s
+    [stage1] 1650/3347 | correct 1036 (62%) | 0.2 ex/s | ETA 7359s
+    [stage1] 1675/3347 | correct 1061 (63%) | 0.2 ex/s | ETA 7255s
