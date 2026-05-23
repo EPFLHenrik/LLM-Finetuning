@@ -52,6 +52,7 @@ import os
 import re
 import sys
 import time
+import random
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -65,13 +66,13 @@ sys.path.insert(0, str(REPO))
 # ---------------------------------------------------------------------------
 
 API_BASE = "https://api.swissai.svc.cscs.ch/v1"
-TEACHER_PRIMARY  = "Qwen/Qwen3.5-27B"               # main teacher + rationale generator
+TEACHER_PRIMARY  = "Qwen/Qwen3.5-27B"                   # main teacher 
 TEACHER_VERIFIER = "meta-llama/Llama-3.3-70B-Instruct"  # independent verifier
-TEACHER_TIEBREAK = "swiss-ai/Apertus-70B-Instruct-2509"  # tie-breaker
+TEACHER_TIEBREAK = "swiss-ai/Apertus-70B-Instruct-2509" # tie-breaker
 
 MAX_TOKENS_THINKING    = 1024  # thinking models (Qwen, Apertus) — need room for <think>
-MAX_TOKENS_NONTHINKING = 64    # Llama — non-thinking, answer only
-MAX_TOKENS_RATIONALE   = 1200  # stage 2 rationale generation
+MAX_TOKENS_NONTHINKING = 256    # Llama — non-thinking, answer only
+MAX_TOKENS_RATIONALE   = 1024   # stage 2 rationale generation
 
 DEFAULT_CONCURRENCY = 4
 DEFAULT_MAX_RETRIES = 3
@@ -79,6 +80,18 @@ DEFAULT_RETRY_DELAY = 3.0
 LOG_EVERY           = 25      # print progress every N examples
 
 NOT_SURE_MARKER = "NOT_SURE"
+PROCESSED_INPUTS = {
+    "ceval": [
+        ("ceval/ceval_chinese_regional.jsonl", "ceval_chinese_regional"),
+        ("ceval/ceval_chinese_regional_implicit.jsonl", "ceval_chinese_regional_implicit"),
+    ],
+    "milu": [
+        ("milu/milu_hindi_train_regional.jsonl", "milu_hindi_train_regional"),
+        ("milu/milu_hindi_train_regional_implicit.jsonl", "milu_hindi_train_regional_implicit"),
+    ],
+    "mera_mamuramu": [("mera/mera_clean_mamuramu.jsonl", "mera_russian_mamuramu")],
+    "mera_mathlogicqa": [("mera/mera_clean_mathlogicqa.jsonl", "mera_russian_mathlogicqa")],
+}
 
 # ---------------------------------------------------------------------------
 # Prompts
@@ -97,28 +110,63 @@ STAGE1_SYSTEM = (
 STAGE2_SYSTEM = (
     "You are a multilingual teaching assistant. "
     "You will be given a multiple-choice question and its correct answer.\n"
-    "Write a short explanation (2-4 sentences) in the SAME LANGUAGE as the question "
+    "Write a short explanation (between 2 and 4 sentences) in the SAME LANGUAGE as the question "
     "explaining why the given answer is correct.\n"
     "Rules:\n"
     "- Be concise and factual.\n"
     "- Do not repeat the question.\n"
     "- Respond in the same language as the question.\n"
     "- If you are not confident about the explanation, write only: NOT_SURE\n"
-    "- End your response with the boxed answer on its own line: \\boxed{X}"
+    "- End your response with the given correct answer inside \\boxed{}, for example \\boxed{A}."
 )
 
+LANGUAGE_NAME = {
+    "russian": "Russian",
+    "chinese": "Chinese",
+    "hindi": "Hindi",
+    "italian": "Italian",
+    "spanish": "Spanish",
+    "english": "English",
+}
 
-def _stage1_user(prompt: str) -> str:
-    return prompt
+
+def _language_name(ex: Dict) -> str:
+    return LANGUAGE_NAME.get(str(ex.get("language", "")).lower(), "the same language as the question")
 
 
-def _stage2_user(prompt: str, gold: str) -> str:
+def _stage1_user(prompt: str, language: str) -> str:
     return (
+        f"The question is written in {language}. "
+        f"Reason in {language} and give the final answer in the required boxed format.\n\n"
+        f"{prompt}"
+    )
+
+def _stage2_user(prompt: str, gold: str, language: str) -> str:
+    return (
+        # f"/no_think\n" # for qwen only, not for llama
+        f"The question is written in {language}. "
+        f"Output only the final explanation, not your hidden reasoning or analysis. "
+        f"Write only in {language}.\n\n"
         f"{prompt}\n\n"
         f"The correct answer is {gold}. "
-        f"Briefly explain why in the same language as the question, "
-        f"then write \\boxed{{{gold}}} on the last line."
+        f"Write 2-4 short sentences explaining why this answer is correct, using only {language}. "
+        f"Do not write headings, bullet points, drafts, analysis, or a thinking process. "
+        f"Then write \\boxed{{{gold}}} on the last line."
     )
+
+# ======= deprecated for now =========
+# def _stage1_user(prompt: str) -> str:
+#     return prompt
+#
+#
+# def _stage2_user(prompt: str, gold: str, language: str) -> str:
+#     return (
+#         f"The question is written in {language}. "
+#         f"{prompt}\n\n"
+#         f"The correct answer is {gold}. "
+#         f"Briefly explain why this answer is the correct one, in no more than 200 words, using only {language}, "
+#         f"then write \\boxed{{{gold}}} on the last line."
+#     )
 
 # ---------------------------------------------------------------------------
 # HTTP client
@@ -177,13 +225,13 @@ def _strip_think(text: str) -> str:
 
 
 def _extract_boxed(text: Optional[str]) -> Optional[str]:
-    """Extract \\boxed{X} content, stripping think blocks first."""
+    """Extract the last \\boxed{X} content, stripping think blocks first."""
     if not text:
         return None
     for src in (_strip_think(text), text):
-        m = re.search(r'\\boxed\{([^}]+)\}', src)
-        if m:
-            return m.group(1).strip().upper()
+        matches = re.findall(r'\\boxed\{([^}]+)\}', src)
+        if matches:
+            return matches[-1].strip().upper()
     return None
 
 
@@ -215,6 +263,24 @@ def _extract_answer(text: Optional[str], task_type: str) -> Optional[str]:
         return _extract_letter(text)
     return None
 
+
+def _contains_cjk(text: str) -> bool:
+    return bool(re.search(r"[\u4e00-\u9fff]", text))
+
+
+def _too_short_rationale(text: str) -> bool:
+    clean = text.strip()
+    if _contains_cjk(clean):
+        return len(clean) <= 20
+    return len(clean.split()) <= 4
+
+
+def _too_long_rationale(text: str) -> bool:
+    clean = text.strip()
+    if _contains_cjk(clean):
+        return len(clean) >= 900
+    return len(clean.split()) >= 300
+
 # ---------------------------------------------------------------------------
 # Stage 1: independent answer verification
 # ---------------------------------------------------------------------------
@@ -231,7 +297,7 @@ async def _stage1_example(
 
     messages_s1 = [
         {"role": "system", "content": STAGE1_SYSTEM},
-        {"role": "user",   "content": _stage1_user(prompt)},
+        {"role": "user", "content": _stage1_user(prompt, _language_name(ex))},
     ]
 
     async with sem:
@@ -248,7 +314,8 @@ async def _stage1_example(
     primary_correct  = (primary_ans  == gold)
     verifier_correct = (verifier_ans == gold)
 
-    # Tie-breaker only when they disagree
+    # NEW
+    # Tie-breaker only when exactly one of Qwen/Llama is correct.
     tiebreak_ans = None
     if primary_correct != verifier_correct:
         async with sem:
@@ -258,16 +325,57 @@ async def _stage1_example(
             )
         tiebreak_ans = _extract_answer(tb_raw, task_type)
 
-    # stage 1 passing criteria
     tiebreak_correct = (tiebreak_ans == gold)
-    accepted_answer = primary_correct or verifier_correct or tiebreak_correct
-    rationale_eligible = primary_correct and (verifier_correct or tiebreak_correct)
-    if primary_correct and verifier_correct:
+
+    # Stage 1 passing criteria:
+    # - Qwen + Llama correct: pass, use Llama rationale.
+    # exactly one of Qwen/Llama correct + Apertus correct: pass; use Llama if correct, otherwise Apertus.
+    # - otherwise: reject for rationale generation.
+    both_primary_verifier_correct = primary_correct and verifier_correct
+    primary_confirmed_by_tiebreak = primary_correct and (not verifier_correct) and tiebreak_correct
+    verifier_confirmed_by_tiebreak = verifier_correct and (not primary_correct) and tiebreak_correct
+
+    accepted_answer = (
+        both_primary_verifier_correct
+        or primary_confirmed_by_tiebreak
+        or verifier_confirmed_by_tiebreak
+    )
+
+    rationale_eligible = accepted_answer
+
+    primary_rationale = primary_confirmed_by_tiebreak
+    fallback_rationale = verifier_confirmed_by_tiebreak
+
+    if both_primary_verifier_correct:
+        rationale_teacher_source = "verifier_confirmed_by_primary"
+        rationale_teacher_model = TEACHER_VERIFIER
+    elif verifier_confirmed_by_tiebreak:
+        rationale_teacher_source = "verifier_confirmed_by_tiebreak"
+        rationale_teacher_model = TEACHER_VERIFIER
+    elif primary_confirmed_by_tiebreak:
+        rationale_teacher_source = "tiebreak_confirmed_primary"
+        rationale_teacher_model = TEACHER_TIEBREAK
+    else:
+        rationale_teacher_source = None
+        rationale_teacher_model = None
+    
+    # old
+    # if primary_rationale:
+    #     rationale_teacher_source = "primary"
+    #     rationale_teacher_model = TEACHER_PRIMARY
+    # elif fallback_rationale:
+    #     rationale_teacher_source = "verifier_confirmed_by_tiebreak"
+    #     rationale_teacher_model = TEACHER_VERIFIER
+    # else:
+    #     rationale_teacher_source = None
+    #     rationale_teacher_model = None
+
+    if both_primary_verifier_correct:
         confidence = "high"
-    elif primary_correct and tiebreak_correct:
-        confidence = "medium-high"
-    elif verifier_correct or tiebreak_correct:
-        confidence = "medium"
+    elif verifier_confirmed_by_tiebreak:
+        confidence = "medium-confirmed-verifier"
+    elif primary_confirmed_by_tiebreak:
+        confidence = "medium-confirmed-primary"
     else:
         confidence = "low"
 
@@ -282,10 +390,17 @@ async def _stage1_example(
             "tiebreak_ans":     tiebreak_ans,
             "primary_correct":  primary_correct,
             "verifier_correct": verifier_correct,
-            "tiebreak_correct":    tiebreak_correct,
-            "accepted_answer":     accepted_answer,
-            "rationale_eligible":  rationale_eligible,
-            "confidence":          confidence,
+            "tiebreak_correct":         tiebreak_correct,
+            "both_primary_verifier_correct": both_primary_verifier_correct,
+            "primary_confirmed_by_tiebreak": primary_confirmed_by_tiebreak,
+            "verifier_confirmed_by_tiebreak": verifier_confirmed_by_tiebreak,
+            "accepted_answer":          accepted_answer,
+            "primary_rationale":        primary_rationale,
+            "fallback_rationale":       fallback_rationale,
+            "rationale_eligible":       rationale_eligible,
+            "rationale_teacher_source": rationale_teacher_source,
+            "rationale_teacher_model":  rationale_teacher_model,
+            "confidence":               confidence,
         },
     }
 
@@ -294,7 +409,7 @@ async def _stage1_example(
 # ---------------------------------------------------------------------------
 
 def _should_generate_rationale(r: Dict) -> bool:
-    """Generate rationale only when Qwen is correct and independently confirmed."""
+    """Generate rationale when a confirmed rationale teacher is available."""
     return bool(r["distill"].get("rationale_eligible", False))
 
 
@@ -306,16 +421,20 @@ async def _stage2_example(
 ) -> Dict:
     gold   = ex["distill"]["gold"]
     prompt = ex["messages"][1]["content"]
+    rationale_teacher_model = ex["distill"].get("rationale_teacher_model")
+    rationale_teacher_source = ex["distill"].get("rationale_teacher_source")
+    if not rationale_teacher_model:
+        raise ValueError(f"No rationale teacher selected for {ex.get('source_id')}")
 
     messages_s2 = [
         {"role": "system", "content": STAGE2_SYSTEM},
-        {"role": "user",   "content": _stage2_user(prompt, gold)},
+        {"role": "user", "content": _stage2_user(prompt, gold, _language_name(ex))},
     ]
 
     async with sem:
         rationale_raw = await _call_api(
-            client, TEACHER_PRIMARY, messages_s2, api_key,
-            max_tokens=MAX_TOKENS_RATIONALE, temperature=0.3,
+            client, rationale_teacher_model, messages_s2, api_key,
+            max_tokens=MAX_TOKENS_RATIONALE, temperature=0.0,
         )
 
     rationale_clean = _strip_think(rationale_raw) if rationale_raw else None
@@ -332,10 +451,13 @@ async def _stage2_example(
         invalid_reason = f"wrong_boxed:{boxed}"
     else:
         n_words = len(rationale_clean.split())
-        if n_words <= 5:
+        expected_final = f"\\boxed{{{gold}}}"
+        if _too_short_rationale(rationale_clean):
             invalid_reason = "too_short"
-        elif n_words >= 300:
+        elif _too_long_rationale(rationale_clean):
             invalid_reason = "too_long"
+        elif not rationale_clean.strip().endswith(expected_final):
+            invalid_reason = "not_ending_with_boxed"
         else:
             valid = True
 
@@ -343,11 +465,13 @@ async def _stage2_example(
         **ex,
         "distill": {
             **ex["distill"],
-            "rationale_raw":    rationale_raw,
-            "rationale_clean":  rationale_clean,
-            "rationale_valid":  valid,
-            "rationale_boxed":  boxed,
-            "invalid_reason":   invalid_reason if not valid else None,
+            "rationale_raw":            rationale_raw,
+            "rationale_clean":          rationale_clean,
+            "rationale_valid":          valid,
+            "rationale_boxed":          boxed,
+            "rationale_teacher_source": rationale_teacher_source,
+            "rationale_teacher_model":  rationale_teacher_model,
+            "invalid_reason":           invalid_reason if not valid else None,
         },
     }
 
@@ -359,6 +483,8 @@ async def _stage2_example(
             result["messages"][2] = assistant_msg
         else:
             result["messages"].append(assistant_msg)
+
+    return result
 
 # ---------------------------------------------------------------------------
 # Progress tracking
@@ -393,6 +519,33 @@ class _Progress:
 # File-level pipeline
 # ---------------------------------------------------------------------------
 
+def _make_prompt_from_record(r: Dict[str, Any]) -> str:
+    if r.get("prompt"):
+        return str(r["prompt"])
+    if r.get("messages") and len(r["messages"]) >= 2:
+        return str(r["messages"][1]["content"])
+    question = str(r.get("question", "")).strip()
+    if all(k in r for k in ["A", "B", "C", "D"]):
+        return f"{question}\n\nA) {r['A']}\nB) {r['B']}\nC) {r['C']}\nD) {r['D']}"
+    if all(k in r for k in ["option1", "option2", "option3", "option4"]):
+        return f"{question}\n\nA) {r['option1']}\nB) {r['option2']}\nC) {r['option3']}\nD) {r['option4']}"
+    raise ValueError(f"Cannot build prompt for record: {r.get('id', r.get('source_id', '<no id>'))}")
+
+
+def _normalize_processed_record(r: Dict[str, Any], src_path: Path, idx: int) -> Dict[str, Any]:
+    prompt = _make_prompt_from_record(r)
+    answer = str(r["answer"]).strip().upper()
+    source_id = str(r.get("source_id") or r.get("id") or f"{src_path.stem}_{idx:06d}")
+    metadata = dict(r.get("metadata", {}))
+    return {**r, "source_id": source_id, "answer": answer, "task_type": r.get("task_type", "mcq"), "split": "train", "messages": r.get("messages") or [{"role": "system", "content": ""}, {"role": "user", "content": prompt}, {"role": "assistant", "content": f"\\boxed{{{answer}}}"}], "metadata": metadata}
+
+
+def _load_processed_records(src_path: Path) -> List[Dict[str, Any]]:
+    with open(src_path, encoding="utf-8") as f:
+        raw_records = [json.loads(l) for l in f if l.strip()]
+    return [_normalize_processed_record(r, src_path, i) for i, r in enumerate(raw_records)]
+
+
 async def _distill_file(
     src_path: Path,
     stage1_path: Path,
@@ -403,12 +556,10 @@ async def _distill_file(
     dry_run: bool,
     log_every: int,
     subset_filter: Optional[str] = None,
+    debug_n: int = 5,
 ) -> Dict[str, Any]:
-    with open(src_path, encoding="utf-8") as f:
-        records = [json.loads(l) for l in f if l.strip()]
-
-    records = [r for r in records
-               if r.get("split") == "train" and r.get("task_type") == "mcq"]
+    records = _load_processed_records(src_path)
+    records = [r for r in records if r.get("task_type") == "mcq"]
 
     # MERA subset filter: mera_mamuramu / mera_mathlogicqa
     if subset_filter:
@@ -416,7 +567,8 @@ async def _distill_file(
                    if r.get("metadata", {}).get("subset") == subset_filter]
 
     if dry_run:
-        records = records[:5]
+        rng = random.Random(42)
+        records = rng.sample(records, min(debug_n, len(records)))
 
     if not records:
         return {"total": 0, "stage1_pass": 0, "stage2_eligible": 0, "stage2_valid": 0}
@@ -459,11 +611,16 @@ async def _distill_file(
     for r in stage1_results:
         c = r["distill"]["confidence"]
         conf_counts[c] = conf_counts.get(c, 0) + 1
+    source_counts = {}
+    for r in stage2_eligible:
+        src = r["distill"].get("rationale_teacher_source", "none")
+        source_counts[src] = source_counts.get(src, 0) + 1
 
     print(f"  Stage 1 accepted: {len(stage1_pass)}/{len(stage1_results)} "
         f"({100*len(stage1_pass)//max(1,len(stage1_results))}%)")
     print(f"  Confidence breakdown: {conf_counts}")
     print(f"  Stage 2 eligible (rationale_eligible): {len(stage2_eligible)}")
+    print(f"  Rationale source breakdown: {source_counts}")
 
     # ── Stage 2 ──────────────────────────────────────────────────────────────
     done_s2: set        = set()
@@ -514,6 +671,7 @@ async def _distill_file(
         "stage2_eligible": len(stage2_eligible),
         "stage2_valid":    stage2_valid,
         "conf_counts":     conf_counts,
+        "rationale_source_counts": source_counts,
         "invalid_reasons": invalid_reasons,
     }
 
@@ -521,23 +679,30 @@ async def _distill_file(
 # Main
 # ---------------------------------------------------------------------------
 
-SUPPORTED_DATASETS = ["mera", "ceval", "milu", "global_mmlu",
-                      "mera_mamuramu", "mera_mathlogicqa"]
+SUPPORTED_DATASETS = ["ceval", "milu", "mera_mamuramu"]
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--datasets",    nargs="+", default=SUPPORTED_DATASETS,
-                        choices=SUPPORTED_DATASETS)
-    parser.add_argument("--sft_dir",     type=Path,
-                        default=Path("multilingual/data/sft/v7"))
-    parser.add_argument("--output_dir",  type=Path,
-                        default=Path("multilingual/data/distilled/v7"))
+    parser.add_argument("--datasets", nargs="+", default=SUPPORTED_DATASETS, choices=SUPPORTED_DATASETS)
+    parser.add_argument("--processed_dir", type=Path, default=Path("multilingual/data/processed"))
+    parser.add_argument("--output_dir", type=Path, default=Path("multilingual/data/distilled/v7"))
     parser.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY)
-    parser.add_argument("--log_every",   type=int, default=LOG_EVERY,
-                        help="Print progress every N examples per phase.")
-    parser.add_argument("--dry_run",     action="store_true")
+    parser.add_argument("--log_every", type=int, default=LOG_EVERY, help="Print progress every N examples per phase.")
+    parser.add_argument("--dry_run", action="store_true")
+    parser.add_argument("--debug_n", type=int, default=5)
     return parser.parse_args()
+
+
+def _build_jobs(processed_dir: Path, datasets: List[str]) -> List[tuple[Path, Optional[str], str]]:
+    jobs = []
+    for dataset in datasets:
+        for rel_path, output_base in PROCESSED_INPUTS[dataset]:
+            path = processed_dir / rel_path
+            if not path.exists():
+                raise FileNotFoundError(f"Processed distillation input not found: {path}")
+            jobs.append((path, None, output_base))
+    return jobs
 
 
 async def main_async(args):
@@ -545,37 +710,24 @@ async def main_async(args):
     if not api_key:
         raise ValueError("CSCS_SERVING_API environment variable not set.")
 
-    per_dir = args.sft_dir / "per_dataset"
-    if not per_dir.exists():
-        raise FileNotFoundError(f"per_dataset dir not found: {per_dir}")
-
+    processed_dir = args.processed_dir
+    if not processed_dir.exists():
+        raise FileNotFoundError(f"processed_dir not found: {processed_dir}")
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     # Build list of (src_path, subset_filter, output_base)
-    jobs: list = []
-    for dataset in args.datasets:
-        if dataset == "mera_mamuramu":
-            for path in sorted(per_dir.glob("mera_*_train.jsonl")):
-                jobs.append((path, "mamuramu", "mera_russian_mamuramu"))
-        elif dataset == "mera_mathlogicqa":
-            for path in sorted(per_dir.glob("mera_*_train.jsonl")):
-                jobs.append((path, "mathlogicqa", "mera_russian_mathlogicqa"))
-        else:
-            for path in sorted(per_dir.glob(f"{dataset}_*_train.jsonl")):
-                jobs.append((path, None, path.stem.replace("_train", "")))
-
+    jobs = _build_jobs(processed_dir, args.datasets)
     if not jobs:
-        print(f"No files found for {args.datasets} in {per_dir}")
+        print(f"No files found for {args.datasets} in {processed_dir}")
         return
 
-    files_to_process = jobs  # rename for print
     print(f"Jobs to distill ({len(jobs)}):")
     for path, subset, base in jobs:
         tag = f" [subset={subset}]" if subset else ""
         print(f"  {path.name}{tag} → {base}")
 
     if args.dry_run:
-        print("\n[DRY RUN] Processing 5 examples per file.\n")
+        print(f"\n[DRY RUN] Processing {args.debug_n} examples per file.\n")
 
     sem     = asyncio.Semaphore(args.concurrency)
     summary = []
@@ -592,6 +744,7 @@ async def main_async(args):
                 src_path, stage1_path, stage2_path,
                 client, sem, api_key, args.dry_run, args.log_every,
                 subset_filter=subset_filter,
+                debug_n=args.debug_n,
             )
             elapsed         = time.time() - t0
             stats["file"]   = src_path.name
