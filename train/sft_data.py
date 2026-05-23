@@ -20,20 +20,31 @@ class DatasetBundle:
     test_loader: DataLoader
     train_size: int
     test_size: int
+    train_max_tokens: int = 0
+    test_max_tokens: int = 0
+    train_dropped_count: int = 0
+    test_dropped_count: int = 0
 
 
 class SFTDataset(torch.utils.data.Dataset):
-    def __init__(self, hf_dataset, tokenizer, system_prompt: str):
+    def __init__(self, hf_dataset, tokenizer, system_prompt: str, max_seq_len: int | None = None):
         self.examples = []
+        self.max_tokens = 0
+        self.dropped_count = 0
         for row in hf_dataset:
             ex = encode_example(
                 tokenizer,
                 row[DatasetFieldNames.SFT_INPUT],
                 row[DatasetFieldNames.SFT_TARGET],
                 system_prompt,
+                max_seq_len=max_seq_len,
             )
+            if ex is None:
+                self.dropped_count += 1
+                continue
             if "answer" in row:
                 ex["answer"] = row["answer"]
+            self.max_tokens = max(self.max_tokens, len(ex["input_ids"]))
             self.examples.append(ex)
 
     def __len__(self):
@@ -48,7 +59,8 @@ def encode_example(
     prompt: str,
     target: str,
     system_prompt: str,
-) -> dict:
+    max_seq_len: int | None = None,
+) -> dict | None:
     messages_full = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": prompt},
@@ -75,8 +87,15 @@ def encode_example(
     full_ids = tokenizer(full_text, add_special_tokens=False)["input_ids"]
     prompt_len = len(tokenizer(prompt_text, add_special_tokens=False)["input_ids"])
 
+    if max_seq_len is not None and max_seq_len <= 0:
+        raise ValueError("max_seq_len must be positive when provided.")
+
+    if max_seq_len is not None and len(full_ids) > max_seq_len:
+        return None
+
     input_ids = full_ids
-    labels = [-100] * prompt_len + full_ids[prompt_len:]
+
+    labels = [-100] * prompt_len + input_ids[prompt_len:]
 
     return {"input_ids": input_ids, "labels": labels}
 
@@ -107,6 +126,7 @@ def load_dataset_bundles(
     tokenizer,
     batch_size: int,
     system_prompt: str,
+    max_seq_len: int | None = None,
 ) -> list[DatasetBundle]:
     bundles: list[DatasetBundle] = []
     _collate = partial(collate_fn, pad_token_id=tokenizer.pad_token_id)
@@ -122,8 +142,8 @@ def load_dataset_bundles(
         train_hf = load_from_disk(str(train_path))
         test_hf = load_from_disk(str(test_path))
 
-        train_ds = SFTDataset(train_hf, tokenizer, system_prompt)
-        test_ds = SFTDataset(test_hf, tokenizer, system_prompt)
+        train_ds = SFTDataset(train_hf, tokenizer, system_prompt, max_seq_len=max_seq_len)
+        test_ds = SFTDataset(test_hf, tokenizer, system_prompt, max_seq_len=max_seq_len)
 
         bundles.append(
             DatasetBundle(
@@ -142,6 +162,10 @@ def load_dataset_bundles(
                 ),
                 train_size=len(train_ds),
                 test_size=len(test_ds),
+                train_max_tokens=train_ds.max_tokens,
+                test_max_tokens=test_ds.max_tokens,
+                train_dropped_count=train_ds.dropped_count,
+                test_dropped_count=test_ds.dropped_count,
             )
         )
 

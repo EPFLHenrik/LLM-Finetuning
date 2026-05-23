@@ -52,6 +52,7 @@ DEFAULT_BATCH_SIZE = 1
 DEFAULT_LR = 2e-4
 DEFAULT_WARMUP_RATIO = 0.05
 DEFAULT_GRADIENT_ACCUMULATION_STEPS = 16
+DEFAULT_MAX_SEQ_LEN = 15000 # Safer cap than 16384 to avoid OOMs from outliers in the training data.
 
 # LoRA defaults (gold-standard starter values for 1-2B models).
 LORA_R = 16
@@ -185,6 +186,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", type=str, default=None)
     parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+    parser.add_argument(
+        "--max-seq-len",
+        type=int,
+        default=DEFAULT_MAX_SEQ_LEN,
+        help="Maximum token length per encoded training example after chat templating.",
+    )
     parser.add_argument(
         "--gradient-accumulation-steps",
         type=int,
@@ -401,6 +408,10 @@ def apply_train_size_caps(
                 test_loader=bundle.test_loader,
                 train_size=target_train_size,
                 test_size=bundle.test_size,
+                train_max_tokens=bundle.train_max_tokens,
+                test_max_tokens=bundle.test_max_tokens,
+                train_dropped_count=bundle.train_dropped_count,
+                test_dropped_count=bundle.test_dropped_count,
             )
         )
 
@@ -444,6 +455,10 @@ def apply_test_size_caps(
                 ),
                 train_size=bundle.train_size,
                 test_size=target_test_size,
+                train_max_tokens=bundle.train_max_tokens,
+                test_max_tokens=bundle.test_max_tokens,
+                train_dropped_count=bundle.train_dropped_count,
+                test_dropped_count=bundle.test_dropped_count,
             )
         )
 
@@ -718,6 +733,8 @@ def copy_best_checkpoint(
 def train(args: argparse.Namespace) -> None:
     if args.batch_size <= 0:
         raise ValueError("--batch-size must be > 0")
+    if args.max_seq_len <= 0:
+        raise ValueError("--max-seq-len must be > 0")
     if args.gradient_accumulation_steps <= 0:
         raise ValueError("--gradient-accumulation-steps must be > 0")
     if args.train_sizes is not None and len(args.train_sizes) != len(args.datasets):
@@ -737,6 +754,7 @@ def train(args: argparse.Namespace) -> None:
     print(f"  Base model           : {BASE_MODEL}")
     print(f"  Datasets             : {args.datasets}")
     print(f"  Train sizes          : {args.train_sizes}")
+    print(f"  Max seq len          : {args.max_seq_len}")
     print(f"  Batch size           : {args.batch_size}")
     print(f"  Grad accumulation    : {args.gradient_accumulation_steps}")
     print(f"  Effective update size: {args.batch_size * args.gradient_accumulation_steps}")
@@ -753,13 +771,23 @@ def train(args: argparse.Namespace) -> None:
         tokenizer=tokenizer,
         batch_size=args.batch_size,
         system_prompt=SYSTEM_PROMPT_MCQ,
+        max_seq_len=args.max_seq_len,
     )
     bundles = apply_train_size_caps(bundles, args.train_sizes, seed=Random.SEED)
     bundles = apply_test_size_caps(bundles, args.test_sizes, seed=Random.SEED)
 
     print("\nLoaded datasets:")
     for bundle in bundles:
-        print(f"  - {bundle.name}: train={bundle.train_size} test={bundle.test_size}")
+        print(
+            "  - "
+            f"{bundle.name}: "
+            f"train={bundle.train_size} "
+            f"test={bundle.test_size} "
+            f"train_max_tokens={bundle.train_max_tokens} "
+            f"test_max_tokens={bundle.test_max_tokens} "
+            f"train_dropped={bundle.train_dropped_count} "
+            f"test_dropped={bundle.test_dropped_count}"
+        )
 
     if wb_run is not None:
         wb_run.config.update(
