@@ -124,7 +124,28 @@ def _format_example(tokenizer, row: dict[str, Any]) -> str:
     return tokenizer.apply_chat_template(row["messages"], tokenize=False, add_generation_prompt=False)
 
 
-def _save_tokenizer_artifacts(tokenizer, output_dir: Path) -> None:
+def _ensure_training_chat_template(tokenizer) -> None:
+    """Ensure the tokenizer's chat template contains a training generation marker.
+
+    TRL requires chat templates to include prefix-preservation or a
+    `{% generation %}` marker. If the loaded tokenizer template is missing
+    the marker we append a generation placeholder so the template becomes
+    training-compatible.
+    """
+    tokenizer.chat_template = (
+        "{% for message in messages %}"
+        "{{ '<|im_start|>' + message['role'] + '\\n' }}"
+        "{% if message['role'] == 'assistant' %}"
+        "{% generation %}{{ message['content'] }}{% endgeneration %}"
+        "{% else %}"
+        "{{ message['content'] }}"
+        "{% endif %}"
+        "{{ '<|im_end|>\\n' }}"
+        "{% endfor %}"
+    )
+
+
+def _save_tokenizer_artifacts(tokenizer, output_dir: Path, source_dir: Path) -> None:
     tokenizer.save_pretrained(output_dir)
 
     tokenizer_config_path = output_dir / "tokenizer_config.json"
@@ -134,8 +155,10 @@ def _save_tokenizer_artifacts(tokenizer, output_dir: Path) -> None:
         data.pop("chat_template", None)
         tokenizer_config_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    if tokenizer.chat_template:
-        (output_dir / "chat_template.jinja").write_text(tokenizer.chat_template, encoding="utf-8")
+    source_chat_template = source_dir / "chat_template.jinja"
+    if not source_chat_template.exists():
+        raise SystemExit(f"Source chat template not found: {source_chat_template}")
+    shutil.copyfile(source_chat_template, output_dir / "chat_template.jinja")
 
 
 def _merge_saved_adapter_checkpoints(base_model_folder: Path, adapter_root: Path, merged_root: Path, tokenizer, dtype: torch.dtype) -> list[Path]:
@@ -165,7 +188,7 @@ def _merge_saved_adapter_checkpoints(base_model_folder: Path, adapter_root: Path
         merged_model.config.save_pretrained(merged_dir)
         if getattr(merged_model, "generation_config", None) is not None:
             merged_model.generation_config.save_pretrained(merged_dir)
-        _save_tokenizer_artifacts(tokenizer, merged_dir)
+            _save_tokenizer_artifacts(tokenizer, merged_dir, base_model_folder)
         merged_dirs.append(merged_dir)
 
     return merged_dirs
@@ -227,6 +250,8 @@ def main() -> None:
     if not tokenizer.chat_template:
         raise SystemExit(f"Tokenizer does not define a chat template: {args.model_folder}")
 
+    _ensure_training_chat_template(tokenizer)        
+
     _disable_peft_bnb_dispatch()
 
     run_name = args.run_name or args.output_dir.name
@@ -279,7 +304,7 @@ def main() -> None:
     eval_dataset = None
 
     if train_rows_for_trainer:
-        preview_text = tokenizer.apply_chat_template(train_rows_for_trainer[0]["messages"], tokenize=False, add_generation_prompt=True)
+        preview_text = tokenizer.apply_chat_template(train_rows_for_trainer[0]["messages"], tokenize=False, add_generation_prompt=False)
         print("\n--- Sample formatted prompt ---")
         print(preview_text)
         print("------------------------------\n")
@@ -327,7 +352,6 @@ def main() -> None:
         model=model,
         args=sft_config,
         train_dataset=train_dataset,
-        formatting_func=lambda example: _format_example(tokenizer, example),
         processing_class=tokenizer,
     )
 
@@ -336,7 +360,7 @@ def main() -> None:
     if args.merge_and_save:
         merged_model = trainer.model.merge_and_unload()
         merged_model.save_pretrained(args.output_dir, safe_serialization=True)
-        _save_tokenizer_artifacts(tokenizer, args.output_dir)
+        _save_tokenizer_artifacts(tokenizer, args.output_dir, args.model_folder)
         merged_checkpoints_dir = args.output_dir / "merged_checkpoints"
         merged_checkpoint_dirs = _merge_saved_adapter_checkpoints(
             args.model_folder,

@@ -121,7 +121,7 @@ def _assistant_content(row: dict[str, Any], answer: str) -> str:
     think_block = f"<think>\nLets think about this step by step\n\n{task_b}\n</think>"
     return "\n\n".join([
         think_block,
-        f"So the answer is: \\\boxed{{{answer}}}",
+        f"So the answer is: \\boxed{{{answer}}}",
     ])
 
 

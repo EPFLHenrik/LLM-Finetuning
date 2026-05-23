@@ -145,32 +145,6 @@ def _log_eval_report_to_wandb(eval_report: dict[str, Any], *, prefix: str, step:
     wandb.run.summary.update(metrics)
 
 
-class TransformerEvaluator:
-    def __init__(self, model_path: Path | str, tokenizer, device: str):
-        dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-        self.tokenizer = tokenizer
-        self.model = AutoModelForCausalLM.from_pretrained(str(model_path), torch_dtype=dtype, trust_remote_code=True)
-        self.model.to(device)
-        self.model.eval()
-
-    def generate_once(self, prompt: str, max_new_tokens: int, temperature: float, top_p: float) -> str:
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
-        gen_kwargs = {
-            "max_new_tokens": max_new_tokens,
-            "do_sample": temperature > 0,
-            "pad_token_id": self.tokenizer.eos_token_id,
-            "eos_token_id": self.tokenizer.eos_token_id,
-        }
-        if temperature > 0:
-            gen_kwargs["temperature"] = temperature
-            gen_kwargs["top_p"] = top_p
-        with torch.no_grad():
-            generated = self.model.generate(**inputs, **gen_kwargs)
-        prompt_length = inputs["input_ids"].shape[-1]
-        completion = generated[0][prompt_length:]
-        return self.tokenizer.decode(completion, skip_special_tokens=False)
-
-
 class VLLMEvaluator:
     def __init__(self, model_path: Path | str, tokenizer):
         self.model_path = str(model_path)
@@ -260,10 +234,9 @@ def main() -> None:
     parser.add_argument("--checkpoints-dir", required=True, type=Path)
     parser.add_argument("--validation-file", required=True, type=Path)
     parser.add_argument("--output-dir", type=Path, default=Path("results/checkpoint_evals"))
-    parser.add_argument("--max-new-tokens", type=int, default=512)
+    parser.add_argument("--max-new-tokens", type=int, default=16000)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top-p", type=float, default=0.95)
-    parser.add_argument("--use-vllm", action="store_true")
     parser.add_argument("--skip-wandb", action="store_true")
     parser.add_argument("--wandb-project", type=str, default="cs552-mystery-machine")
     parser.add_argument("--wandb-entity", type=str, default=None)
@@ -283,6 +256,8 @@ def main() -> None:
     candidates = find_candidate_checkpoints(args.checkpoints_dir)
     if not candidates:
         raise SystemExit(f"No merged checkpoints found under {args.checkpoints_dir}")
+    if not _HAS_VLLM:
+        raise SystemExit("vLLM is required for this script but could not be imported")
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -304,10 +279,7 @@ def main() -> None:
                 tokenizer.pad_token = tokenizer.eos_token
             tokenizer.padding_side = "right"
 
-            if args.use_vllm and _HAS_VLLM:
-                evaluator = VLLMEvaluator(ckpt_dir, tokenizer)
-            else:
-                evaluator = TransformerEvaluator(ckpt_dir, tokenizer, device)
+            evaluator = VLLMEvaluator(ckpt_dir, tokenizer)
 
             eval_report = evaluate_rows(
                 evaluator,

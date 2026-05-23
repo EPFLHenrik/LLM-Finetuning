@@ -17,6 +17,15 @@ from huggingface_hub import HfApi
 
 
 TARGET_REPO_ID = "cs-552-2026-mystery-machine/general_knowledge_model"
+ALLOWED_FILES = (
+    "chat_template.jinja",
+    "checkpoint_manifest.json",
+    "config.json",
+    "generation_config.json",
+    "model.safetensors",
+    "tokenizer.json",
+    "tokenizer_config.json",
+)
 
 
 def main(argv: list[str]) -> int:
@@ -32,14 +41,26 @@ def main(argv: list[str]) -> int:
 
     api = HfApi()
     api.create_repo(repo_id=TARGET_REPO_ID, repo_type="model", exist_ok=True, token=token)
-    print(f"Uploading {model_dir} to {TARGET_REPO_ID}...")
-    api.upload_folder(
-        folder_path=str(model_dir),
-        repo_id=TARGET_REPO_ID,
-        repo_type="model",
-        commit_message=f"Upload {model_dir.name}",
-        token=token,
-    )
+    upload_paths = []
+    for filename in ALLOWED_FILES:
+        file_path = model_dir / filename
+        if not file_path.is_file():
+            print(f"[warn] Skipping missing file: {file_path}")
+            continue
+        upload_paths.append(file_path)
+
+    if not upload_paths:
+        raise FileNotFoundError(f"No allowed files found in {model_dir}")
+
+    print(f"Uploading {len(upload_paths)} files from {model_dir} to {TARGET_REPO_ID}...")
+    for file_path in upload_paths:
+        api.upload_file(
+            path_or_fileobj=str(file_path),
+            path_in_repo=file_path.name,
+            repo_id=TARGET_REPO_ID,
+            repo_type="model",
+            token=token,
+        )
     print("Upload complete.")
     return 0
 
