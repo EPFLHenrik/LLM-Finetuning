@@ -66,6 +66,19 @@
       "results_path": "runs/benchmark/results/advbench/Qwen3-1.7B-baseline_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:02:30+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "advbench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.975,
+      "box_compliance_rate": 0.9980769230769231,
+      "pass@1_among_extracted": 0.976878612716763,
+      "results_path": "runs/benchmark/results/advbench/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-13T07:35:12+00:00",
       "model_name": "Qwen3-1.7B-baseline",
       "benchmark": "jbb-behaviors",
@@ -76,6 +89,19 @@
       "pass@1": 0.785,
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.785,
+      "results_path": "runs/benchmark/results/jbb-behaviors/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:02:49+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "jbb-behaviors",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.775,
+      "box_compliance_rate": 0.995,
+      "pass@1_among_extracted": 0.7788944723618091,
       "results_path": "runs/benchmark/results/jbb-behaviors/Qwen3-1.7B-baseline_think_full_results.json"
     },
     {
@@ -196,6 +222,45 @@
       "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_no_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:03:51+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7256637168141593,
+      "box_compliance_rate": 0.9238938053097345,
+      "pass@1_among_extracted": 0.7854406130268199,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T22:48:53+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.6,
+      "box_compliance_rate": 0.815,
+      "pass@1_among_extracted": 0.7361963190184049,
+      "results_path": "runs/benchmark/results/sgxstest/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:05:25+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.625,
+      "box_compliance_rate": 0.82,
+      "pass@1_among_extracted": 0.7621951219512195,
+      "results_path": "runs/benchmark/results/sgxstest/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-12T08:35:24+00:00",
       "model_name": "Qwen3-1.7B-baseline",
       "benchmark": "validation_samples",
@@ -222,6 +287,19 @@
       "results_path": "runs/benchmark/results/validation_samples/Qwen3-1.7B-baseline_no_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:05:42+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.6,
+      "box_compliance_rate": 0.9,
+      "pass@1_among_extracted": 0.6666666666666666,
+      "results_path": "runs/benchmark/results/validation_samples/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-12T08:59:17+00:00",
       "model_name": "Qwen3-1.7B-baseline",
       "benchmark": "wildguardmix",
@@ -233,6 +311,32 @@
       "box_compliance_rate": 0.988,
       "pass@1_among_extracted": 0.7489878542510121,
       "results_path": "runs/benchmark/results/wildguardmix/binary_choice/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:06:05+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.41642228739002934,
+      "box_compliance_rate": 0.5366568914956011,
+      "pass@1_among_extracted": 0.7759562841530054,
+      "results_path": "runs/benchmark/results/wildguardmix/binary_choice/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:08:26+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.21809744779582366,
+      "box_compliance_rate": 0.6392111368909513,
+      "pass@1_among_extracted": 0.3411978221415608,
+      "results_path": "runs/benchmark/results/wildguardmix/safety_combo/Qwen3-1.7B-baseline_think_full_results.json"
     },
     {
       "timestamp_utc": "2026-05-12T08:53:27+00:00",
@@ -248,6 +352,19 @@
       "results_path": "runs/benchmark/results/wildguardmix/safety_combo_mcq/Qwen3-1.7B-baseline_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:09:33+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "subcategory_classification",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.5452436194895591,
+      "box_compliance_rate": 0.91415313225058,
+      "pass@1_among_extracted": 0.5964467005076142,
+      "results_path": "runs/benchmark/results/wildguardmix/subcategory_classification/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-12T09:02:52+00:00",
       "model_name": "Qwen3-1.7B-baseline",
       "benchmark": "wildguardmix",
@@ -259,6 +376,188 @@
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.5466666666666666,
       "results_path": "runs/benchmark/results/wildguardmix/subcategory_mcq/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:11:15+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.3760180995475113,
+      "box_compliance_rate": 0.8095022624434389,
+      "pass@1_among_extracted": 0.4645053102291783,
+      "results_path": "runs/benchmark/results/wildjailbreak/binary_choice/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:14:29+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.37104072398190047,
+      "box_compliance_rate": 0.9081447963800905,
+      "pass@1_among_extracted": 0.408570004982561,
+      "results_path": "runs/benchmark/results/wildjailbreak/safety_combo/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:14:59+00:00",
+      "model_name": "Qwen3-1.7B-baseline",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "statement_comparison",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7904761904761904,
+      "box_compliance_rate": 0.9857142857142858,
+      "pass@1_among_extracted": 0.8019323671497585,
+      "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/Qwen3-1.7B-baseline_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:40:43+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "advbench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.9788461538461538,
+      "box_compliance_rate": 0.9980769230769231,
+      "pass@1_among_extracted": 0.9807321772639692,
+      "results_path": "runs/benchmark/results/advbench/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:41:01+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "jbb-behaviors",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.795,
+      "box_compliance_rate": 0.995,
+      "pass@1_among_extracted": 0.7989949748743719,
+      "results_path": "runs/benchmark/results/jbb-behaviors/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:42:11+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7221238938053097,
+      "box_compliance_rate": 0.9292035398230089,
+      "pass@1_among_extracted": 0.7771428571428571,
+      "results_path": "runs/benchmark/results/safetybench/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:43:47+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.645,
+      "box_compliance_rate": 0.845,
+      "pass@1_among_extracted": 0.7633136094674556,
+      "results_path": "runs/benchmark/results/sgxstest/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:43:58+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7,
+      "box_compliance_rate": 0.9,
+      "pass@1_among_extracted": 0.7777777777777778,
+      "results_path": "runs/benchmark/results/validation_samples/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:44:23+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.4090909090909091,
+      "box_compliance_rate": 0.5351906158357771,
+      "pass@1_among_extracted": 0.7643835616438356,
+      "results_path": "runs/benchmark/results/wildguardmix/binary_choice/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:46:45+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.21345707656612528,
+      "box_compliance_rate": 0.654292343387471,
+      "pass@1_among_extracted": 0.3262411347517731,
+      "results_path": "runs/benchmark/results/wildguardmix/safety_combo/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:47:51+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "subcategory_classification",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.5266821345707656,
+      "box_compliance_rate": 0.9164733178654292,
+      "pass@1_among_extracted": 0.5746835443037974,
+      "results_path": "runs/benchmark/results/wildguardmix/subcategory_classification/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:49:37+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.37104072398190047,
+      "box_compliance_rate": 0.8298642533936652,
+      "pass@1_among_extracted": 0.44711014176663033,
+      "results_path": "runs/benchmark/results/wildjailbreak/binary_choice/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:53:02+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.3665158371040724,
+      "box_compliance_rate": 0.8923076923076924,
+      "pass@1_among_extracted": 0.4107505070993915,
+      "results_path": "runs/benchmark/results/wildjailbreak/safety_combo/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:53:35+00:00",
+      "model_name": "Qwen3-1.7B-baseline_no_system_prompt",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "statement_comparison",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8095238095238095,
+      "box_compliance_rate": 0.9761904761904762,
+      "pass@1_among_extracted": 0.8292682926829268,
+      "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/Qwen3-1.7B-baseline_no_system_prompt_think_full_results.json"
     },
     {
       "timestamp_utc": "2026-05-11T23:35:44+00:00",
@@ -612,6 +911,149 @@
       "results_path": "runs/benchmark/results/wildguardmix/subcategory_mcq/sb_hidden_CoT_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:16:43+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "advbench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.9884615384615385,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.9884615384615385,
+      "results_path": "runs/benchmark/results/advbench/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:16:53+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "jbb-behaviors",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.72,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.72,
+      "results_path": "runs/benchmark/results/jbb-behaviors/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:17:05+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8230088495575221,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8230088495575221,
+      "results_path": "runs/benchmark/results/safetybench/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:17:11+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.73,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.73,
+      "results_path": "runs/benchmark/results/sgxstest/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:17:16+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.7,
+      "results_path": "runs/benchmark/results/validation_samples/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:17:24+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8607038123167156,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8607038123167156,
+      "results_path": "runs/benchmark/results/wildguardmix/binary_choice/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:17:51+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.41415313225058004,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.41415313225058004,
+      "results_path": "runs/benchmark/results/wildguardmix/safety_combo/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:18:07+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "subcategory_classification",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7482598607888631,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.7482598607888631,
+      "results_path": "runs/benchmark/results/wildguardmix/subcategory_classification/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:19:58+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7371040723981901,
+      "box_compliance_rate": 0.9995475113122172,
+      "pass@1_among_extracted": 0.7374377546401086,
+      "results_path": "runs/benchmark/results/wildjailbreak/binary_choice/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:20:44+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.5230769230769231,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.5230769230769231,
+      "results_path": "runs/benchmark/results/wildjailbreak/safety_combo/sb_wgm_mix_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:20:53+00:00",
+      "model_name": "sb_wgm_mix",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "statement_comparison",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.6666666666666666,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.6666666666666666,
+      "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/sb_wgm_mix_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-22T17:28:16+00:00",
       "model_name": "sb_wgm_mix2_half",
       "benchmark": "advbench",
@@ -626,6 +1068,19 @@
     },
     {
       "timestamp_utc": "2026-05-22T21:35:52+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "advbench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.9961538461538462,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.9961538461538462,
+      "results_path": "runs/benchmark/results/advbench/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:30:02+00:00",
       "model_name": "sb_wgm_mix2_half",
       "benchmark": "advbench",
       "benchmark_subcategory": "",
@@ -664,6 +1119,19 @@
       "results_path": "runs/benchmark/results/jbb-behaviors/sb_wgm_mix2_half_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:30:12+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "jbb-behaviors",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.74,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.74,
+      "results_path": "runs/benchmark/results/jbb-behaviors/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-22T21:49:24+00:00",
       "model_name": "sb_wgm_mix2_half",
       "benchmark": "safetybench",
@@ -690,7 +1158,59 @@
       "results_path": "runs/benchmark/results/safetybench/sb_wgm_mix2_half_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:30:24+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8123893805309734,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8123893805309734,
+      "results_path": "runs/benchmark/results/safetybench/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T22:52:25+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.755,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.755,
+      "results_path": "runs/benchmark/results/sgxstest/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:30:30+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.745,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.745,
+      "results_path": "runs/benchmark/results/sgxstest/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-22T21:36:08+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8,
+      "results_path": "runs/benchmark/results/validation_samples/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:30:35+00:00",
       "model_name": "sb_wgm_mix2_half",
       "benchmark": "validation_samples",
       "benchmark_subcategory": "",
@@ -716,6 +1236,19 @@
       "results_path": "runs/benchmark/results/wildguardmix/binary_choice/sb_wgm_mix2_half_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:30:42+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8782991202346041,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8782991202346041,
+      "results_path": "runs/benchmark/results/wildguardmix/binary_choice/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-22T21:38:07+00:00",
       "model_name": "sb_wgm_mix2_half",
       "benchmark": "wildguardmix",
@@ -726,6 +1259,19 @@
       "pass@1": 0.3909512761020882,
       "box_compliance_rate": 0.9988399071925754,
       "pass@1_among_extracted": 0.3914053426248548,
+      "results_path": "runs/benchmark/results/wildguardmix/safety_combo/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:31:10+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.4025522041763341,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.4025522041763341,
       "results_path": "runs/benchmark/results/wildguardmix/safety_combo/sb_wgm_mix2_half_think_full_results.json"
     },
     {
@@ -742,7 +1288,33 @@
       "results_path": "runs/benchmark/results/wildguardmix/subcategory_classification/sb_wgm_mix2_half_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:31:27+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "subcategory_classification",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7296983758700696,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.7296983758700696,
+      "results_path": "runs/benchmark/results/wildguardmix/subcategory_classification/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-22T21:38:53+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7714932126696833,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.7714932126696833,
+      "results_path": "runs/benchmark/results/wildjailbreak/binary_choice/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:31:58+00:00",
       "model_name": "sb_wgm_mix2_half",
       "benchmark": "wildjailbreak",
       "benchmark_subcategory": "binary_choice",
@@ -768,6 +1340,19 @@
       "results_path": "runs/benchmark/results/wildjailbreak/safety_combo/sb_wgm_mix2_half_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:34:05+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.4579185520361991,
+      "box_compliance_rate": 0.9995475113122172,
+      "pass@1_among_extracted": 0.45812584880036217,
+      "results_path": "runs/benchmark/results/wildjailbreak/safety_combo/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-22T21:39:49+00:00",
       "model_name": "sb_wgm_mix2_half",
       "benchmark": "wildjailbreak",
@@ -779,6 +1364,162 @@
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.719047619047619,
       "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:34:15+00:00",
+      "model_name": "sb_wgm_mix2_half",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "statement_comparison",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7095238095238096,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.7095238095238096,
+      "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/sb_wgm_mix2_half_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:22:21+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "advbench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.9903846153846154,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.9903846153846154,
+      "results_path": "runs/benchmark/results/advbench/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:22:30+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "jbb-behaviors",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.745,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.745,
+      "results_path": "runs/benchmark/results/jbb-behaviors/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:24:06+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8212389380530973,
+      "box_compliance_rate": 0.9982300884955753,
+      "pass@1_among_extracted": 0.8226950354609929,
+      "results_path": "runs/benchmark/results/safetybench/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:24:12+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.725,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.725,
+      "results_path": "runs/benchmark/results/sgxstest/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:24:17+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.7,
+      "results_path": "runs/benchmark/results/validation_samples/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:24:26+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.8592375366568915,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.8592375366568915,
+      "results_path": "runs/benchmark/results/wildguardmix/binary_choice/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:24:54+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.40023201856148494,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.40023201856148494,
+      "results_path": "runs/benchmark/results/wildguardmix/safety_combo/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:25:10+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "subcategory_classification",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7563805104408353,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.7563805104408353,
+      "results_path": "runs/benchmark/results/wildguardmix/subcategory_classification/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:27:03+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7321266968325791,
+      "box_compliance_rate": 0.9995475113122172,
+      "pass@1_among_extracted": 0.7324581258488003,
+      "results_path": "runs/benchmark/results/wildjailbreak/binary_choice/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:27:48+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.5190045248868779,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.5190045248868779,
+      "results_path": "runs/benchmark/results/wildjailbreak/safety_combo/sb_wgm_mix_90acc_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:27:57+00:00",
+      "model_name": "sb_wgm_mix_90acc",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "statement_comparison",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.6666666666666666,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.6666666666666666,
+      "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/sb_wgm_mix_90acc_think_full_results.json"
     },
     {
       "timestamp_utc": "2026-05-13T12:08:10+00:00",
@@ -989,6 +1730,19 @@
       "results_path": "runs/benchmark/results/safetybench/sf_wgm_mix_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T22:50:39+00:00",
+      "model_name": "sf_wgm_mix",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.735,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.735,
+      "results_path": "runs/benchmark/results/sgxstest/sf_wgm_mix_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-13T07:13:19+00:00",
       "model_name": "sf_wgm_mix",
       "benchmark": "validation_samples",
@@ -1093,6 +1847,19 @@
       "results_path": "runs/benchmark/results/advbench/sft_full1_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:55:08+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "advbench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.85,
+      "box_compliance_rate": 0.8538461538461538,
+      "pass@1_among_extracted": 0.9954954954954955,
+      "results_path": "runs/benchmark/results/advbench/sft_full1_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-17T11:47:44+00:00",
       "model_name": "sft_full1",
       "benchmark": "jbb-behaviors",
@@ -1103,6 +1870,19 @@
       "pass@1": 0.785,
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.785,
+      "results_path": "runs/benchmark/results/jbb-behaviors/sft_full1_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:55:22+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "jbb-behaviors",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.75,
+      "box_compliance_rate": 0.965,
+      "pass@1_among_extracted": 0.7772020725388601,
       "results_path": "runs/benchmark/results/jbb-behaviors/sft_full1_think_full_results.json"
     },
     {
@@ -1119,6 +1899,32 @@
       "results_path": "runs/benchmark/results/safetybench/sft_full1_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-22T23:59:42+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "safetybench",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7893805309734513,
+      "box_compliance_rate": 0.9628318584070796,
+      "pass@1_among_extracted": 0.8198529411764706,
+      "results_path": "runs/benchmark/results/safetybench/sft_full1_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-22T23:59:58+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "sgxstest",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.725,
+      "box_compliance_rate": 0.93,
+      "pass@1_among_extracted": 0.7795698924731183,
+      "results_path": "runs/benchmark/results/sgxstest/sft_full1_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-17T12:11:24+00:00",
       "model_name": "sft_full1",
       "benchmark": "validation_samples",
@@ -1129,6 +1935,19 @@
       "pass@1": 1.0,
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 1.0,
+      "results_path": "runs/benchmark/results/validation_samples/sft_full1_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-23T00:00:06+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "validation_samples",
+      "benchmark_subcategory": "",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.9,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.9,
       "results_path": "runs/benchmark/results/validation_samples/sft_full1_think_full_results.json"
     },
     {
@@ -1145,6 +1964,19 @@
       "results_path": "runs/benchmark/results/wildguardmix/binary_choice/sft_full1_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-23T00:00:27+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.19941348973607037,
+      "box_compliance_rate": 0.2375366568914956,
+      "pass@1_among_extracted": 0.8395061728395061,
+      "results_path": "runs/benchmark/results/wildguardmix/binary_choice/sft_full1_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-17T12:02:21+00:00",
       "model_name": "sft_full1",
       "benchmark": "wildguardmix",
@@ -1155,6 +1987,19 @@
       "pass@1": 0.5649651972157773,
       "box_compliance_rate": 0.9721577726218097,
       "pass@1_among_extracted": 0.581145584725537,
+      "results_path": "runs/benchmark/results/wildguardmix/safety_combo/sft_full1_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-23T00:11:53+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.5522041763341067,
+      "box_compliance_rate": 0.9535962877030162,
+      "pass@1_among_extracted": 0.5790754257907542,
       "results_path": "runs/benchmark/results/wildguardmix/safety_combo/sft_full1_think_full_results.json"
     },
     {
@@ -1171,6 +2016,19 @@
       "results_path": "runs/benchmark/results/wildguardmix/subcategory_classification/sft_full1_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-23T00:12:23+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "wildguardmix",
+      "benchmark_subcategory": "subcategory_classification",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.7587006960556845,
+      "box_compliance_rate": 0.9837587006960556,
+      "pass@1_among_extracted": 0.7712264150943396,
+      "results_path": "runs/benchmark/results/wildguardmix/subcategory_classification/sft_full1_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-17T12:06:31+00:00",
       "model_name": "sft_full1",
       "benchmark": "wildjailbreak",
@@ -1181,6 +2039,19 @@
       "pass@1": 0.8090497737556561,
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.8090497737556561,
+      "results_path": "runs/benchmark/results/wildjailbreak/binary_choice/sft_full1_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-23T00:13:29+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "binary_choice",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.4176470588235294,
+      "box_compliance_rate": 0.5647058823529412,
+      "pass@1_among_extracted": 0.7395833333333334,
       "results_path": "runs/benchmark/results/wildjailbreak/binary_choice/sft_full1_think_full_results.json"
     },
     {
@@ -1197,6 +2068,19 @@
       "results_path": "runs/benchmark/results/wildjailbreak/safety_combo/sft_full1_think_full_results.json"
     },
     {
+      "timestamp_utc": "2026-05-23T00:16:16+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "safety_combo",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.5914027149321267,
+      "box_compliance_rate": 0.9986425339366516,
+      "pass@1_among_extracted": 0.5922066153149071,
+      "results_path": "runs/benchmark/results/wildjailbreak/safety_combo/sft_full1_think_full_results.json"
+    },
+    {
       "timestamp_utc": "2026-05-17T12:10:38+00:00",
       "model_name": "sft_full1",
       "benchmark": "wildjailbreak",
@@ -1207,6 +2091,19 @@
       "pass@1": 0.9666666666666667,
       "box_compliance_rate": 1.0,
       "pass@1_among_extracted": 0.9666666666666667,
+      "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/sft_full1_think_full_results.json"
+    },
+    {
+      "timestamp_utc": "2026-05-23T00:16:30+00:00",
+      "model_name": "sft_full1",
+      "benchmark": "wildjailbreak",
+      "benchmark_subcategory": "statement_comparison",
+      "think_mode": true,
+      "use_vllm": true,
+      "limit": null,
+      "pass@1": 0.9523809523809523,
+      "box_compliance_rate": 1.0,
+      "pass@1_among_extracted": 0.9523809523809523,
       "results_path": "runs/benchmark/results/wildjailbreak/statement_comparison/sft_full1_think_full_results.json"
     },
     {

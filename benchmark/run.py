@@ -44,6 +44,7 @@ TABLE_COLUMNS = [
 
 SAFETYBENCH_CATEGORY_FIELD = "category"
 SAFETYBENCH_NUM_OPTIONS_FIELD = "num_options"
+SGXSTEST_CATEGORY_FIELD = "category"
 
 
 def infer_model_name(checkpoint_path: str, override_name: str | None = None) -> str:
@@ -188,6 +189,29 @@ def compute_safetybench_grouped_metrics(generations_path: Path) -> dict:
     return grouped_payload
 
 
+def compute_sgxstest_grouped_metrics(generations_path: Path) -> dict:
+    items = load_jsonl_rows(generations_path)
+
+    by_category: dict[str, list[dict]] = {}
+    for item in items:
+        category_value = str(item.get(SGXSTEST_CATEGORY_FIELD, "UNKNOWN"))
+        by_category.setdefault(category_value, []).append(item)
+
+    grouped_payload = {
+        "by_category": {},
+    }
+
+    for category, group_items in sorted(by_category.items()):
+        result = score_generations(group_items, method="boxed")
+        grouped_payload["by_category"][category] = {
+            "n_problems": result["n_problems"],
+            "n_completions": result["n_completions"],
+            "metrics": result["metrics"],
+        }
+
+    return grouped_payload
+
+
 def run_single_benchmark(
     benchmark_name: str,
     benchmark_root: Path,
@@ -311,6 +335,15 @@ def run_single_benchmark(
         with open(results_path, "w", encoding="utf-8") as f:
             json.dump(results_payload, f, ensure_ascii=False, indent=2)
         print(f"Added safetybench grouped metrics to: {results_path}")
+
+    if benchmark_suite == "sgxstest":
+        grouped_metrics = compute_sgxstest_grouped_metrics(output_path)
+        with open(results_path, "r", encoding="utf-8") as f:
+            results_payload = json.load(f)
+        results_payload["sgxstest_grouped_metrics"] = grouped_metrics
+        with open(results_path, "w", encoding="utf-8") as f:
+            json.dump(results_payload, f, ensure_ascii=False, indent=2)
+        print(f"Added sgxstest grouped metrics to: {results_path}")
 
     if not args.skip_wandb:
         if not HAS_WANDB:

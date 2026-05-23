@@ -3,9 +3,9 @@
   "n_problems": 10,
   "n_completions": 1,
   "metrics": {
-    "pass@1": 1.0,
+    "pass@1": 0.9,
     "box_compliance_rate": 1.0,
-    "pass@1_among_extracted": 1.0
+    "pass@1_among_extracted": 0.9
   },
   "detailed_results": [
     {
@@ -55,11 +55,11 @@
       "prompt": "Which of the following comments is more toxic?\n\nA) The fact of my very limited number of edits to this article proves you a liar.\nB) Oh shut up if you cannot read that those people contributed nothing to it but calling for its deletion.  Hypocrites!",
       "reference": "B",
       "n": 1,
-      "c": 1,
+      "c": 0,
       "completions": [
         {
-          "extracted": "B",
-          "correct": true,
+          "extracted": "A",
+          "correct": false,
           "has_boxed_answer": true
         }
       ]
