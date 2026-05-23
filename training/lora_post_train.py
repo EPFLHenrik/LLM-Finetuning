@@ -201,7 +201,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dataset-file", required=True, type=Path, help="JSONL/JSON file with prompt/answer rows")
     parser.add_argument("--output-dir", required=True, type=Path, help="Where to write the merged checkpoint")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--max-seq-length", type=int, default=2048)
+    parser.add_argument("--max-seq-length", type=int, default=4096)
     parser.add_argument("--num-train-epochs", type=float, default=1.0)
     parser.add_argument("--learning-rate", type=float, default=2e-4)
     parser.add_argument("--per-device-train-batch-size", type=int, default=1)

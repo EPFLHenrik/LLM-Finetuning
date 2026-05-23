@@ -1,32 +1,23 @@
 #!/usr/bin/env python3
-"""Merge student and teacher outputs into a canonical SFT JSONL file.
+"""Merge corrected student/teacher files into chat-style JSONL.
 
-The script reads two JSONL files with matching prompts and answers. If the
-student row is marked correct, the student source is kept and its final boxed
-answer is normalized to ``\boxed{<gold>}`` when the model used a fallback boxed
-format such as ``\boxed{\text{A}}``. If the student row is not correct, the
-teacher source is used unchanged.
+The script reads two JSONL files with matching prompt/answer pairs and writes
+rows containing only:
+prompt, answer, messages.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from evaluate.extract_answer import extract_boxed_answer_with_fallbacks
-from evaluate.extract_answer import last_boxed_only_string
-
-
 PROMPT_KEYS = ("prompt", "question", "input", "text")
 ANSWER_KEYS = ("gold_answer", "answer", "reference", "label", "target", "answerKey", "boxed_answer")
-REASONING_KEYS = ("actual_answer", "completion", "reasoning", "response", "output", "text")
-REASON_KEYS = ("reason", "strategy", "extraction_strategy")
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -66,46 +57,6 @@ def _get_first(row: dict[str, Any], keys: tuple[str, ...]) -> str | None:
     return None
 
 
-def _as_bool(value: Any) -> bool | None:
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        cleaned = value.strip().lower()
-        if cleaned in {"true", "1", "yes", "y"}:
-            return True
-        if cleaned in {"false", "0", "no", "n"}:
-            return False
-    return None
-
-
-def _build_boxed_answer(answer: str) -> str:
-    return f"\\boxed{{{answer.strip()}}}"
-
-
-def _normalize_boxed_answer(text: str, answer: str) -> tuple[str, str]:
-    extracted, strategy = extract_boxed_answer_with_fallbacks(text)
-    if extracted is None:
-        return text, strategy
-
-    gold = answer.strip().upper()
-    if extracted.upper() != gold:
-        return text, strategy
-
-    if strategy == "boxed_exact_capital":
-        return text, strategy
-
-    boxed = last_boxed_only_string(text)
-    if boxed is not None:
-        normalized = text[: text.rfind(boxed)] + _build_boxed_answer(gold) + text[text.rfind(boxed) + len(boxed) :]
-    else:
-        stripped = text.rstrip()
-        if stripped:
-            normalized = stripped + "\n\n" + _build_boxed_answer(gold)
-        else:
-            normalized = _build_boxed_answer(gold)
-    return normalized, strategy
-
-
 def _row_key(row: dict[str, Any]) -> tuple[str, str]:
     prompt = _get_first(row, PROMPT_KEYS)
     if prompt is None:
@@ -120,41 +71,46 @@ def _load_indexed_rows(path: Path) -> dict[tuple[str, str], dict[str, Any]]:
     for index, row in enumerate(rows, start=1):
         key = _row_key(row)
         if key in indexed:
-            raise SystemExit(f"{path}:{index}: duplicate row key for prompt/answer pair")
+            print(f"{path}:{index}: duplicate row key for prompt/answer pair")
+            pass
         indexed[key] = row
     return indexed
 
 
-def _select_reasoning(student_row: dict[str, Any], teacher_row: dict[str, Any]) -> tuple[str, str, bool, str]:
-    student_correct = _as_bool(student_row.get("correct"))
-    if student_correct is None:
-        raise SystemExit(f"Missing boolean 'correct' field in student row: {student_row}")
-
-    student_reasoning = _get_first(student_row, REASONING_KEYS)
-    teacher_reasoning = _get_first(teacher_row, REASONING_KEYS)
-    student_strategy = _get_first(student_row, REASON_KEYS) or ""
-
-    if student_reasoning is None:
-        raise SystemExit(f"Missing reasoning field in student row: {student_row}")
-    if teacher_reasoning is None:
-        raise SystemExit(f"Missing reasoning field in teacher row: {teacher_row}")
-
-    if student_correct:
-        return student_reasoning, "student", True, student_strategy
-    return teacher_reasoning, "teacher", False, student_strategy
+def _pick_field(row: dict[str, Any], primary: str, fallback: str | None = None) -> str:
+    value = row.get(primary)
+    if value is None and fallback is not None:
+        value = row.get(fallback)
+    if value is None:
+        return ""
+    return str(value)
 
 
-def _build_messages(prompt: str, reasoning: str) -> list[dict[str, str]]:
+def _pick_bool_field(row: dict[str, Any], primary: str, fallback: str | None = None) -> bool | None:
+    value = row.get(primary)
+    if value is None and fallback is not None:
+        value = row.get(fallback)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        cleaned = value.strip().lower()
+        if cleaned in {"true", "1", "yes", "y"}:
+            return True
+        if cleaned in {"false", "0", "no", "n"}:
+            return False
+    return None
+
+
+def _build_messages(prompt: str, system_message: str, completion: str) -> list[dict[str, str]]:
     return [
+        {"role": "system", "content": system_message},
         {"role": "user", "content": prompt},
-        {"role": "assistant", "content": reasoning},
+        {"role": "assistant", "content": completion},
     ]
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Merge student and teacher reasoning JSONL files into one SFT-ready JSONL file."
-    )
+    parser = argparse.ArgumentParser(description="Merge corrected student/teacher JSONL files.")
     parser.add_argument("student", type=Path, help="Student JSONL file with correctness and reasoning")
     parser.add_argument("teacher", type=Path, help="Teacher JSONL file with reasoning")
     parser.add_argument(
@@ -188,42 +144,42 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("Key mismatch between files: " + ", ".join(problems))
 
     merged_rows: list[dict[str, Any]] = []
-    student_correct_count = 0
+    dropped_both_wrong = 0
 
     for key, student_row in student_rows.items():
         teacher_row = teacher_rows[key]
-        selected_reasoning, source, student_correct, student_strategy = _select_reasoning(student_row, teacher_row)
-        student_correct_count += int(student_correct)
-
         prompt = _get_first(student_row, PROMPT_KEYS)
         assert prompt is not None
         answer = _get_first(student_row, ANSWER_KEYS) or _get_first(teacher_row, ANSWER_KEYS)
         if answer is None:
             raise SystemExit(f"Missing answer field for row: {student_row}")
 
-        if student_correct:
-            selected_reasoning, selected_strategy = _normalize_boxed_answer(selected_reasoning, answer)
-        else:
-            selected_strategy = student_strategy or "wrong answer"
+        student_correct = _pick_bool_field(student_row, "correct")
+        trainer_correct = _pick_bool_field(teacher_row, "correct", fallback="teacher_correct")
 
-        merged_row = dict(student_row)
-        merged_row["answer"] = answer
-        merged_row["boxed_answer"] = answer
-        merged_row["selected_reasoning"] = selected_reasoning
-        merged_row["reasoning"] = selected_reasoning
-        merged_row["actual_answer"] = selected_reasoning
-        merged_row["source_reasoning"] = source
-        merged_row["student_correct"] = student_correct
-        merged_row["student_reasoning"] = _get_first(student_row, REASONING_KEYS)
-        merged_row["teacher_reasoning"] = _get_first(teacher_row, REASONING_KEYS)
-        merged_row["selected_strategy"] = selected_strategy
-        merged_row["messages"] = _build_messages(prompt, selected_reasoning)
+        # Drop rows where both sides are explicitly incorrect.
+        if student_correct is False and trainer_correct is False:
+            dropped_both_wrong += 1
+            continue
+
+        student_completion = _pick_field(student_row, "completion")
+        trainer_completion = _pick_field(teacher_row, "completion", fallback="teacher_completion")
+        system_message = _pick_field(student_row, "system_message")
+        if not system_message:
+            system_message = _pick_field(teacher_row, "system_message", fallback="teacher_system_message")
+
+        chosen_completion = student_completion if student_correct is True else trainer_completion
+        merged_row = {
+            "prompt": prompt,
+            "answer": answer,
+            "messages": _build_messages(prompt, system_message, chosen_completion),
+        }
         merged_rows.append(merged_row)
 
     _write_jsonl(output_path, merged_rows)
-    total = len(merged_rows)
     print(f"Wrote {output_path}")
-    print(f"Student correct: {student_correct_count}/{total} ({student_correct_count / total:.2%})")
+    print(f"Rows: {len(merged_rows)}")
+    print(f"Dropped both-wrong rows: {dropped_both_wrong}")
     return 0
 
 
