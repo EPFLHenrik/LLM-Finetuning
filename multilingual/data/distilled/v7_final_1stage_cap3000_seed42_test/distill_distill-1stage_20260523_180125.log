@@ -1,0 +1,46 @@
+[distill-pod] Started at Sat May 23 16:01:40 UTC 2026
+[distill-pod] Datasets: ceval milu mera_mamuramu
+[distill-pod] Processed dir: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/processed
+[distill-pod] Output dir: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/v7_final_1stage_cap3000_seed42
+[distill-pod] Concurrency: 2
+[distill-pod] Log every: 20
+[distill-pod] Save every: 20
+[distill-pod] Max valid per file: 3000
+[distill-pod] Shuffle seed: 42
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Jobs (5):
+  ceval_chinese_regional.jsonl → ceval_chinese_regional
+  ceval_chinese_regional_implicit.jsonl → ceval_chinese_regional_implicit
+  milu_hindi_train_regional.jsonl → milu_hindi_regional
+  milu_hindi_train_regional_implicit.jsonl → milu_hindi_regional_implicit
+  mera_clean_mamuramu.jsonl → mera_russian_mamuramu
+
+── ceval_chinese_regional.jsonl ──
+  Processing: 3347 remaining / 3347 total
+    20/3347 | valid=18 (90%) | 1.1 ex/s | ETA 3132s
+    40/3347 | valid=32 (80%) | 1.0 ex/s | ETA 3396s
+    60/3347 | valid=44 (73%) | 0.9 ex/s | ETA 3646s
+    80/3347 | valid=59 (73%) | 0.9 ex/s | ETA 3785s
+    100/3347 | valid=72 (72%) | 0.7 ex/s | ETA 4585s
+    120/3347 | valid=89 (74%) | 0.7 ex/s | ETA 4338s
+    140/3347 | valid=107 (76%) | 0.8 ex/s | ETA 4101s
+    160/3347 | valid=122 (76%) | 0.8 ex/s | ETA 3995s
+    180/3347 | valid=136 (75%) | 0.8 ex/s | ETA 4057s
+    200/3347 | valid=150 (75%) | 0.8 ex/s | ETA 3992s
+    220/3347 | valid=166 (75%) | 0.8 ex/s | ETA 3880s
+    240/3347 | valid=183 (76%) | 0.8 ex/s | ETA 3814s
+    260/3347 | valid=200 (76%) | 0.8 ex/s | ETA 3698s
+    280/3347 | valid=214 (76%) | 0.8 ex/s | ETA 3667s
+    300/3347 | valid=227 (75%) | 0.8 ex/s | ETA 3629s
+    320/3347 | valid=245 (76%) | 0.9 ex/s | ETA 3556s
+    340/3347 | valid=259 (76%) | 0.9 ex/s | ETA 3503s
+    360/3347 | valid=273 (75%) | 0.9 ex/s | ETA 3482s
+    380/3347 | valid=291 (76%) | 0.9 ex/s | ETA 3399s
+    400/3347 | valid=308 (77%) | 0.9 ex/s | ETA 3338s
+    420/3347 | valid=323 (76%) | 0.9 ex/s | ETA 3308s
+    440/3347 | valid=339 (77%) | 0.9 ex/s | ETA 3275s
+    460/3347 | valid=357 (77%) | 0.9 ex/s | ETA 3211s
+    480/3347 | valid=375 (78%) | 0.9 ex/s | ETA 3145s
+    500/3347 | valid=390 (78%) | 0.9 ex/s | ETA 3120s
+    520/3347 | valid=407 (78%) | 0.9 ex/s | ETA 3085s

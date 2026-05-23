@@ -205,11 +205,11 @@ def _contains_cjk(text: str) -> bool:
 
 
 def _too_short(text: str) -> bool:
-    return (len(text) <= 20) if _contains_cjk(text) else (len(text.split()) <= 4)
+    return (len(text) <= 20) if _contains_cjk(text) else (len(text.split()) <= 5)
 
 
 def _too_long(text: str) -> bool:
-    return (len(text) >= 2000) if _contains_cjk(text) else (len(text.split()) >= 650)
+    return (len(text) >= 1000) if _contains_cjk(text) else (len(text.split()) >= 200)
 
 def _ends_with_expected_boxed(clean_stripped: str, expected: str) -> bool:
     tail = clean_stripped
