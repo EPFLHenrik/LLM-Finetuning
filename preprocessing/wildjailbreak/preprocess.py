@@ -110,6 +110,28 @@ def stratified_internal_split(ds: Dataset, test_ratio: float):
     return Dataset.from_list(train_rows), Dataset.from_list(test_rows)
 
 
+def split_into_three(ds: Dataset):
+    grouped_rows = defaultdict(list)
+    for row in ds:
+        grouped_rows[row["source_uid"]].append(row)
+
+    groups = list(grouped_rows.values())
+    random.Random(SEED).shuffle(groups)
+
+    n = len(groups)
+    first_cut = n // 3
+    second_cut = (2 * n) // 3
+
+    def flatten(group_slice):
+        return [row for group in group_slice for row in group]
+
+    return (
+        Dataset.from_list(flatten(groups[:first_cut])),
+        Dataset.from_list(flatten(groups[first_cut:second_cut])),
+        Dataset.from_list(flatten(groups[second_cut:])),
+    )
+
+
 def split_test_and_benchmark(ds: Dataset, benchmark_ratio=0.5, seed=SEED):
     rows = list(ds)
     random.Random(seed).shuffle(rows)
@@ -328,19 +350,32 @@ def main():
     args = parser.parse_args()
 
     raw_train = attach_ids(load_from_disk(args.train_path), "train")
-    internal_train, internal_test = stratified_internal_split(raw_train, args.internal_test_ratio)
+    split_a, split_b, split_c = split_into_three(raw_train)
+    internal_train_a, internal_test_a = stratified_internal_split(split_a, args.internal_test_ratio)
+    internal_train_b, internal_test_b = stratified_internal_split(split_b, args.internal_test_ratio)
+    internal_train_c, internal_test_c = stratified_internal_split(split_c, args.internal_test_ratio)
 
     print(f"Loaded raw train={len(raw_train)}")
-    print(f"Internal split train={len(internal_train)} test={len(internal_test)}")
+    print(
+        "Split sizes:",
+        {
+            "part_a": len(split_a),
+            "part_b": len(split_b),
+            "part_c": len(split_c),
+            "part_a_train": len(internal_train_a),
+            "part_b_train": len(internal_train_b),
+            "part_c_train": len(internal_train_c),
+        },
+    )
 
-    combo_train = build_combo_split(internal_train, include_vanilla=True, max_per_type=args.combo_max_per_type)
-    combo_test = build_combo_split(internal_test, include_vanilla=True, max_per_type=args.combo_max_per_type)
+    combo_train = build_combo_split(internal_train_a, include_vanilla=True, max_per_type=args.combo_max_per_type)
+    combo_test = build_combo_split(internal_test_a, include_vanilla=True, max_per_type=args.combo_max_per_type)
 
-    binary_train = build_binary_split(internal_train, allowed_types=COMBO_CAT_KEYS)
-    binary_test = build_binary_split(internal_test, allowed_types=COMBO_CAT_KEYS)
+    binary_train = build_binary_split(internal_train_b, allowed_types=COMBO_CAT_KEYS)
+    binary_test = build_binary_split(internal_test_b, allowed_types=COMBO_CAT_KEYS)
 
-    comparison_train = build_comparison_split(internal_train, adversarial_only=False)
-    comparison_test = build_comparison_split(internal_test, adversarial_only=False)
+    comparison_train = build_comparison_split(internal_train_c, adversarial_only=False)
+    comparison_test = build_comparison_split(internal_test_c, adversarial_only=False)
 
     save_dataset_dict(DatasetDict(train=combo_train, test=combo_test), OUT_COMBO)
     save_dataset_dict(DatasetDict(train=binary_train, test=binary_test), OUT_BINARY)
@@ -372,6 +407,21 @@ def main():
     print_stats("benchmark_combo", bench_combo_full)
     print_stats("benchmark_binary", bench_binary_full)
     print_stats("benchmark_comparison", bench_comparison_full)
+
+    train_uid_sets = {
+        "combo": set(combo_train["source_uid"]),
+        "binary": set(binary_train["source_uid"]),
+        "comparison": set(comparison_train["harm_source_uid"]) | set(comparison_train["ben_source_uid"]),
+    }
+    print(
+        "train_uid_overlap",
+        {
+            "combo_binary": len(train_uid_sets["combo"] & train_uid_sets["binary"]),
+            "combo_comparison": len(train_uid_sets["combo"] & train_uid_sets["comparison"]),
+            "binary_comparison": len(train_uid_sets["binary"] & train_uid_sets["comparison"]),
+            "all_three": len(train_uid_sets["combo"] & train_uid_sets["binary"] & train_uid_sets["comparison"]),
+        },
+    )
 
 
 if __name__ == "__main__":

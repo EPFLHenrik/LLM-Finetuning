@@ -22,6 +22,7 @@ datasets_to_download = [
     ("safechain", ("UWNSL/SafeChain", None)),
     # DPO Datasets
     ("pku-safeRLHF", ("PKU-Alignment/PKU-SafeRLHF", "default")),
+    ("pku-safeRLHF-qa", ("PKU-Alignment/PKU-SafeRLHF-QA", "default")),
     ("hh-rlhf", ("Anthropic/hh-rlhf", None)),
 ]
 
