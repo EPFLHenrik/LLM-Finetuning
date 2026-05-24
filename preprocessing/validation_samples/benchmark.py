@@ -15,11 +15,13 @@ TASK_NAMES = ["general_knowledge", "math", "multilingual", "safety"]
 
 def preprocess_task(task_name: str):
     jsonl_path = RAW_VALIDATION_DIR / f"{task_name}.jsonl"
-    output_path = OUTPUT_BASE_PATH / task_name
+    output_path = OUTPUT_BASE_PATH / f"VAL_{task_name}"
 
     records = []
     with open(jsonl_path, "r", encoding="utf-8") as f:
         for line in f:
+            if not line.strip():
+                continue
             item = json.loads(line)
             records.append({
                 DatasetFieldNames.BENCHMARK_INPUT: item["prompt"],

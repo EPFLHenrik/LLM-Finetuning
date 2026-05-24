@@ -424,7 +424,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Evaluate a model on one or more benchmarks by generating outputs and then scoring them."
     )
-    parser.add_argument("--benchmark", type=str, default=None, help="Name of the benchmark to run. Ignored when --run_all is set.")
+    parser.add_argument("--benchmark", type=str, nargs="+", default=None, help="One or more benchmark names to run. Ignored when --run_all is set.")
     parser.add_argument("--run_all", action="store_true", help="Run all benchmark dataset folders containing .arrow files under data/processed/benchmarks/ (with fallback to data/processed/benchmark/).")
     parser.add_argument("--limit", type=int, default=None, help="Limit the number of examples to run (for testing)")
     parser.set_defaults(think=True)
@@ -504,7 +504,7 @@ def main() -> None:
         if not benchmark_names:
             raise FileNotFoundError(f"No benchmark folders containing .arrow files found under {benchmark_root}")
     else:
-        benchmark_names = [args.benchmark.strip("/")]
+        benchmark_names = [b.strip("/") for b in args.benchmark]
 
     print("BENCHMARK EVALUATION")
     print(f"Benchmark root: {benchmark_root}")
@@ -559,7 +559,7 @@ def main() -> None:
                 think_mode=think_mode,
             )
         except Exception as exc:
-            if not args.run_all:
+            if not args.run_all and len(benchmark_names) == 1:
                 raise
             failures.append((benchmark_name, str(exc)))
             print(f"[warn] Benchmark failed and will be skipped: {benchmark_name}")
