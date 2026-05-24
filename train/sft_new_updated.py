@@ -213,6 +213,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--skip_training",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Skip model training and assume per-epoch checkpoints already exist under "
+            "--epoch-checkpoints-dir (or checkpoints/<run_name>/epochs). Useful as a "
+            "fallback to re-run post-training validation/selection only."
+        ),
+    )
+    parser.add_argument(
         "--save-epoch-checkpoints",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -555,6 +565,13 @@ def build_model_and_tokenizer(args: argparse.Namespace, device: torch.device) ->
     return model, tokenizer
 
 
+def build_tokenizer_only() -> Any:
+    tokenizer: Any = AutoTokenizer.from_pretrained(BASE_MODEL)
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+    return tokenizer
+
+
 
 def epoch_checkpoint_dirs(epoch_root: Path, epoch: int) -> tuple[Path, Path, Path]:
     epoch_dir = epoch_root / f"epoch_{epoch:02d}"
@@ -663,8 +680,17 @@ def evaluate_checkpoint_on_validation_with_vllm(
     )
 
     prompts = [ex["prompt"] for ex in validation_examples]
-    outputs = llm.generate(prompts, sampling_params, use_tqdm=True)
-    completions = [output.outputs[0].text.strip() for output in outputs]
+    completions: list[str] = []
+    generation_batch_size = 500
+
+    for start in range(0, len(prompts), generation_batch_size):
+        end = min(start + generation_batch_size, len(prompts))
+        print(
+            f"[validation] Generating batch {start}-{end - 1} "
+            f"of {len(prompts)} for epoch {epoch:02d}"
+        )
+        outputs = llm.generate(prompts[start:end], sampling_params, use_tqdm=True)
+        completions.extend(output.outputs[0].text.strip() for output in outputs)
 
     with open(jsonl_path, "w", encoding="utf-8") as f:
         for ex, completion in zip(validation_examples, completions):
@@ -764,7 +790,16 @@ def train(args: argparse.Namespace) -> None:
     print(f"  Final/best checkpoint: {best_checkpoint_dir}")
     print("=" * 60)
 
-    model, tokenizer = build_model_and_tokenizer(args, device)
+    model: Any | None = None
+    optimizer: Any | None = None
+    scheduler: Any | None = None
+    mixed_train_loader: Any | None = None
+
+    if args.skip_training:
+        print("[info] --skip_training enabled; skipping model training and using existing epoch checkpoints.")
+        tokenizer = build_tokenizer_only()
+    else:
+        model, tokenizer = build_model_and_tokenizer(args, device)
 
     bundles: list[DatasetBundle] = load_dataset_bundles(
         dataset_names=args.datasets,
@@ -799,104 +834,112 @@ def train(args: argparse.Namespace) -> None:
             allow_val_change=True,
         )
 
-    mixed_train_loader = build_mixed_train_loader(
-        bundles,
-        seed=Random.SEED,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
-    )
-    batch_sampler = cast(HomogeneousBatchSampler, mixed_train_loader.batch_sampler)
-    optimizer_steps_per_epoch = max(1, batch_sampler.optimizer_steps_per_epoch())
-    total_optimizer_steps = max(1, optimizer_steps_per_epoch * args.epochs)
-
-    optimizer = AdamW(model.parameters(), lr=args.lr)
-    scheduler = get_cosine_schedule_with_warmup(
-        optimizer,
-        num_warmup_steps=int(total_optimizer_steps * args.warmup_ratio),
-        num_training_steps=total_optimizer_steps,
-    )
-
     global_step = 0
     samples_seen = 0
     saved_epochs: list[int] = []
 
-    for epoch in range(1, args.epochs + 1):
-        print(f"\n=== Epoch {epoch}/{args.epochs} ===")
-        model.train()
-        running_loss = 0.0
-        n_batches = 0
-        optimizer.zero_grad(set_to_none=True)
+    if args.skip_training:
+        saved_epochs = list(range(1, args.epochs + 1))
+    else:
+        mixed_train_loader = build_mixed_train_loader(
+            bundles,
+            seed=Random.SEED,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+        )
+        batch_sampler = cast(HomogeneousBatchSampler, mixed_train_loader.batch_sampler)
+        optimizer_steps_per_epoch = max(1, batch_sampler.optimizer_steps_per_epoch())
+        total_optimizer_steps = max(1, optimizer_steps_per_epoch * args.epochs)
 
-        for batch_idx, batch in enumerate(mixed_train_loader):
-            outputs = model(
-                input_ids=batch["input_ids"].to(device),
-                attention_mask=batch["attention_mask"].to(device),
-                labels=batch["labels"].to(device),
-            )
-            raw_loss = float(outputs.loss.item())
-            (outputs.loss / args.gradient_accumulation_steps).backward()
+        optimizer = AdamW(model.parameters(), lr=args.lr)
+        scheduler = get_cosine_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=int(total_optimizer_steps * args.warmup_ratio),
+            num_training_steps=total_optimizer_steps,
+        )
 
-            batch_samples = int(batch["input_ids"].shape[0])
-            samples_seen += batch_samples
-            running_loss += raw_loss
-            n_batches += 1
+        for epoch in range(1, args.epochs + 1):
+            print(f"\n=== Epoch {epoch}/{args.epochs} ===")
+            model.train()
+            running_loss = 0.0
+            n_batches = 0
+            optimizer.zero_grad(set_to_none=True)
 
-            if wb_run is not None:
-                wb_run.log(
-                    {
-                        "train/sample": samples_seen,
-                        "train/batch_loss": raw_loss,
-                        "train/running_loss": running_loss / n_batches,
-                    },
-                    commit=True,
+            for batch_idx, batch in enumerate(mixed_train_loader):
+                outputs = model(
+                    input_ids=batch["input_ids"].to(device),
+                    attention_mask=batch["attention_mask"].to(device),
+                    labels=batch["labels"].to(device),
                 )
+                raw_loss = float(outputs.loss.item())
+                (outputs.loss / args.gradient_accumulation_steps).backward()
 
-            if batch_sampler.update_ends_at(batch_idx):
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                optimizer.step()
-                scheduler.step()
-                optimizer.zero_grad(set_to_none=True)
-                global_step += 1
+                batch_samples = int(batch["input_ids"].shape[0])
+                samples_seen += batch_samples
+                running_loss += raw_loss
+                n_batches += 1
 
                 if wb_run is not None:
                     wb_run.log(
                         {
-                            "other/global_step": global_step,
-                            "other/epoch": epoch,
-                            "other/samples_seen": samples_seen,
-                            "other/learning_rate": scheduler.get_last_lr()[0],
+                            "train/sample": samples_seen,
+                            "train/batch_loss": raw_loss,
+                            "train/running_loss": running_loss / n_batches,
                         },
                         commit=True,
                     )
 
-        train_running = running_loss / n_batches if n_batches else float("inf")
-        print(f"train_running_loss={train_running:.4f}")
+                if batch_sampler.update_ends_at(batch_idx):
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                    optimizer.step()
+                    scheduler.step()
+                    optimizer.zero_grad(set_to_none=True)
+                    global_step += 1
 
-        if args.save_epoch_checkpoints:
-            epoch_dir, epoch_hf_dir, epoch_lora_dir = epoch_checkpoint_dirs(epoch_root, epoch)
-            print(f"[checkpoint] Exporting epoch {epoch} to {epoch_dir}")
-            export_merged_checkpoint(
-                model=model,
-                tokenizer=tokenizer,
-                output_dir=epoch_hf_dir,
-                base_model=BASE_MODEL,
-                system_prompt=SYSTEM_PROMPT_MCQ,
-                temperature=args.export_temperature,
-                top_p=args.export_top_p,
-                top_k=args.export_top_k,
-            )
-            if epoch_lora_dir.exists():
-                shutil.rmtree(epoch_lora_dir)
-            model.save_pretrained(str(epoch_lora_dir))
-            saved_epochs.append(epoch)
+                    if wb_run is not None:
+                        wb_run.log(
+                            {
+                                "other/global_step": global_step,
+                                "other/epoch": epoch,
+                                "other/samples_seen": samples_seen,
+                                "other/learning_rate": scheduler.get_last_lr()[0],
+                            },
+                            commit=True,
+                        )
 
-        if wb_run is not None:
-            wb_run.summary["last_epoch_train_running_loss"] = train_running
-            wb_run.summary["last_epoch"] = epoch
-            wb_run.summary["last_global_step"] = global_step
+            train_running = running_loss / n_batches if n_batches else float("inf")
+            print(f"train_running_loss={train_running:.4f}")
+
+            if args.save_epoch_checkpoints:
+                epoch_dir, epoch_hf_dir, epoch_lora_dir = epoch_checkpoint_dirs(epoch_root, epoch)
+                print(f"[checkpoint] Exporting epoch {epoch} to {epoch_dir}")
+                export_merged_checkpoint(
+                    model=model,
+                    tokenizer=tokenizer,
+                    output_dir=epoch_hf_dir,
+                    base_model=BASE_MODEL,
+                    system_prompt=SYSTEM_PROMPT_MCQ,
+                    temperature=args.export_temperature,
+                    top_p=args.export_top_p,
+                    top_k=args.export_top_k,
+                )
+                if epoch_lora_dir.exists():
+                    shutil.rmtree(epoch_lora_dir)
+                model.save_pretrained(str(epoch_lora_dir))
+                saved_epochs.append(epoch)
+
+            if wb_run is not None:
+                wb_run.summary["last_epoch_train_running_loss"] = train_running
+                wb_run.summary["last_epoch"] = epoch
+                wb_run.summary["last_global_step"] = global_step
 
     print("\nTraining complete.")
 
     if not saved_epochs:
+        if args.skip_training:
+            raise RuntimeError(
+                "--skip_training was set but no epochs were selected for evaluation. "
+                "Provide --epochs > 0."
+            )
         print("[checkpoint] No per-epoch checkpoints were saved; exporting final model as best checkpoint.")
         export_merged_checkpoint(
             model=model,
