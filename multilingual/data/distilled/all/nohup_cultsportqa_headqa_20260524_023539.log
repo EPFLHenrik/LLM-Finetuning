@@ -258,3 +258,40 @@ Jobs (4):
     1775/11250 | valid=1538 (86%) | 2.6 ex/s | ETA 3691s
     1800/11250 | valid=1560 (86%) | 2.6 ex/s | ETA 3682s
     1825/11250 | valid=1583 (86%) | 2.6 ex/s | ETA 3661s
+    1850/11250 | valid=1605 (86%) | 2.6 ex/s | ETA 3646s
+    1875/11250 | valid=1625 (86%) | 2.6 ex/s | ETA 3644s
+    1900/11250 | valid=1647 (86%) | 2.6 ex/s | ETA 3642s
+    1925/11250 | valid=1669 (86%) | 2.6 ex/s | ETA 3636s
+    1950/11250 | valid=1691 (86%) | 2.6 ex/s | ETA 3622s
+    1975/11250 | valid=1712 (86%) | 2.6 ex/s | ETA 3618s
+    2000/11250 | valid=1733 (86%) | 2.6 ex/s | ETA 3605s
+    2025/11250 | valid=1755 (86%) | 2.6 ex/s | ETA 3589s
+    2050/11250 | valid=1778 (86%) | 2.6 ex/s | ETA 3578s
+    2075/11250 | valid=1801 (86%) | 2.6 ex/s | ETA 3559s
+    2100/11250 | valid=1823 (86%) | 2.6 ex/s | ETA 3556s
+    2125/11250 | valid=1844 (86%) | 2.6 ex/s | ETA 3545s
+    2150/11250 | valid=1866 (86%) | 2.6 ex/s | ETA 3526s
+    2175/11250 | valid=1889 (86%) | 2.6 ex/s | ETA 3511s
+    2200/11250 | valid=1912 (86%) | 2.6 ex/s | ETA 3497s
+    2225/11250 | valid=1935 (86%) | 2.6 ex/s | ETA 3482s
+    2250/11250 | valid=1957 (86%) | 2.6 ex/s | ETA 3464s
+    2275/11250 | valid=1977 (86%) | 2.6 ex/s | ETA 3452s
+    2300/11250 | valid=1999 (86%) | 2.6 ex/s | ETA 3444s
+    2325/11250 | valid=2021 (86%) | 2.6 ex/s | ETA 3429s
+  Valid: 3000/3440 (87%)
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 2879, 'none': 440, 'swiss-ai/Apertus-70B-Instruct-2509': 121}
+  Invalid reasons: {'wrong_answer:A': 168, 'wrong_answer:B': 92, 'wrong_answer:C': 89, 'wrong_answer:D': 78, 'wrong_answer:E': 6, 'not_sure': 4, 'wrong_answer:None': 1, 'not_ending_with_boxed': 1, 'too_long': 1}
+  Done in 893.7s
+
+── head_qa_italian_all.jsonl ──
+  Resuming: 1174 already done
+  Processing: 11215 remaining / 12389 total
+    25/11215 | valid=24 (96%) | 2.5 ex/s | ETA 4490s
+    50/11215 | valid=47 (94%) | 2.4 ex/s | ETA 4585s
+    75/11215 | valid=69 (92%) | 2.5 ex/s | ETA 4526s
+    100/11215 | valid=89 (89%) | 2.5 ex/s | ETA 4516s
+    125/11215 | valid=107 (85%) | 2.3 ex/s | ETA 4740s
+    150/11215 | valid=129 (86%) | 2.4 ex/s | ETA 4588s
+    175/11215 | valid=148 (84%) | 2.5 ex/s | ETA 4497s
+    200/11215 | valid=166 (83%) | 2.5 ex/s | ETA 4465s
+    225/11215 | valid=184 (81%) | 2.4 ex/s | ETA 4564s

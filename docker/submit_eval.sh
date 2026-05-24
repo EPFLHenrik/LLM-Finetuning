@@ -1,7 +1,7 @@
 #!/bin/bash
 # Submit an overnight evaluation job.
-# Evaluates base Qwen + v5/v6/v8/v9 checkpoints on INCLUDE val + 10 provided examples.
-# Runs sequentially to avoid OOM. Results saved per model in multilingual/results/eval/.
+# Evaluates base Qwen + v1 + v10 on INCLUDE val + 10 provided examples.
+# Runs sequentially to avoid OOM.
 
 set -euo pipefail
 
@@ -10,15 +10,12 @@ GASPAR="anastass"
 GROUP="g02"
 REPO_DIR="/scratch/workspace/emma/standard-project-m2-mystery-machine"
 
-VAL_FILE="${REPO_DIR}/multilingual/data/sft/v9/mixed/include_val.jsonl"
+VAL_FILE="${REPO_DIR}/multilingual/data/sft/v10/mixed/include_val.jsonl"
 EVAL_DIR="${REPO_DIR}/multilingual/results/eval"
-LATEST_CHECKPOINT=700
 
-V5_PATH="${REPO_DIR}/multilingual/results/checkpoints/sft_multilingual_v5-less-data"
-V6_PATH="${REPO_DIR}/multilingual/results/checkpoints/sft_multilingual_v6-ru-zh-heavy"
-V8_PATH="${REPO_DIR}/multilingual/results/checkpoints/sft_multilingual_v8_distilled/best_adapter"
-V9S_PATH="${REPO_DIR}/multilingual/results/checkpoints/sft_multilingual_v9_distilled_shorter/checkpoint-${LATEST_CHECKPOINT}"
-V9_PATH="${REPO_DIR}/multilingual/results/checkpoints/sft_multilingual_v9_distilled/checkpoint-${LATEST_CHECKPOINT}"
+BASE_PATH="Qwen/Qwen3-1.7B"
+V1_PATH="${REPO_DIR}/multilingual/results/checkpoints/sft_multilingual_v1/best_adapter"
+V10_PATH="${REPO_DIR}/multilingual/results/checkpoints/sft_multilingual_v10_distilled/best_adapter"
 # ==============================================
 
 if [[ -z "${GASPAR}" ]]; then
@@ -33,7 +30,7 @@ fi
 
 GPUS=1
 NODE="${NODE:-a100-40g}"
-SUFFIX="${1:-eval-overnight}"
+SUFFIX="${1:-eval-v10}"
 JOB_NAME="cs552-${GASPAR}-${GROUP}-${SUFFIX}-$(date +%H%M%S)"
 PROJECT="course-cs-552-${GASPAR}"
 
@@ -64,55 +61,31 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
     mkdir -p /scratch/hf_cache && \
     ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
     cd ${REPO_DIR} && \
-    echo '[eval] Starting evaluation run at \$(date)' && \
+    echo '[eval] Starting at \$(date)' && \
 
-    echo '[eval] 1/6 Base Qwen3-1.7B' && \
+    echo '[eval] 1/3 Base Qwen3-1.7B' && \
     python -m multilingual.eval.run_eval \
-      --model_name Qwen/Qwen3-1.7B \
+      --model_name ${BASE_PATH} \
       --no_custom_template \
       --val_file ${VAL_FILE} \
       --eval_provided \
-      --output_dir ${EVAL_DIR}/base_qwen \
+      --output_dir ${EVAL_DIR}/base_qwen_include \
       --overwrite && \
 
-    echo '[eval] 2/6 V5' && \
+    echo '[eval] 2/3 V1 best_adapter' && \
     python -m multilingual.eval.run_eval \
-      --model_name ${V5_PATH} \
+      --model_name ${V1_PATH} \
       --val_file ${VAL_FILE} \
       --eval_provided \
-      --output_dir ${EVAL_DIR}/v5 \
+      --output_dir ${EVAL_DIR}/v1_include \
       --overwrite && \
 
-    echo '[eval] 3/6 V6' && \
+    echo '[eval] 3/3 V10 best_adapter' && \
     python -m multilingual.eval.run_eval \
-      --model_name ${V6_PATH} \
+      --model_name ${V10_PATH} \
       --val_file ${VAL_FILE} \
       --eval_provided \
-      --output_dir ${EVAL_DIR}/v6 \
-      --overwrite && \
-
-    echo '[eval] 4/6 V8' && \
-    python -m multilingual.eval.run_eval \
-      --model_name ${V8_PATH} \
-      --val_file ${VAL_FILE} \
-      --eval_provided \
-      --output_dir ${EVAL_DIR}/v8 \
-      --overwrite && \
-
-    echo '[eval] 5/6 V9 shorter checkpoint-${LATEST_CHECKPOINT}' && \
-    python -m multilingual.eval.run_eval \
-      --model_name ${V9S_PATH} \
-      --val_file ${VAL_FILE} \
-      --eval_provided \
-      --output_dir ${EVAL_DIR}/v9_shorter_ckpt${LATEST_CHECKPOINT} \
-      --overwrite && \
-
-    echo '[eval] 6/6 V9 checkpoint-${LATEST_CHECKPOINT}' && \
-    python -m multilingual.eval.run_eval \
-      --model_name ${V9_PATH} \
-      --val_file ${VAL_FILE} \
-      --eval_provided \
-      --output_dir ${EVAL_DIR}/v9_ckpt${LATEST_CHECKPOINT} \
+      --output_dir ${EVAL_DIR}/v10_include \
       --overwrite && \
 
     echo '[eval] All done at \$(date)'"
@@ -136,12 +109,9 @@ Shell in pod:
 Stop the job:
   runai workload delete ${JOB_NAME} -p ${PROJECT}
 
-Results will be saved in:
-  ${EVAL_DIR}/base_qwen/summary.csv
-  ${EVAL_DIR}/v5/summary.csv
-  ${EVAL_DIR}/v6/summary.csv
-  ${EVAL_DIR}/v8/summary.csv
-  ${EVAL_DIR}/v9_shorter_ckpt${LATEST_CHECKPOINT}/summary.csv
-  ${EVAL_DIR}/v9_ckpt${LATEST_CHECKPOINT}/summary.csv
+Results:
+  ${EVAL_DIR}/base_qwen_include/summary.csv
+  ${EVAL_DIR}/v1_include/summary.csv
+  ${EVAL_DIR}/v10_include/summary.csv
 
 EOF

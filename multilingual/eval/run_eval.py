@@ -92,6 +92,13 @@ def load_model_and_tokenizer_for_eval(
         tokenizer = AutoTokenizer.from_pretrained(
             BASE_MODEL, token=hf_token, trust_remote_code=True,
         )
+        # Disable bitsandbytes dispatch to avoid CUDA setup crash
+        try:
+            import peft.tuners.lora.model as lora_model
+            lora_model.is_bnb_available = lambda: False
+            lora_model.is_bnb_4bit_available = lambda: False
+        except Exception:
+            pass
         base = AutoModelForCausalLM.from_pretrained(
             BASE_MODEL,
             token=hf_token,
