@@ -224,11 +224,11 @@ def split_distilled_answer(clean: str, gold: str) -> Tuple[str, str]:
     """
     lines = clean.strip().splitlines()
 
-    # Remove trailing empty lines
+    # remove trailing empty lines
     while lines and not lines[-1].strip():
         lines.pop()
 
-    # Remove trailing line(s) that contain \\boxed{}
+    # remove trailing line(s) that contain \\boxed{}
     while lines and "\\boxed{" in lines[-1]:
         lines.pop()
         # Also remove newly trailing empty lines
@@ -250,10 +250,6 @@ def _make_distilled_assistant_message(cot: str, gold: str) -> str:
     return f"<think>\n</think>\n\n{boxed}"
 
 
-def _make_raw_assistant_message(answer: str) -> str:
-    """Build the assistant message for a raw (non-distilled) example."""
-    answer = answer.strip().upper()
-    return f"\\boxed{{{answer}}}"
 
 # ---------------------------------------------------------------------------
 # SFT record helpers
@@ -634,6 +630,83 @@ def _build_mixed(
     rng.shuffle(mixed)
     return mixed
 
+
+def _dataset_total_cap_for_distilled(dataset: str, global_cap: int) -> int:
+    """
+    Cap distilled examples by dataset without using split_caps.
+
+    Some datasets have split_caps["train"] = 0 because their raw loader is
+    evaluation-only/recarved, but distilled examples from those datasets should
+    still be allowed in train. Therefore distilled caps use max_per_dataset only.
+    """
+    cfg = _dataset_cfg(dataset)
+    v = cfg.get("max_per_dataset", global_cap)
+    return v if v is not None else 10_000_000
+
+
+def _cap_distilled_records(
+    records: List[Dict],
+    global_max_per_language: int,
+    global_max_per_dataset: int,
+    rng: random.Random,
+    debug: bool,
+) -> List[Dict]:
+    """
+    Apply the same dataset/language caps to distilled records before they are
+    written and added to the mixed train set.
+
+    This prevents large distilled sources, especially CEval and MILU, from
+    bypassing the normal sampling caps.
+    """
+    if debug:
+        return records
+
+    by_dataset_language: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
+    for r in records:
+        by_dataset_language[(r["dataset"], r["language"])].append(r)
+
+    by_dataset: Dict[str, List[Dict]] = defaultdict(list)
+
+    for (dataset, language), items in by_dataset_language.items():
+        rng.shuffle(items)
+        cap = _max_per_language(dataset, language, global_max_per_language)
+        by_dataset[dataset].extend(items[:cap])
+
+    capped: List[Dict] = []
+    for dataset, items in by_dataset.items():
+        rng.shuffle(items)
+        ds_cap = _dataset_total_cap_for_distilled(dataset, global_max_per_dataset)
+        capped.extend(items[:ds_cap])
+
+    rng.shuffle(capped)
+    return capped
+
+
+def _cap_records_by_language(
+    records: List[Dict],
+    max_per_language: Optional[int],
+    rng: random.Random,
+    debug: bool,
+) -> List[Dict]:
+    """
+    Final language cap applied after adding distilled records to the train mix.
+    This is needed because distilled records are appended after _build_mixed().
+    """
+    if debug or max_per_language is None:
+        return records
+
+    by_lang: Dict[str, List[Dict]] = defaultdict(list)
+    for r in records:
+        by_lang[r["language"]].append(r)
+
+    capped: List[Dict] = []
+    for _, items in by_lang.items():
+        rng.shuffle(items)
+        capped.extend(items[:max_per_language])
+
+    rng.shuffle(capped)
+    return capped
+
 # ---------------------------------------------------------------------------
 # Main build
 # ---------------------------------------------------------------------------
@@ -661,6 +734,17 @@ def build(
     if distilled_dirs:
         print("\n── Loading distilled examples ──")
         distilled_train, distilled_ids = _load_distilled_dirs(distilled_dirs)
+        before_distilled_cap = len(distilled_train)
+        distilled_train = _cap_distilled_records(
+            distilled_train,
+            global_max_per_language=max_per_language,
+            global_max_per_dataset=max_per_dataset,
+            rng=rng,
+            debug=debug,
+        )
+        removed_distilled = before_distilled_cap - len(distilled_train)
+        if removed_distilled:
+            print(f"  Capped distilled train examples: {before_distilled_cap} → {len(distilled_train)}")
         print(f"  → {len(distilled_train)} distilled train examples loaded")
 
     # ── Step 1: per-dataset/language files ───────────────────────────────────
@@ -771,12 +855,28 @@ def build(
             debug=debug,
         )
 
-        # Add distilled examples to train mixed (always, no cap — they are
-        # already capped by the distillation pipeline)
+        # Add distilled examples to train mixed. They were already capped by
+        # dataset/language above, then the final mixed language cap is applied
+        # again after appending them.
         if split == "train" and distilled_train:
             mixed = mixed + distilled_train
             rng.shuffle(mixed)
             print(f"  Added {len(distilled_train)} distilled examples to train mixed")
+
+        if split == "train" and not debug and max_per_language_mixed is not None:
+            before_final_lang_cap = len(mixed)
+            mixed = _cap_records_by_language(
+                mixed,
+                max_per_language=max_per_language_mixed,
+                rng=rng,
+                debug=debug,
+            )
+            removed_final_lang_cap = before_final_lang_cap - len(mixed)
+            if removed_final_lang_cap:
+                print(
+                    f"  Applied final train language cap: "
+                    f"{before_final_lang_cap} → {len(mixed)}"
+                )
 
         if not mixed:
             continue
@@ -786,6 +886,17 @@ def build(
                 "dataset": "mixed", "language": "all",
                 "split": split, "n": len(mixed), "path": str(mixed_path),
             })
+
+        # save INCLUDE-only subset from val for benchmarking (NB NB NB EMMA)
+        if split == "val":
+            include_val = [r for r in mixed if r["dataset"] == "include"]
+            if include_val:
+                include_path = mixed_dir / "include_val.jsonl"
+                if _write_jsonl(include_val, include_path, overwrite):
+                    summary_rows.append({
+                        "dataset": "include[val]", "language": "all",
+                        "split": "val", "n": len(include_val), "path": str(include_path),
+                    })
 
     # ── Step 4: summary CSV ──────────────────────────────────────────────────
     summary_path = output_dir / "build_summary.csv"

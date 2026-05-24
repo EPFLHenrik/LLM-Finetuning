@@ -86,6 +86,7 @@ runai submit \
   --environment HF_HUB_ENABLE_HF_TRANSFER=1 \
   --environment HF_TOKEN="${HF_TOKEN:-}" \
   --environment WANDB_API_KEY="${WANDB_API_KEY:-}" \
+  --environment CSCS_SERVING_API="${CSCS_SERVING_API:-}" \
   --environment WANDB_DIR=/scratch/wandb \
   --existing-pvc "claimname=${SCRATCH_PVC},path=/scratch" \
   --existing-pvc "claimname=${SHARED_RO_PVC},path=/shared-ro" \

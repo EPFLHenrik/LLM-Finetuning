@@ -2,7 +2,7 @@
   "output_name": "v9",
 
   "distilled_dirs": [
-    "multilingual/data/distilled/selected"
+    "multilingual/data/distilled"
   ],
   "invalid_distilled_policy": "raw_train",
 

@@ -1,0 +1,184 @@
+nohup: ignoring input
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Jobs (4):
+  milu_hindi_train_regional.jsonl → milu_hindi_regional
+  milu_hindi_train_regional_implicit.jsonl → milu_hindi_regional_implicit
+  ceval_chinese_regional.jsonl → ceval_chinese_regional
+  ceval_chinese_regional_implicit.jsonl → ceval_chinese_regional_implicit
+
+── milu_hindi_train_regional.jsonl ──
+  Resuming: 3680 already done
+  Processing: 251 remaining / 3931 total
+    25/251 | valid=21 (84%) | 2.4 ex/s | ETA 94s
+    50/251 | valid=41 (82%) | 2.1 ex/s | ETA 97s
+    75/251 | valid=60 (80%) | 1.9 ex/s | ETA 95s
+  Valid: 5000/6147 (81%)
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 4654, 'swiss-ai/Apertus-70B-Instruct-2509': 346, 'none': 1147}
+  Invalid reasons: {'wrong_answer:C': 241, 'wrong_answer:A': 384, 'wrong_answer:D': 188, 'wrong_answer:B': 247, 'not_ending_with_boxed': 62, 'wrong_answer:None': 12, 'not_sure': 8, 'too_long': 3, 'wrong_answer:U': 2}
+  Done in 40.9s
+
+── milu_hindi_train_regional_implicit.jsonl ──
+  Resuming: 3771 already done
+  Processing: 2868 remaining / 6639 total
+    25/2868 | valid=22 (88%) | 1.7 ex/s | ETA 1680s
+    50/2868 | valid=40 (80%) | 1.5 ex/s | ETA 1849s
+    75/2868 | valid=60 (80%) | 1.6 ex/s | ETA 1704s
+    100/2868 | valid=80 (80%) | 1.7 ex/s | ETA 1623s
+    125/2868 | valid=97 (77%) | 1.7 ex/s | ETA 1594s
+    150/2868 | valid=115 (76%) | 1.7 ex/s | ETA 1607s
+    175/2868 | valid=134 (76%) | 1.7 ex/s | ETA 1557s
+    200/2868 | valid=154 (77%) | 1.7 ex/s | ETA 1527s
+    225/2868 | valid=176 (78%) | 1.8 ex/s | ETA 1510s
+    250/2868 | valid=197 (78%) | 1.8 ex/s | ETA 1462s
+    275/2868 | valid=217 (78%) | 1.8 ex/s | ETA 1444s
+    300/2868 | valid=235 (78%) | 1.7 ex/s | ETA 1470s
+    325/2868 | valid=255 (78%) | 1.7 ex/s | ETA 1475s
+    350/2868 | valid=274 (78%) | 1.7 ex/s | ETA 1497s
+    375/2868 | valid=292 (77%) | 1.7 ex/s | ETA 1505s
+    400/2868 | valid=314 (78%) | 1.7 ex/s | ETA 1469s
+    425/2868 | valid=334 (78%) | 1.7 ex/s | ETA 1458s
+    450/2868 | valid=356 (79%) | 1.7 ex/s | ETA 1443s
+    475/2868 | valid=374 (78%) | 1.7 ex/s | ETA 1443s
+    500/2868 | valid=394 (78%) | 1.7 ex/s | ETA 1422s
+    525/2868 | valid=414 (78%) | 1.7 ex/s | ETA 1405s
+    550/2868 | valid=434 (78%) | 1.7 ex/s | ETA 1383s
+    575/2868 | valid=455 (79%) | 1.7 ex/s | ETA 1357s
+    600/2868 | valid=474 (79%) | 1.7 ex/s | ETA 1331s
+    625/2868 | valid=496 (79%) | 1.7 ex/s | ETA 1335s
+    650/2868 | valid=511 (78%) | 1.7 ex/s | ETA 1319s
+    675/2868 | valid=531 (78%) | 1.7 ex/s | ETA 1296s
+    700/2868 | valid=550 (78%) | 1.7 ex/s | ETA 1293s
+    725/2868 | valid=571 (78%) | 1.7 ex/s | ETA 1294s
+    750/2868 | valid=591 (78%) | 1.6 ex/s | ETA 1284s
+    775/2868 | valid=606 (78%) | 1.6 ex/s | ETA 1278s
+    800/2868 | valid=629 (78%) | 1.6 ex/s | ETA 1256s
+    825/2868 | valid=648 (78%) | 1.7 ex/s | ETA 1233s
+    850/2868 | valid=666 (78%) | 1.7 ex/s | ETA 1212s
+    875/2868 | valid=688 (78%) | 1.7 ex/s | ETA 1191s
+    900/2868 | valid=711 (79%) | 1.7 ex/s | ETA 1169s
+    925/2868 | valid=733 (79%) | 1.7 ex/s | ETA 1149s
+    950/2868 | valid=749 (78%) | 1.7 ex/s | ETA 1141s
+    975/2868 | valid=772 (79%) | 1.7 ex/s | ETA 1117s
+    1000/2868 | valid=792 (79%) | 1.7 ex/s | ETA 1097s
+    1025/2868 | valid=813 (79%) | 1.7 ex/s | ETA 1083s
+    1050/2868 | valid=833 (79%) | 1.7 ex/s | ETA 1066s
+    1075/2868 | valid=854 (79%) | 1.7 ex/s | ETA 1048s
+    1100/2868 | valid=875 (79%) | 1.7 ex/s | ETA 1035s
+    1125/2868 | valid=898 (79%) | 1.7 ex/s | ETA 1015s
+  Valid: 5000/6278 (79%)
+  Teachers used: {'none': 1278, 'meta-llama/Llama-3.3-70B-Instruct': 4672, 'swiss-ai/Apertus-70B-Instruct-2509': 328}
+  Invalid reasons: {'wrong_answer:C': 263, 'wrong_answer:B': 317, 'not_sure': 29, 'wrong_answer:D': 185, 'wrong_answer:A': 370, 'wrong_answer:None': 41, 'not_ending_with_boxed': 69, 'wrong_answer:E': 1, 'too_long': 3}
+  Done in 655.5s
+
+── ceval_chinese_regional.jsonl ──
+  Resuming: 3347 already done
+  Processing: 0 remaining / 3347 total
+  Already complete. Valid: 2644/3347
+  Done in 0.2s
+
+── ceval_chinese_regional_implicit.jsonl ──
+  Resuming: 3946 already done
+  Processing: 2164 remaining / 6110 total
+    25/2164 | valid=20 (80%) | 2.7 ex/s | ETA 803s
+    50/2164 | valid=37 (74%) | 2.3 ex/s | ETA 912s
+    75/2164 | valid=55 (73%) | 2.4 ex/s | ETA 863s
+    100/2164 | valid=74 (74%) | 2.6 ex/s | ETA 808s
+    125/2164 | valid=94 (75%) | 2.5 ex/s | ETA 827s
+    150/2164 | valid=114 (76%) | 2.3 ex/s | ETA 875s
+    175/2164 | valid=134 (76%) | 2.4 ex/s | ETA 844s
+    200/2164 | valid=154 (77%) | 2.3 ex/s | ETA 851s
+    225/2164 | valid=172 (76%) | 2.4 ex/s | ETA 821s
+    250/2164 | valid=191 (76%) | 2.3 ex/s | ETA 818s
+    275/2164 | valid=212 (77%) | 2.4 ex/s | ETA 788s
+    300/2164 | valid=234 (78%) | 2.4 ex/s | ETA 781s
+    325/2164 | valid=252 (77%) | 2.3 ex/s | ETA 791s
+    350/2164 | valid=271 (77%) | 2.3 ex/s | ETA 792s
+    375/2164 | valid=291 (77%) | 2.2 ex/s | ETA 801s
+    400/2164 | valid=313 (78%) | 2.2 ex/s | ETA 806s
+    425/2164 | valid=331 (77%) | 2.2 ex/s | ETA 788s
+    450/2164 | valid=352 (78%) | 2.2 ex/s | ETA 769s
+    475/2164 | valid=369 (77%) | 2.2 ex/s | ETA 776s
+    500/2164 | valid=389 (77%) | 2.1 ex/s | ETA 777s
+    525/2164 | valid=410 (78%) | 2.2 ex/s | ETA 755s
+    550/2164 | valid=433 (78%) | 2.2 ex/s | ETA 731s
+    575/2164 | valid=449 (78%) | 2.2 ex/s | ETA 714s
+    600/2164 | valid=469 (78%) | 2.2 ex/s | ETA 703s
+    625/2164 | valid=491 (78%) | 2.2 ex/s | ETA 690s
+    650/2164 | valid=507 (78%) | 2.2 ex/s | ETA 680s
+    675/2164 | valid=525 (77%) | 2.2 ex/s | ETA 671s
+    700/2164 | valid=543 (77%) | 2.2 ex/s | ETA 674s
+    725/2164 | valid=566 (78%) | 2.2 ex/s | ETA 657s
+    750/2164 | valid=589 (78%) | 2.2 ex/s | ETA 642s
+    775/2164 | valid=607 (78%) | 2.2 ex/s | ETA 629s
+    800/2164 | valid=627 (78%) | 2.2 ex/s | ETA 613s
+    825/2164 | valid=647 (78%) | 2.2 ex/s | ETA 607s
+    850/2164 | valid=670 (78%) | 2.2 ex/s | ETA 591s
+    875/2164 | valid=686 (78%) | 2.2 ex/s | ETA 577s
+    900/2164 | valid=702 (78%) | 2.2 ex/s | ETA 567s
+    925/2164 | valid=721 (77%) | 2.2 ex/s | ETA 554s
+    950/2164 | valid=741 (78%) | 2.2 ex/s | ETA 543s
+    975/2164 | valid=758 (77%) | 2.2 ex/s | ETA 530s
+    1000/2164 | valid=775 (77%) | 2.2 ex/s | ETA 517s
+    1025/2164 | valid=794 (77%) | 2.3 ex/s | ETA 505s
+    1050/2164 | valid=805 (76%) | 2.2 ex/s | ETA 500s
+    1075/2164 | valid=821 (76%) | 2.2 ex/s | ETA 488s
+    1100/2164 | valid=839 (76%) | 2.2 ex/s | ETA 480s
+    1125/2164 | valid=859 (76%) | 2.2 ex/s | ETA 472s
+    1150/2164 | valid=880 (76%) | 2.2 ex/s | ETA 456s
+    1175/2164 | valid=895 (76%) | 2.2 ex/s | ETA 446s
+    1200/2164 | valid=912 (76%) | 2.2 ex/s | ETA 436s
+    1225/2164 | valid=932 (76%) | 2.2 ex/s | ETA 424s
+    1250/2164 | valid=951 (76%) | 2.2 ex/s | ETA 416s
+    1275/2164 | valid=970 (76%) | 2.2 ex/s | ETA 408s
+    1300/2164 | valid=987 (75%) | 2.2 ex/s | ETA 400s
+    1325/2164 | valid=1008 (76%) | 2.2 ex/s | ETA 386s
+    1350/2164 | valid=1025 (75%) | 2.2 ex/s | ETA 376s
+    1375/2164 | valid=1046 (76%) | 2.2 ex/s | ETA 365s
+    1400/2164 | valid=1066 (76%) | 2.2 ex/s | ETA 355s
+    1425/2164 | valid=1084 (76%) | 2.1 ex/s | ETA 344s
+    1450/2164 | valid=1100 (75%) | 2.1 ex/s | ETA 334s
+    1475/2164 | valid=1119 (75%) | 2.1 ex/s | ETA 324s
+    1500/2164 | valid=1135 (75%) | 2.1 ex/s | ETA 314s
+    1525/2164 | valid=1156 (75%) | 2.1 ex/s | ETA 301s
+    1550/2164 | valid=1173 (75%) | 2.1 ex/s | ETA 288s
+    1575/2164 | valid=1191 (75%) | 2.1 ex/s | ETA 276s
+    1600/2164 | valid=1211 (75%) | 2.1 ex/s | ETA 264s
+    1625/2164 | valid=1223 (75%) | 2.1 ex/s | ETA 254s
+    1650/2164 | valid=1245 (75%) | 2.1 ex/s | ETA 242s
+    1675/2164 | valid=1263 (75%) | 2.1 ex/s | ETA 229s
+    1700/2164 | valid=1280 (75%) | 2.1 ex/s | ETA 219s
+    1725/2164 | valid=1303 (75%) | 2.1 ex/s | ETA 206s
+    1750/2164 | valid=1324 (75%) | 2.1 ex/s | ETA 194s
+    1775/2164 | valid=1345 (75%) | 2.1 ex/s | ETA 182s
+    1800/2164 | valid=1363 (75%) | 2.1 ex/s | ETA 170s
+    1825/2164 | valid=1380 (75%) | 2.1 ex/s | ETA 159s
+    1850/2164 | valid=1397 (75%) | 2.1 ex/s | ETA 148s
+    1875/2164 | valid=1410 (75%) | 2.1 ex/s | ETA 137s
+    1900/2164 | valid=1430 (75%) | 2.1 ex/s | ETA 125s
+    1925/2164 | valid=1451 (75%) | 2.1 ex/s | ETA 113s
+    1950/2164 | valid=1469 (75%) | 2.1 ex/s | ETA 101s
+    1975/2164 | valid=1486 (75%) | 2.1 ex/s | ETA 89s
+    2000/2164 | valid=1508 (75%) | 2.1 ex/s | ETA 77s
+    2025/2164 | valid=1523 (75%) | 2.1 ex/s | ETA 65s
+    2050/2164 | valid=1541 (75%) | 2.1 ex/s | ETA 53s
+    2075/2164 | valid=1559 (75%) | 2.1 ex/s | ETA 42s
+    2100/2164 | valid=1576 (75%) | 2.1 ex/s | ETA 30s
+    2125/2164 | valid=1599 (75%) | 2.1 ex/s | ETA 18s
+    2150/2164 | valid=1617 (75%) | 2.1 ex/s | ETA 7s
+    2164/2164 | valid=1629 (75%) | 2.1 ex/s | ETA 0s
+  Valid: 4629/6110 (75%)
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 4121, 'none': 1481, 'swiss-ai/Apertus-70B-Instruct-2509': 508}
+  Invalid reasons: {'wrong_answer:B': 338, 'wrong_answer:A': 486, 'wrong_answer:D': 255, 'wrong_answer:C': 294, 'wrong_answer:None': 62, 'not_sure': 29, 'wrong_answer:BD': 1, 'not_ending_with_boxed': 6, 'wrong_answer:A,B': 1, 'wrong_answer:A, B, C': 1, 'wrong_answer:19': 1, 'too_long': 1, 'wrong_answer:12': 1, 'wrong_answer:B1': 2, 'wrong_answer:BC': 1, 'wrong_answer:10': 1, 'wrong_answer:1500': 1}
+  Done in 1021.1s
+
+============================================================
+DISTILLATION SUMMARY
+============================================================
+  milu_hindi_train_regional.jsonl                     total=6147  valid=5000 (81%)  stop=valid_cap_reached  (40.9s)
+  milu_hindi_train_regional_implicit.jsonl            total=6278  valid=5000 (79%)  stop=valid_cap_reached  (655.5s)
+  ceval_chinese_regional.jsonl                        total=3347  valid=2644 (78%)  stop=unknown  (0.2s)
+  ceval_chinese_regional_implicit.jsonl               total=6110  valid=4629 (75%)  stop=exhausted  (1021.1s)
+
+  TOTAL: 21882 → valid 17273 (78%)
+Summary: multilingual/data/distilled/all/distill_summary.json
