@@ -5,7 +5,7 @@ from multilingual.config import REPO
 from multilingual.utils import VAL_SEED, VAL_FRACTION
 import re
 
-_HIRAGANA_KATAKANA = re.compile(r'[\u3040-\u30ff]')
+_HIRAGANA_KATAKANA = re.compile('[\u3040-\u30ff]')
 CLEAN_CSV = REPO / "multilingual" / "data" / "processed" / "cultsportqa" / "cultsportqa_clean_all.csv"
 SUPPORTED_LANGUAGES = {"chinese", "hindi"}
 

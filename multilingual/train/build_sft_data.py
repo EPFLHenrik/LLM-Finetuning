@@ -267,17 +267,28 @@ def _hash_source_id(ex: Dict[str, Any]) -> str:
     return f"{ex['dataset']}_{ex['language']}_{hashlib.sha1(raw.encode()).hexdigest()[:16]}"
 
 
+# def _make_assistant_message(ex: Dict[str, Any]) -> str:
+#     """Build assistant message for a raw (non-distilled) example."""
+#     answer = str(ex["answer"]).strip()
+#     if ex["task_type"] == "mcq":
+#         answer = answer.upper()
+#     boxed = f"\\boxed{{{answer}}}"
+#     cot = ex.get("cot") or ex.get("rationale") or ex.get("reasoning")
+#     if cot:
+#         cot = str(cot).strip()
+#         return f"<think>\n{cot}\n</think>\n\n{boxed}"
+#     return boxed
+
 def _make_assistant_message(ex: Dict[str, Any]) -> str:
-    """Build assistant message for a raw (non-distilled) example."""
     answer = str(ex["answer"]).strip()
     if ex["task_type"] == "mcq":
         answer = answer.upper()
     boxed = f"\\boxed{{{answer}}}"
     cot = ex.get("cot") or ex.get("rationale") or ex.get("reasoning")
     if cot:
-        cot = str(cot).strip()
-        return f"<think>\n{cot}\n</think>\n\n{boxed}"
-    return boxed
+        return f"<think>\n{str(cot).strip()}\n</think>\n\n{boxed}"
+    # always include empty think tags for format consistency
+    return f"<think>\n</think>\n\n{boxed}"
 
 
 def _to_sft_record(ex: Dict[str, Any], split: str, idx: int) -> Dict[str, Any]:
