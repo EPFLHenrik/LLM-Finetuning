@@ -1,4 +1,7 @@
 class DatasetFieldNames:
+    DS_INPUT = "input"
+    DS_ANSWER = "answer"
+
     BENCHMARK_INPUT = "prompt"
     BENCHMARK_COMPLETIONS = "completions"
     BENCHMARK_ANSWER = "answer"
@@ -9,6 +12,10 @@ class DatasetFieldNames:
 
     RLVR_INPUT = "prompt"
     RLVR_ANSWER = "answer"
+
+    DPO_INPUT = "prompt"
+    DPO_REJECTED = "rejected"
+    DPO_CHOSEN = "chosen"
 
 class DistillationFieldNames:
     TEACHER_MODEL = "teacher_model"
