@@ -120,6 +120,18 @@ class DPOPreferenceDataset(Dataset):
 def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description="DPO on an existing SFT LoRA adapter for Qwen3-1.7B")
 	parser.add_argument(
+		"--datasets",
+		nargs="+",
+		required=True,
+		help="Dataset names under --train-data-root/<name> with train and test splits.",
+	)
+	parser.add_argument(
+		"--train-data-root",
+		type=Path,
+		default=Path("data/processed/dpo"),
+		help="Root directory containing processed DPO/SFT datasets for training and validation.",
+	)
+	parser.add_argument(
 		"--adapter-path",
 		type=Path,
 		required=True,
