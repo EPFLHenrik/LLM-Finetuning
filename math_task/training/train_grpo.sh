@@ -38,6 +38,10 @@
 
 set -euo pipefail
 
+# ms-swift defaults to ModelScope (CN hub). Force HuggingFace lookups so our
+# cs-552-2026-mystery-machine/math_model repo resolves correctly.
+export USE_HF="${USE_HF:-1}"
+
 PHASE="${PHASE:-4k}"
 PILOT="${PILOT:-0}"
 
@@ -129,6 +133,7 @@ exec swift rlhf \
   --epsilon_high "$EPS_HIGH" \
   --beta "$KL_BETA" \
   --model "$RL_MODEL" \
+  --model_type qwen3 \
   --train_type lora \
   --lora_rank 32 \
   --lora_alpha 64 \
