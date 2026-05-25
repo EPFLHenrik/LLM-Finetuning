@@ -23,6 +23,9 @@
 #       --output  /scratch/<user>/ckpt/math_rl_8k_v1
 #
 # Env overrides:
+#   RL_MODEL     : --model path. Default Qwen/Qwen3-1.7B (Track B from-base).
+#                  For Track A, set to cs-552-2026-mystery-machine/math_model
+#                  (already-merged SFT-200 weights with new system-prompt template).
 #   PHASE        : 4k | 8k | 16k    (default 4k)
 #   INIT_FROM    : path to previous-phase LoRA checkpoint (default: none = from base)
 #   MAX_STEPS    : training steps  (default: pilot=100, full=500/500/300 by phase)
@@ -72,6 +75,7 @@ KL_BETA="${KL_BETA:-0.001}"
 EPS_HIGH="${EPS_HIGH:-5.0}"
 GRAD_ACCUM="${GRAD_ACCUM:-8}"
 INIT_FROM="${INIT_FROM:-}"
+RL_MODEL="${RL_MODEL:-Qwen/Qwen3-1.7B}"
 EXTRA_ARGS="${EXTRA_ARGS:-}"
 
 # Parse --dataset and --output from CLI (the only two we make first-class).
@@ -96,6 +100,7 @@ mkdir -p "$OUTPUT"
 MAX_LENGTH=$((1024 + MAX_COMPLETION))
 
 echo ">>> CISPO LoRA training"
+echo "    model            = $RL_MODEL"
 echo "    phase            = $PHASE (pilot=$PILOT)"
 echo "    max_completion   = $MAX_COMPLETION"
 echo "    max_length       = $MAX_LENGTH"
@@ -107,7 +112,7 @@ echo "    cispo eps_high   = $EPS_HIGH"
 echo "    grad_accum       = $GRAD_ACCUM"
 echo "    dataset          = $DATASET"
 echo "    output           = $OUTPUT"
-echo "    init_from        = ${INIT_FROM:-(base model)}"
+echo "    init_from        = ${INIT_FROM:-(none)}"
 
 ADAPTER_ARG=()
 if [ -n "$INIT_FROM" ]; then
@@ -123,7 +128,7 @@ exec swift rlhf \
   --loss_type cispo \
   --epsilon_high "$EPS_HIGH" \
   --beta "$KL_BETA" \
-  --model Qwen/Qwen3-1.7B \
+  --model "$RL_MODEL" \
   --train_type lora \
   --lora_rank 32 \
   --lora_alpha 64 \

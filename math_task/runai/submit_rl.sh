@@ -14,8 +14,11 @@
 # Env overrides (passed through to the pod):
 #   PHASE       : 4k | 8k | 16k                (default 4k)
 #   PILOT       : 1 for the 100-step smoke test, 0 for full run (default 1)
-#   RL_DATA     : input JSONL (default /scratch/<user>/rl_data/deepscaler_filtered.jsonl)
-#   RL_OUTPUT   : ckpt dir   (default /scratch/<user>/ckpt/math_rl_<phase>_v1)
+#   RL_DATA     : input JSONL (default /scratch/user/rl_data/deepscaler_filtered.jsonl)
+#   RL_OUTPUT   : ckpt dir   (default /scratch/user/ckpt/math_rl_<phase>_v1)
+#   RL_MODEL    : --model path. Default Qwen/Qwen3-1.7B (Track B from-base).
+#                 Set to cs-552-2026-mystery-machine/math_model for Track A
+#                 (already-merged SFT-200 + new system-prompt chat template).
 #   INIT_FROM   : path to previous-phase LoRA adapter (default: none = from base)
 #   MAX_STEPS   : override step count
 #   LR          : learning rate            (default 1e-6)
@@ -38,6 +41,7 @@ PHASE="${PHASE:-4k}"
 PILOT="${PILOT:-1}"
 RL_DATA="${RL_DATA:-/scratch/user/rl_data/deepscaler_filtered.jsonl}"
 RL_OUTPUT="${RL_OUTPUT:-/scratch/user/ckpt/math_rl_${PHASE}_${SUFFIX}}"
+RL_MODEL="${RL_MODEL:-}"
 INIT_FROM="${INIT_FROM:-}"
 MAX_STEPS="${MAX_STEPS:-}"
 LR="${LR:-}"
@@ -94,6 +98,7 @@ echo ">>> Submitting ${JOB_NAME}"
 echo ">>> RL args:"
 echo "    phase     = ${PHASE}"
 echo "    pilot     = ${PILOT}"
+echo "    model     = ${RL_MODEL:-(default: Qwen/Qwen3-1.7B)}"
 echo "    dataset   = ${RL_DATA}"
 echo "    output    = ${RL_OUTPUT}"
 echo "    init_from = ${INIT_FROM:-(none)}"
@@ -119,6 +124,7 @@ ENV_FORWARDS=(
   --environment "PHASE=${PHASE}"
   --environment "PILOT=${PILOT}"
 )
+[[ -n "${RL_MODEL}"   ]] && ENV_FORWARDS+=(--environment "RL_MODEL=${RL_MODEL}")
 [[ -n "${INIT_FROM}"  ]] && ENV_FORWARDS+=(--environment "INIT_FROM=${INIT_FROM}")
 [[ -n "${MAX_STEPS}"  ]] && ENV_FORWARDS+=(--environment "MAX_STEPS=${MAX_STEPS}")
 [[ -n "${LR}"         ]] && ENV_FORWARDS+=(--environment "LR=${LR}")
