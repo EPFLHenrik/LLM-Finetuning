@@ -95,7 +95,7 @@ MSYS_NO_PATHCONV=1 runai submit \
     python -m train.sft_new_updated \
     --run_name sft_full9 \
     --datasets distillation_no_think/sb_mcq distillation_no_think/wgm_binary_choice distillation_no_think/wgm_safety_combo distillation_no_think/wgm_subcategory_classification \
-    --train-sizes 10000 5000 5000 5000 --epochs 5 && \
+    --train-sizes 10000 5000 5000 5000 --epochs 5 \
     --test-sizes 500 250 250 250 && \
     python -m benchmark.run \
     --run_all \
