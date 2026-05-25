@@ -6,7 +6,8 @@ The included `Dockerfile` and `build.sh` are only a base for teams that
 genuinely need a custom image.
 
 For the official project scope, grading weights, rubrics, report
-requirements, and deadlines, refer to your [project description](https://docs.google.com/document/d/1TECHv4q_eR0X-HIyW10vHFbcU2bHLSph/edit?usp=sharing&ouid=117565422542731737285&rtpof=true&sd=true). This guide focuses on the compute environment and
+requirements, and deadlines, refer to your project description
+([Standard](https://docs.google.com/document/d/1TECHv4q_eR0X-HIyW10vHFbcU2bHLSph/edit?usp=sharing&ouid=117565422542731737285&rtpof=true&sd=true)). This guide focuses on the compute environment and
 the files needed to run your code.
 
 Use `/scratch` for caches, datasets, checkpoints, and large generated
@@ -200,39 +201,47 @@ VS Code is the most ergonomic option for serious code editing during
 the project. Jupyter is still convenient for quick exploration and
 plots.
 
+## What's in the image
+
+The course image (`registry.rcp.epfl.ch/course-cs-552/base-vllm:v1`) is
+built on the official vLLM image and ships:
+
+- **Core**: CUDA, PyTorch, vLLM, FlashAttention, FlashInfer, bitsandbytes
+- **Training**: transformers, TRL (SFT/DPO/PPO), PEFT (LoRA/QLoRA), accelerate
+- **Data**: datasets, huggingface_hub with hf_transfer
+- **RAG**: sentence-transformers, faiss-cpu, rank-bm25, langchain
+- **Eval**: lm-eval-harness, rouge-score, sacrebleu, bert-score
+- **Tracking**: wandb, tensorboard
+- **Notebook**: jupyterlab with widgets
+
 ## I need a package that isn't in the image
 
 Three options, in order of preference:
 
-1. **`pip install` from a notebook cell or CLI** — works for the session, takes
+1. **`pip install` from a notebook cell** — works for the session, takes
    seconds. Fine for one-off experiments.
-2. **`requirements.txt` in your repo** — keep a `requirements.txt` with all the requirements in each line and install it at the beginning of each session using CLI or a jupyter cell using `pip install -r requirements.txt`. 
+2. **`requirements.txt` in your repo** — keep a `pip install -r
+   requirements.txt` cell at the top of your notebook. Works for the
+   grader too.
 3. **Build your own image.** If your project genuinely needs something
    that can't be pip-installed (custom CUDA kernels, weird system libs),
-   you can use the included `Dockerfile` and `build.sh` as a base in the `docker` folder. The
-   image lives on **your own public Docker Hub repo** so the cluster
-   can pull it without credentials.
-   - Create a free Docker Hub account and a **public** repo: see
-     [Docker Hub Quickstart](https://docs.docker.com/docker-hub/quickstart/)
-     and [Creating repositories](https://docs.docker.com/docker-hub/repos/create/).
-   - One-time, on your laptop: `docker login` with your Docker Hub
-     credentials.
-   - Edit `build.sh` — set `DOCKERHUB_USER` to your Docker Hub
-     username, `IMAGE` to your repo name, and `DOCKERFILE` if your
-     Dockerfile lives at a non-default path.
-   - Build & push:
-     ```bash
-     ./build.sh           # builds & pushes :v1
-     ./build.sh v2        # builds & pushes :v2
-     ```
-   - Copy the printed image name into `submit.sh` as
-     `IMAGE="docker.io/<dockerhub-user>/<repo>:<tag>"`. Keep the
-     Docker Hub repo **public** so the cluster can pull without
-     credentials.
-   - The initial build can take ~30 minutes, so plan for that.
+   you can use the included `Dockerfile` and `build.sh` as a base.
+   One-time:
+   ```bash
+   docker login registry.rcp.epfl.ch    # use your EPFL credentials
+   ```
+   Then from the repo root:
+   ```bash
+   ./build.sh           # builds & pushes :v1
+   ./build.sh v2        # builds & pushes :v2
+   ```
+   The image lands at
+   `registry.rcp.epfl.ch/course-cs-552/{your-image-name}:{tag}`; point
+   `IMAGE=` in `submit.sh` at it. The initial build can take ~30
+   minutes, so plan for that.
 
 Stick with the course image unless you have a concrete reason to build a
-custom one. Also, remember that the evaluation pipeline runs on the base image, and does not have access to your updated packages.
+custom one.
 
 ## Storage layout inside the pod
 
@@ -282,18 +291,15 @@ everyone, especially around the May 24 and June 7 deadlines:
   runai submit \
     --name "cs552-${GASPAR}-${GROUP}-train-$(date +%H%M%S)" \
     -p "course-cs-552-${GASPAR}" \
-    --image "${IMAGE}" \
+    --image "registry.rcp.epfl.ch/course-cs-552/base-vllm:v1" \
     --gpu 1 --large-shm --node-pools a100-40g \
-    --working-dir /scratch \
     --environment HF_HOME=/scratch/hf_cache \
     --environment HF_TOKEN="${HF_TOKEN:-}" \
     --environment WANDB_API_KEY="${WANDB_API_KEY:-}" \
     --existing-pvc "claimname=course-cs-552-scratch-${GROUP},path=/scratch" \
     --existing-pvc "claimname=course-cs-552-shared-ro,path=/shared-ro" \
     --existing-pvc "claimname=course-cs-552-shared-rw,path=/shared-rw" \
-    --command -- /bin/bash -lc "\
-      ln -sf \"\$(command -v python3)\" /usr/local/bin/python && \
-      cd /scratch/<your-repo> && python train.py"
+    --command -- /bin/bash -lc "cd /scratch/<your-repo> && python train.py"
   ```
   Stream logs with `runai logs -f <job-name>`. The job exits on its own
   when the script finishes — still run `runai delete job` if you abort.
