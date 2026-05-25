@@ -132,190 +132,177 @@ class DPOPreferenceDataset(Dataset):
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="DPO on an existing SFT LoRA adapter for Qwen3-1.7B"
-    )
-    parser.add_argument(
-        "--datasets",
-        nargs="+",
-        required=True,
-        help="Dataset names under --train-data-root/<name> with train and test splits.",
-    )
-    parser.add_argument(
-        "--train-data-root",
-        type=Path,
-        default=Path("data/processed/dpo"),
-        help="Root directory containing processed DPO/SFT datasets for training and validation.",
-    )
-    parser.add_argument(
-        "--adapter-path",
-        type=Path,
-        required=True,
-        help="Path to the existing LoRA adapter to continue training. No merged model is expected.",
-    )
-    parser.add_argument(
-        "--base-model",
-        type=str,
-        default=BASE_MODEL,
-        help="Base model checkpoint used to load the adapter; defaults to the local Qwen3-1.7B baseline.",
-    )
-    parser.add_argument(
-        "--run_name",
-        type=str,
-        default=None,
-        help=(
-            "Human-readable run name. Also used as default checkpoint folder name "
-            "under checkpoints/<run_name>."
-        ),
-    )
-    parser.add_argument("--run-id", type=str, default=None)
-    parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
-    parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
-    parser.add_argument(
-        "--train-sizes",
-        nargs="+",
-        type=int,
-        default=None,
-        help=(
-            "Optional per-dataset train sample caps aligned with --datasets order. "
-            "Use -1 for full dataset. Values above dataset size are clamped to full dataset."
-        ),
-    )
-    parser.add_argument(
-        "--test-sizes",
-        nargs="+",
-        type=int,
-        default=None,
-        help=(
-            "Optional per-dataset test sample caps aligned with --datasets order. "
-            "Use -1 for full dataset. Values above dataset size are clamped to full dataset."
-        ),
-    )
-    parser.add_argument(
-        "--max-seq-len",
-        type=int,
-        default=DEFAULT_MAX_SEQ_LEN,
-        help="Maximum token length per encoded preference example after chat templating.",
-    )
-    parser.add_argument(
-        "--gradient-accumulation-steps",
-        type=int,
-        default=DEFAULT_GRADIENT_ACCUMULATION_STEPS,
-        help="Number of micro-batches to accumulate before an optimizer step.",
-    )
-    parser.add_argument("--lr", type=float, default=DEFAULT_LR)
-    parser.add_argument("--warmup-ratio", type=float, default=DEFAULT_WARMUP_RATIO)
-    parser.add_argument(
-        "--skip_training",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Skip DPO training and assume per-epoch checkpoints already exist.",
-    )
-    parser.add_argument(
-        "--save-epoch-checkpoints",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Export a merged HF checkpoint and LoRA adapter at the end of each epoch.",
-    )
-    parser.add_argument(
-        "--epoch-checkpoints-dir",
-        type=Path,
-        default=None,
-        help="Directory for per-epoch checkpoints. Defaults to checkpoints/<run_name>/epochs.",
-    )
-    parser.add_argument(
-        "--select-best-after-training",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Evaluate every epoch checkpoint after training and keep the best one.",
-    )
-    parser.add_argument(
-        "--validation-eval-limit",
-        type=int,
-        default=None,
-        help="Optional total number of validation examples for post-training checkpoint selection.",
-    )
-    parser.add_argument(
-        "--validation-output-dir",
-        type=Path,
-        default=Path("runs/dpo_validation"),
-        help="Where validation generations and metric JSON files are written.",
-    )
-    parser.add_argument(
-        "--validation-think", action=argparse.BooleanOptionalAction, default=True
-    )
-    parser.add_argument("--validation-temperature", type=float, default=0.6)
-    parser.add_argument("--validation-top-p", type=float, default=0.95)
-    parser.add_argument("--validation-top-k", type=int, default=20)
-    parser.add_argument("--validation-max-tokens", type=int, default=16384)
-    parser.add_argument(
-        "--gradient-checkpointing",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-    )
-    parser.add_argument(
-        "--best-checkpoint-dir",
-        type=Path,
-        default=None,
-        help=(
-            "Export path for best checkpoint. Defaults to checkpoints/<run_name> "
-            "(or checkpoints/<run-id> when --run_name is not set)."
-        ),
-    )
-    parser.add_argument(
-        "--export-temperature",
-        type=float,
-        default=0.7,
-        help="temperature to store in exported generation_config.json",
-    )
-    parser.add_argument(
-        "--export-top-p",
-        type=float,
-        default=0.95,
-        help="top_p to store in exported generation_config.json",
-    )
-    parser.add_argument(
-        "--export-top-k",
-        type=int,
-        default=50,
-        help="top_k to store in exported generation_config.json",
-    )
-    parser.add_argument(
-        "--dpo-beta",
-        type=float,
-        default=DEFAULT_BETA,
-        help="Beta coefficient for the DPO objective.",
-    )
-    parser.add_argument(
-        "--drop-missing-chosen",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help=(
-            "Drop preference rows that have no explicit 'chosen' response instead of "
-            "falling back to the SFT target."
-        ),
-    )
-    parser.add_argument(
-        "--skip_wandb",
-        action="store_true",
-        help="Disable W&B logging.",
-    )
-    parser.add_argument(
-        "--wandb_project",
-        type=str,
-        default="MNLP-Safety",
-    )
-    parser.add_argument(
-        "--wandb_entity",
-        type=str,
-        default=None,
-    )
-    parser.add_argument(
-        "--wandb_run_name",
-        type=str,
-        default=None,
-    )
-    return parser.parse_args()
+	parser = argparse.ArgumentParser(description="DPO on an existing SFT LoRA adapter for Qwen3-1.7B")
+	parser.add_argument(
+		"--datasets",
+		nargs="+",
+		required=True,
+		help="Dataset names under --train-data-root/<name> with train and test splits.",
+	)
+	parser.add_argument(
+		"--train-data-root",
+		type=Path,
+		default=Path("data/processed/dpo"),
+		help="Root directory containing processed DPO/SFT datasets for training and validation.",
+	)
+	parser.add_argument(
+		"--adapter-path",
+		type=Path,
+		required=True,
+		help="Path to the existing LoRA adapter to continue training. No merged model is expected.",
+	)
+	parser.add_argument(
+		"--base-model",
+		type=str,
+		default=BASE_MODEL,
+		help="Base model checkpoint used to load the adapter; defaults to the local Qwen3-1.7B baseline.",
+	)
+	parser.add_argument(
+		"--run_name",
+		type=str,
+		default=None,
+		help=(
+			"Human-readable run name. Also used as default checkpoint folder name "
+			"under checkpoints/<run_name>."
+		),
+	)
+	parser.add_argument("--run-id", type=str, default=None)
+	parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
+	parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+	parser.add_argument(
+		"--train-sizes",
+		nargs="+",
+		type=int,
+		default=None,
+		help=(
+			"Optional per-dataset train sample caps aligned with --datasets order. "
+			"Use -1 for full dataset. Values above dataset size are clamped to full dataset."
+		),
+	)
+	parser.add_argument(
+		"--test-sizes",
+		nargs="+",
+		type=int,
+		default=None,
+		help=(
+			"Optional per-dataset test sample caps aligned with --datasets order. "
+			"Use -1 for full dataset. Values above dataset size are clamped to full dataset."
+		),
+	)
+	parser.add_argument(
+		"--max-seq-len",
+		type=int,
+		default=DEFAULT_MAX_SEQ_LEN,
+		help="Maximum token length per encoded preference example after chat templating.",
+	)
+	parser.add_argument(
+		"--gradient-accumulation-steps",
+		type=int,
+		default=DEFAULT_GRADIENT_ACCUMULATION_STEPS,
+		help="Number of micro-batches to accumulate before an optimizer step.",
+	)
+	parser.add_argument("--lr", type=float, default=DEFAULT_LR)
+	parser.add_argument("--warmup-ratio", type=float, default=DEFAULT_WARMUP_RATIO)
+	parser.add_argument(
+		"--skip_training",
+		action=argparse.BooleanOptionalAction,
+		default=False,
+		help="Skip DPO training and assume per-epoch checkpoints already exist.",
+	)
+	parser.add_argument(
+		"--save-epoch-checkpoints",
+		action=argparse.BooleanOptionalAction,
+		default=True,
+		help="Export a merged HF checkpoint and LoRA adapter at the end of each epoch.",
+	)
+	parser.add_argument(
+		"--epoch-checkpoints-dir",
+		type=Path,
+		default=None,
+		help="Directory for per-epoch checkpoints. Defaults to checkpoints/<run_name>/epochs.",
+	)
+	parser.add_argument(
+		"--select-best-after-training",
+		action=argparse.BooleanOptionalAction,
+		default=True,
+		help="Evaluate every epoch checkpoint after training and keep the best one.",
+	)
+	parser.add_argument(
+		"--validation-eval-limit",
+		type=int,
+		default=None,
+		help="Optional total number of validation examples for post-training checkpoint selection.",
+	)
+	parser.add_argument(
+		"--validation-output-dir",
+		type=Path,
+		default=Path("runs/dpo_validation"),
+		help="Where validation generations and metric JSON files are written.",
+	)
+	parser.add_argument("--validation-think", action=argparse.BooleanOptionalAction, default=True)
+	parser.add_argument("--validation-temperature", type=float, default=0.6)
+	parser.add_argument("--validation-top-p", type=float, default=0.95)
+	parser.add_argument("--validation-top-k", type=int, default=20)
+	parser.add_argument("--validation-max-tokens", type=int, default=16384)
+	parser.add_argument(
+		"--gradient-checkpointing",
+		action=argparse.BooleanOptionalAction,
+		default=True,
+	)
+	parser.add_argument(
+		"--best-checkpoint-dir",
+		type=Path,
+		default=None,
+		help=(
+			"Export path for best checkpoint. Defaults to checkpoints/<run_name> "
+			"(or checkpoints/<run-id> when --run_name is not set)."
+		),
+	)
+	parser.add_argument(
+		"--export-temperature",
+		type=float,
+		default=0.7,
+		help="temperature to store in exported generation_config.json",
+	)
+	parser.add_argument(
+		"--export-top-p",
+		type=float,
+		default=0.95,
+		help="top_p to store in exported generation_config.json",
+	)
+	parser.add_argument(
+		"--export-top-k",
+		type=int,
+		default=50,
+		help="top_k to store in exported generation_config.json",
+	)
+	parser.add_argument(
+		"--dpo-beta",
+		type=float,
+		default=DEFAULT_BETA,
+		help="Beta coefficient for the DPO objective.",
+	)
+	parser.add_argument(
+		"--skip_wandb",
+		action="store_true",
+		help="Disable W&B logging.",
+	)
+	parser.add_argument(
+		"--wandb_project",
+		type=str,
+		default="MNLP-Safety",
+	)
+	parser.add_argument(
+		"--wandb_entity",
+		type=str,
+		default=None,
+	)
+	parser.add_argument(
+		"--wandb_run_name",
+		type=str,
+		default=None,
+	)
+	return parser.parse_args()
 
 
 def resolve_effective_size(requested_size: int, available_size: int) -> int:
@@ -589,12 +576,12 @@ def build_model_and_tokenizer(
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
-    base_model: Any = AutoModelForCausalLM.from_pretrained(
-        args.base_model,
-        torch_dtype=torch.bfloat16,
-        device_map={"": device},
-        trust_remote_code=True,
-    )
+	base_model: Any = AutoModelForCausalLM.from_pretrained(
+		args.base_model,
+		torch_dtype=torch.bfloat16,
+		device_map={"": device},
+		trust_remote_code=True,
+	)
 
     model: Any = PeftModel.from_pretrained(
         base_model, str(args.adapter_path), is_trainable=True
