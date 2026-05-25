@@ -44,7 +44,7 @@ from pathlib import Path
 from typing import List
 
 
-BASE_MODEL = "Qwen/Qwen3-1.7B"
+DEFAULT_BASE_MODEL = "Qwen/Qwen3-1.7B"
 CHAT_TEMPLATE_PATH = Path(__file__).parent / "chat_template.jinja"
 
 
@@ -163,6 +163,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt-dir", type=Path, required=True,
                     help="Training output dir containing checkpoint-N subdirs.")
+    ap.add_argument("--base-model", default=DEFAULT_BASE_MODEL,
+                    help=f"HF repo or local path to merge each LoRA into. "
+                         f"Default {DEFAULT_BASE_MODEL}. For RL-on-top-of-SFT "
+                         f"eval, pass cs-552-2026-mystery-machine/math_model "
+                         f"(which already has SFT weights merged in).")
     ap.add_argument("--dataset", default="math500_stratified",
                     help="Dataset key (see run_eval DATASET_LOADERS).")
     ap.add_argument("--budget", default="final", choices=["ci", "final"])
@@ -195,7 +200,7 @@ def main() -> None:
         print(f"\n{'=' * 72}\n  {ckpt.name}\n{'=' * 72}")
         tmp_dir = args.temp_root / ckpt.name
         try:
-            merge_lora_to_tempdir(ckpt, BASE_MODEL, tmp_dir)
+            merge_lora_to_tempdir(ckpt, args.base_model, tmp_dir)
         except Exception as e:
             print(f"[merge] FAILED for {ckpt.name}: {e}")
             continue
