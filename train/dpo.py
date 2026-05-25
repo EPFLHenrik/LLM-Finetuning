@@ -236,6 +236,15 @@ def parse_args() -> argparse.Namespace:
 		default=True,
 	)
 	parser.add_argument(
+		"--disable-peft-bnb-dispatch",
+		action=argparse.BooleanOptionalAction,
+		default=True,
+		help=(
+			"Disable PEFT LoRA bitsandbytes backend dispatch during adapter loading. "
+			"Useful when bitsandbytes is installed but broken for the current CUDA build."
+		),
+	)
+	parser.add_argument(
 		"--best-checkpoint-dir",
 		type=Path,
 		default=None,
@@ -540,9 +549,17 @@ def build_model_and_tokenizer(args: argparse.Namespace, device: torch.device) ->
 	if tokenizer.pad_token_id is None:
 		tokenizer.pad_token_id = tokenizer.eos_token_id
 
+	if args.disable_peft_bnb_dispatch:
+		# bitsandbytes can be importable while still unusable for the current CUDA/PyTorch build.
+		# Force PEFT to skip bnb-backed LoRA layer dispatch so adapter loading remains functional.
+		import peft.tuners.lora.model as peft_lora_model
+
+		peft_lora_model.is_bnb_available = lambda: False
+		peft_lora_model.is_bnb_4bit_available = lambda: False
+
 	base_model: Any = AutoModelForCausalLM.from_pretrained(
 		args.base_model,
-		torch_dtype=torch.bfloat16,
+		dtype=torch.bfloat16,
 		device_map={"": device},
 		trust_remote_code=True,
 	)
