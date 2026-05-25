@@ -97,13 +97,14 @@ MSYS_NO_PATHCONV=1 runai submit \
     --base-model checkpoints/Qwen3-1.7B-baseline \
     --datasets safetybench wgm_binary_choice wgm_safety_combo wgm_subcategory_classification \
     --train-data-root data/processed/dpo \
-    --best-checkpoint-dir checkpoints/sft_dpo_full8 \
-    --drop-missing-chosen && \
-    --run_name sft_dpo_full8 \
+    --best-checkpoint-dir checkpoints/sft_dpo_full8_2 \
+    --drop-missing-chosen \
+    --epochs 3 \
+    --run_name sft_dpo_full8_2 && \
     python -m benchmark.run \
     --run_all \
-    --checkpoint checkpoints/sft_dpo_full8/hf_model \
-    --name sft_dpo_full8"
+    --checkpoint checkpoints/sft_dpo_full8_2/hf_model \
+    --name sft_dpo_full8_2"
 
 cat <<EOF
 

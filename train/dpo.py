@@ -56,6 +56,18 @@ DEFAULT_MAX_SEQ_LEN = 15000
 DEFAULT_BETA = 0.03
 
 
+def disable_peft_bitsandbytes_dispatch() -> None:
+    """Avoid accidental PEFT bitsandbytes path when not quantizing."""
+    try:
+        import peft.tuners.lora.model as lora_model
+
+        setattr(lora_model, "is_bnb_available", lambda: False)
+        setattr(lora_model, "is_bnb_4bit_available", lambda: False)
+        print("[info] Disabled PEFT bitsandbytes dispatch for this run.")
+    except Exception as exc:
+        print(f"[warn] Failed to disable PEFT bitsandbytes dispatch: {exc}")
+
+
 @dataclass
 class PreferenceDatasetBundle:
     name: str
@@ -585,6 +597,8 @@ def load_sft_dataset_bundles(
 def build_model_and_tokenizer(
     args: argparse.Namespace, device: torch.device
 ) -> tuple[Any, Any]:
+    disable_peft_bitsandbytes_dispatch()
+
     tokenizer: Any = AutoTokenizer.from_pretrained(args.base_model)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
