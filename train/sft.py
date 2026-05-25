@@ -14,6 +14,8 @@ Usage example:
 from __future__ import annotations
 
 import argparse
+import gc
+import json
 import math
 import random
 import shutil
@@ -27,7 +29,7 @@ from torch.optim import AdamW
 from torch.utils.data import ConcatDataset, DataLoader, Sampler, Subset
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 
-from constants.global_variables import Random
+from constants.global_variables import DatasetFieldNames, Random
 from prompts.system_prompt import SYSTEM_PROMPT_MCQ
 from train.sft_data import DatasetBundle, load_dataset_bundles
 from train.sft_export import export_merged_checkpoint
@@ -46,9 +48,11 @@ BASE_MODEL = "Qwen/Qwen3-1.7B"
 
 # Simple, conservative defaults.
 DEFAULT_EPOCHS = 3
-DEFAULT_BATCH_SIZE = 8
+DEFAULT_BATCH_SIZE = 1
 DEFAULT_LR = 2e-4
 DEFAULT_WARMUP_RATIO = 0.05
+DEFAULT_GRADIENT_ACCUMULATION_STEPS = 16
+DEFAULT_MAX_SEQ_LEN = 15000 # Safer cap than 16384 to avoid OOMs from outliers in the training data.
 
 # LoRA defaults (gold-standard starter values for 1-2B models).
 LORA_R = 16
@@ -66,36 +70,68 @@ LORA_TARGET_MODULES = [
 
 
 class HomogeneousBatchSampler(Sampler[list[int]]):
-    """Batch sampler that keeps each batch within a single dataset partition."""
+    """Batch sampler that keeps each optimizer update within one dataset partition."""
 
-    def __init__(self, dataset_sizes: list[int], batch_size: int, seed: int):
+    def __init__(
+        self,
+        dataset_sizes: list[int],
+        batch_size: int,
+        gradient_accumulation_steps: int,
+        seed: int,
+    ):
         self.dataset_sizes = dataset_sizes
         self.batch_size = batch_size
+        self.gradient_accumulation_steps = gradient_accumulation_steps
         self.seed = seed
         self._iter_count = 0
+        self._update_end_flags: list[bool] = []
 
     def __len__(self) -> int:
         return sum(math.ceil(size / self.batch_size) for size in self.dataset_sizes)
+
+    def optimizer_steps_per_epoch(self) -> int:
+        micro_batches_per_update = self.batch_size * self.gradient_accumulation_steps
+        return sum(math.ceil(size / micro_batches_per_update) for size in self.dataset_sizes)
+
+    def update_ends_at(self, batch_idx: int) -> bool:
+        if batch_idx < 0 or batch_idx >= len(self._update_end_flags):
+            return False
+        return self._update_end_flags[batch_idx]
 
     def __iter__(self):
         rng = random.Random(self.seed + self._iter_count)
         self._iter_count += 1
 
-        batches: list[list[int]] = []
+        update_blocks: list[list[list[int]]] = []
         offset = 0
         for size in self.dataset_sizes:
             dataset_indices = list(range(offset, offset + size))
             rng.shuffle(dataset_indices)
 
+            micro_batches: list[list[int]] = []
             for start in range(0, size, self.batch_size):
-                batch = dataset_indices[start : start + self.batch_size]
-                if batch:
-                    batches.append(batch)
+                micro_batch = dataset_indices[start : start + self.batch_size]
+                if micro_batch:
+                    micro_batches.append(micro_batch)
+
+            for start in range(0, len(micro_batches), self.gradient_accumulation_steps):
+                update_block = micro_batches[start : start + self.gradient_accumulation_steps]
+                if update_block:
+                    update_blocks.append(update_block)
 
             offset += size
 
-        rng.shuffle(batches)
-        yield from batches
+        rng.shuffle(update_blocks)
+
+        flattened_batches: list[list[int]] = []
+        update_end_flags: list[bool] = []
+        for block in update_blocks:
+            for idx, micro_batch in enumerate(block):
+                flattened_batches.append(micro_batch)
+                update_end_flags.append(idx == len(block) - 1)
+
+        self._update_end_flags = update_end_flags
+        yield from flattened_batches
 
 
 def disable_peft_bitsandbytes_dispatch() -> None:
@@ -150,14 +186,80 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", type=str, default=None)
     parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+    parser.add_argument(
+        "--max-seq-len",
+        type=int,
+        default=DEFAULT_MAX_SEQ_LEN,
+        help="Maximum token length per encoded training example after chat templating.",
+    )
+    parser.add_argument(
+        "--gradient-accumulation-steps",
+        type=int,
+        default=DEFAULT_GRADIENT_ACCUMULATION_STEPS,
+        help=(
+            "Number of micro-batches to accumulate before an optimizer step. "
+            "Updates are dataset-homogeneous: all accumulated samples come from one dataset."
+        ),
+    )
     parser.add_argument("--lr", type=float, default=DEFAULT_LR)
     parser.add_argument("--warmup-ratio", type=float, default=DEFAULT_WARMUP_RATIO)
     parser.add_argument(
         "--eval-interval",
         type=int,
         default=100,
-        help="Number of training samples between evaluations.",
+        help=(
+            "Deprecated in this version. Training no longer runs generation eval mid-epoch; "
+            "checkpoints are saved per epoch and evaluated after training to avoid VRAM conflicts."
+        ),
     )
+    parser.add_argument(
+        "--skip_training",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Skip model training and assume per-epoch checkpoints already exist under "
+            "--epoch-checkpoints-dir (or checkpoints/<run_name>/epochs). Useful as a "
+            "fallback to re-run post-training validation/selection only."
+        ),
+    )
+    parser.add_argument(
+        "--save-epoch-checkpoints",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Export a merged HF checkpoint and LoRA adapter at the end of each epoch.",
+    )
+    parser.add_argument(
+        "--epoch-checkpoints-dir",
+        type=Path,
+        default=None,
+        help="Directory for per-epoch checkpoints. Defaults to checkpoints/<run_name>/epochs.",
+    )
+    parser.add_argument(
+        "--select-best-after-training",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "After training, free training VRAM, evaluate each epoch checkpoint on the SFT "
+            "validation/test split with vLLM, then copy the best epoch to the final checkpoint path."
+        ),
+    )
+    parser.add_argument(
+        "--validation-eval-limit",
+        type=int,
+        default=None,
+        help="Optional total number of validation examples for post-training checkpoint selection.",
+    )
+    parser.add_argument(
+        "--validation-output-dir",
+        type=Path,
+        default=Path("runs/sft_validation"),
+        help="Where validation generations and metric JSON files are written.",
+    )
+    parser.add_argument("--validation-think", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--validation-temperature", type=float, default=0.6)
+    parser.add_argument("--validation-top-p", type=float, default=0.95)
+    parser.add_argument("--validation-top-k", type=int, default=20)
+    parser.add_argument("--validation-max-tokens", type=int, default=16384)
     parser.add_argument(
         "--gradient-checkpointing",
         action=argparse.BooleanOptionalAction,
@@ -316,6 +418,10 @@ def apply_train_size_caps(
                 test_loader=bundle.test_loader,
                 train_size=target_train_size,
                 test_size=bundle.test_size,
+                train_max_tokens=bundle.train_max_tokens,
+                test_max_tokens=bundle.test_max_tokens,
+                train_dropped_count=bundle.train_dropped_count,
+                test_dropped_count=bundle.test_dropped_count,
             )
         )
 
@@ -359,13 +465,21 @@ def apply_test_size_caps(
                 ),
                 train_size=bundle.train_size,
                 test_size=target_test_size,
+                train_max_tokens=bundle.train_max_tokens,
+                test_max_tokens=bundle.test_max_tokens,
+                train_dropped_count=bundle.train_dropped_count,
+                test_dropped_count=bundle.test_dropped_count,
             )
         )
 
     return resized_bundles
 
 
-def build_mixed_train_loader(bundles: list[DatasetBundle], seed: int) -> DataLoader:
+def build_mixed_train_loader(
+    bundles: list[DatasetBundle],
+    seed: int,
+    gradient_accumulation_steps: int,
+) -> DataLoader:
     if not bundles:
         raise ValueError("At least one dataset bundle is required for training.")
 
@@ -379,6 +493,7 @@ def build_mixed_train_loader(bundles: list[DatasetBundle], seed: int) -> DataLoa
     batch_sampler = HomogeneousBatchSampler(
         dataset_sizes=[bundle.train_size for bundle in bundles],
         batch_size=batch_size,
+        gradient_accumulation_steps=gradient_accumulation_steps,
         seed=seed,
     )
 
@@ -410,6 +525,8 @@ def maybe_init_wandb(args: argparse.Namespace, run_id: str, run_name: str):
 
     wandb.define_metric("test/sample")
     wandb.define_metric("test/*", step_metric="test/sample")
+    wandb.define_metric("validation/epoch")
+    wandb.define_metric("validation/*", step_metric="validation/epoch")
 
     wandb.define_metric("other/global_step")
     wandb.define_metric("other/*", step_metric="other/global_step")
@@ -448,232 +565,382 @@ def build_model_and_tokenizer(args: argparse.Namespace, device: torch.device) ->
     return model, tokenizer
 
 
+def build_tokenizer_only() -> Any:
+    tokenizer: Any = AutoTokenizer.from_pretrained(BASE_MODEL)
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+    return tokenizer
+
+
+
+def epoch_checkpoint_dirs(epoch_root: Path, epoch: int) -> tuple[Path, Path, Path]:
+    epoch_dir = epoch_root / f"epoch_{epoch:02d}"
+    return epoch_dir, epoch_dir / "hf_model", epoch_dir / "LoRA"
+
+
+def first_supervised_token_index(labels: Any) -> int:
+    if isinstance(labels, torch.Tensor):
+        label_list = labels.detach().cpu().tolist()
+    else:
+        label_list = list(labels)
+
+    for idx, value in enumerate(label_list):
+        if int(value) != -100:
+            return idx
+    return len(label_list)
+
+
+def materialize_validation_examples(
+    bundles: list[DatasetBundle],
+    tokenizer: Any,
+    limit: int | None,
+) -> list[dict[str, str]]:
+    """Build raw, already chat-templated prompts from SFT validation examples.
+
+    This avoids needing to know the original raw question field. It assumes the usual
+    SFT convention: labels are -100 on the prompt tokens and supervised on the
+    assistant answer tokens. The generated prompt can be passed directly to vLLM.
+    """
+    examples: list[dict[str, str]] = []
+
+    for bundle in bundles:
+        dataset = bundle.test_loader.dataset
+        for idx in range(len(cast(Any, dataset))):
+            row = dict(dataset[idx])
+            if "answer" not in row:
+                raise KeyError(
+                    f"Validation example from {bundle.name} has no 'answer' field. "
+                    "The post-training MCQ evaluator needs gold answers."
+                )
+            if "input_ids" not in row or "labels" not in row:
+                raise KeyError(
+                    f"Validation example from {bundle.name} must contain input_ids and labels."
+                )
+
+            input_ids = row["input_ids"]
+            if isinstance(input_ids, torch.Tensor):
+                input_id_list = input_ids.detach().cpu().tolist()
+            else:
+                input_id_list = list(input_ids)
+
+            prompt_end = first_supervised_token_index(row["labels"])
+            prompt_ids = input_id_list[:prompt_end]
+            prompt_text = tokenizer.decode(prompt_ids, skip_special_tokens=False)
+
+            examples.append(
+                {
+                    "dataset": bundle.name,
+                    "prompt": prompt_text,
+                    "answer": str(row["answer"]).strip(),
+                }
+            )
+
+            if limit is not None and len(examples) >= limit:
+                return examples
+
+    return examples
+
+
+def evaluate_checkpoint_on_validation_with_vllm(
+    checkpoint_path: Path,
+    validation_examples: list[dict[str, str]],
+    output_dir: Path,
+    run_name: str,
+    epoch: int,
+    temperature: float,
+    top_p: float,
+    top_k: int,
+    max_tokens: int,
+    seed: int,
+) -> dict[str, Any]:
+    """Generate validation completions with vLLM and score them with evaluate.score.
+
+    This intentionally runs only after the training model has been deleted and CUDA
+    cache has been cleared, so vLLM never competes with the training graph/model.
+    """
+    from evaluate.score import main as evaluate_score
+    from vllm import LLM, SamplingParams
+
+    outputs_dir = output_dir / "outputs"
+    results_dir = output_dir / "results"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    jsonl_path = outputs_dir / f"{run_name}_epoch_{epoch:02d}_validation.jsonl"
+    results_path = results_dir / f"{run_name}_epoch_{epoch:02d}_validation_results.json"
+
+    print(f"[validation] Loading checkpoint with vLLM: {checkpoint_path}")
+    llm = LLM(model=str(checkpoint_path), dtype="auto", seed=seed)
+    sampling_params = SamplingParams(
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        max_tokens=max_tokens,
+        seed=seed,
+    )
+
+    prompts = [ex["prompt"] for ex in validation_examples]
+    completions: list[str] = []
+    generation_batch_size = 500
+
+    for start in range(0, len(prompts), generation_batch_size):
+        end = min(start + generation_batch_size, len(prompts))
+        print(
+            f"[validation] Generating batch {start}-{end - 1} "
+            f"of {len(prompts)} for epoch {epoch:02d}"
+        )
+        outputs = llm.generate(prompts[start:end], sampling_params, use_tqdm=True)
+        completions.extend(output.outputs[0].text.strip() for output in outputs)
+
+    with open(jsonl_path, "w", encoding="utf-8") as f:
+        for ex, completion in zip(validation_examples, completions):
+            output_row = {
+                DatasetFieldNames.BENCHMARK_INPUT: ex["prompt"],
+                DatasetFieldNames.BENCHMARK_COMPLETIONS: [completion],
+                DatasetFieldNames.BENCHMARK_ANSWER: ex["answer"],
+                "dataset": ex["dataset"],
+            }
+            f.write(json.dumps(output_row, ensure_ascii=False) + "\n")
+
+    # Your run.py uses evaluate.score with benchmark="safety" for these metrics.
+    evaluate_score(
+        [
+            "--generations", str(jsonl_path),
+            "--benchmark", "safety",
+            "--output", str(results_path),
+        ]
+    )
+
+    with open(results_path, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+
+    metrics = payload.get("metrics", {})
+    print(
+        f"[validation] epoch={epoch:02d} "
+        f"pass@1={metrics.get('pass@1')} "
+        f"box={metrics.get('box_compliance_rate')} "
+        f"pass@1_extracted={metrics.get('pass@1_among_extracted')}"
+    )
+
+    # Drop vLLM objects before the next checkpoint.
+    del llm
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    return {
+        "epoch": epoch,
+        "checkpoint_path": str(checkpoint_path),
+        "generations_path": str(jsonl_path),
+        "results_path": str(results_path),
+        "metrics": metrics,
+    }
+
+
+def copy_best_checkpoint(
+    best_record: dict[str, Any],
+    epoch_root: Path,
+    best_hf_model_dir: Path,
+    best_lora_dir: Path,
+) -> None:
+    epoch = int(best_record["epoch"])
+    _, epoch_hf_dir, epoch_lora_dir = epoch_checkpoint_dirs(epoch_root, epoch)
+
+    if best_hf_model_dir.exists():
+        shutil.rmtree(best_hf_model_dir)
+    if best_lora_dir.exists():
+        shutil.rmtree(best_lora_dir)
+
+    shutil.copytree(epoch_hf_dir, best_hf_model_dir)
+    if epoch_lora_dir.exists():
+        shutil.copytree(epoch_lora_dir, best_lora_dir)
+
+
 def train(args: argparse.Namespace) -> None:
     if args.batch_size <= 0:
         raise ValueError("--batch-size must be > 0")
+    if args.max_seq_len <= 0:
+        raise ValueError("--max-seq-len must be > 0")
+    if args.gradient_accumulation_steps <= 0:
+        raise ValueError("--gradient-accumulation-steps must be > 0")
     if args.train_sizes is not None and len(args.train_sizes) != len(args.datasets):
-        raise ValueError(
-            "--train-sizes must have the same number of values as --datasets."
-        )
+        raise ValueError("--train-sizes must have the same number of values as --datasets.")
     if args.test_sizes is not None and len(args.test_sizes) != len(args.datasets):
-        raise ValueError(
-            "--test-sizes must have the same number of values as --datasets."
-        )
-    if args.eval_interval <= 0:
-        raise ValueError("--eval-interval must be > 0")
+        raise ValueError("--test-sizes must have the same number of values as --datasets.")
 
     set_seeds(Random.SEED)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     run_id, run_name, best_checkpoint_dir = resolve_run_configuration(args)
     best_hf_model_dir, best_lora_dir = resolve_checkpoint_subdirs(best_checkpoint_dir)
+    epoch_root = args.epoch_checkpoints_dir or (best_checkpoint_dir / "epochs")
     wb_run = maybe_init_wandb(args, run_id, run_name)
 
     print("SFT TRAINING")
     print(f"  Base model           : {BASE_MODEL}")
     print(f"  Datasets             : {args.datasets}")
     print(f"  Train sizes          : {args.train_sizes}")
+    print(f"  Max seq len          : {args.max_seq_len}")
     print(f"  Batch size           : {args.batch_size}")
-    print(f"  Eval interval        : every {args.eval_interval} samples")
+    print(f"  Grad accumulation    : {args.gradient_accumulation_steps}")
+    print(f"  Effective update size: {args.batch_size * args.gradient_accumulation_steps}")
     print(f"  Device               : {device}")
     print(f"  Run name             : {run_name}")
-    print(f"  Best checkpoint path : {best_checkpoint_dir}")
-    print(f"  - HF merged model    : {best_hf_model_dir}")
-    print(f"  - LoRA adapter       : {best_lora_dir}")
+    print(f"  Epoch checkpoints    : {epoch_root}")
+    print(f"  Final/best checkpoint: {best_checkpoint_dir}")
     print("=" * 60)
 
-    model, tokenizer = build_model_and_tokenizer(args, device)
+    model: Any | None = None
+    optimizer: Any | None = None
+    scheduler: Any | None = None
+    mixed_train_loader: Any | None = None
+
+    if args.skip_training:
+        print("[info] --skip_training enabled; skipping model training and using existing epoch checkpoints.")
+        tokenizer = build_tokenizer_only()
+    else:
+        model, tokenizer = build_model_and_tokenizer(args, device)
 
     bundles: list[DatasetBundle] = load_dataset_bundles(
         dataset_names=args.datasets,
         tokenizer=tokenizer,
         batch_size=args.batch_size,
         system_prompt=SYSTEM_PROMPT_MCQ,
+        max_seq_len=args.max_seq_len,
     )
-    bundles = apply_train_size_caps(
-        bundles=bundles,
-        train_sizes=args.train_sizes,
-        seed=Random.SEED,
-    )
-    bundles = apply_test_size_caps(
-        bundles=bundles,
-        test_sizes=args.test_sizes,
-        seed=Random.SEED,
-    )
+    bundles = apply_train_size_caps(bundles, args.train_sizes, seed=Random.SEED)
+    bundles = apply_test_size_caps(bundles, args.test_sizes, seed=Random.SEED)
 
     print("\nLoaded datasets:")
     for bundle in bundles:
         print(
-            f"  - {bundle.name}: train={bundle.train_size} test={bundle.test_size}"
+            "  - "
+            f"{bundle.name}: "
+            f"train={bundle.train_size} "
+            f"test={bundle.test_size} "
+            f"train_max_tokens={bundle.train_max_tokens} "
+            f"test_max_tokens={bundle.test_max_tokens} "
+            f"train_dropped={bundle.train_dropped_count} "
+            f"test_dropped={bundle.test_dropped_count}"
         )
 
     if wb_run is not None:
         wb_run.config.update(
-            {"effective_train_sizes": {b.name: b.train_size for b in bundles}},
+            {
+                "effective_train_sizes": {b.name: b.train_size for b in bundles},
+                "effective_test_sizes": {b.name: b.test_size for b in bundles},
+                "epoch_checkpoints_dir": str(epoch_root),
+            },
             allow_val_change=True,
         )
 
-    mixed_train_loader = build_mixed_train_loader(bundles, seed=Random.SEED)
-
-    total_optimizer_steps = max(1, len(mixed_train_loader) * args.epochs)
-
-    optimizer = AdamW(model.parameters(), lr=args.lr)
-    scheduler = get_cosine_schedule_with_warmup(
-        optimizer,
-        num_warmup_steps=int(total_optimizer_steps * args.warmup_ratio),
-        num_training_steps=total_optimizer_steps,
-    )
-
-    best_weighted_test = float("inf")
-    best_epoch = -1
-    best_step = -1
     global_step = 0
     samples_seen = 0
-    next_eval_at_samples = args.eval_interval
-    eval_pending = False
+    saved_epochs: list[int] = []
 
-    for epoch in range(1, args.epochs + 1):
-        print(f"\n=== Epoch {epoch}/{args.epochs} ===")
-        model.train()
+    if args.skip_training:
+        saved_epochs = list(range(1, args.epochs + 1))
+    else:
+        mixed_train_loader = build_mixed_train_loader(
+            bundles,
+            seed=Random.SEED,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+        )
+        batch_sampler = cast(HomogeneousBatchSampler, mixed_train_loader.batch_sampler)
+        optimizer_steps_per_epoch = max(1, batch_sampler.optimizer_steps_per_epoch())
+        total_optimizer_steps = max(1, optimizer_steps_per_epoch * args.epochs)
 
-        test_loss_by_dataset: dict[str, float] = {}
-        test_weight_by_dataset: dict[str, int] = {}
-        running_loss = 0.0
-        n_batches = 0
+        optimizer = AdamW(model.parameters(), lr=args.lr)
+        scheduler = get_cosine_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=int(total_optimizer_steps * args.warmup_ratio),
+            num_training_steps=total_optimizer_steps,
+        )
 
-        for batch in mixed_train_loader:
-            outputs = model(
-                input_ids=batch["input_ids"].to(device),
-                attention_mask=batch["attention_mask"].to(device),
-                labels=batch["labels"].to(device),
-            )
-            raw_loss = float(outputs.loss.item())
-            outputs.loss.backward()
+        for epoch in range(1, args.epochs + 1):
+            print(f"\n=== Epoch {epoch}/{args.epochs} ===")
+            model.train()
+            running_loss = 0.0
+            n_batches = 0
+            optimizer.zero_grad(set_to_none=True)
 
-            batch_samples = int(batch["input_ids"].shape[0])
-            samples_seen += batch_samples
-            while samples_seen >= next_eval_at_samples:
-                eval_pending = True
-                next_eval_at_samples += args.eval_interval
-
-            running_loss += raw_loss
-            n_batches += 1
-
-            if wb_run is not None:
-                log_payload = {
-                    "train/sample": samples_seen,
-                    "train/batch_loss": raw_loss,
-                    "train/running_loss": running_loss / n_batches,
-                }
-                wb_run.log(log_payload, commit=True)
-
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
-            scheduler.step()
-            optimizer.zero_grad()
-            global_step += 1
-
-            if wb_run is not None:
-                wb_run.log(
-                    {
-                        "other/global_step": global_step,
-                        "other/epoch": epoch,
-                        "other/samples_seen": samples_seen,
-                        "other/learning_rate": scheduler.get_last_lr()[0],
-                    },
-                    commit=True,
+            for batch_idx, batch in enumerate(mixed_train_loader):
+                outputs = model(
+                    input_ids=batch["input_ids"].to(device),
+                    attention_mask=batch["attention_mask"].to(device),
+                    labels=batch["labels"].to(device),
                 )
+                raw_loss = float(outputs.loss.item())
+                (outputs.loss / args.gradient_accumulation_steps).backward()
 
-            # Evaluation is scheduled by sample count and executed after a model update.
-            if eval_pending:
-                eval_pending = False
-                print(
-                    f"[eval] Step {global_step} (samples={samples_seen}): "
-                    "Running evaluation..."
-                )
-                for bundle in bundles:
-                    test_avg_loss = evaluate_loss(
-                        model,
-                        bundle.test_loader,
-                        device,
-                    )
-                    test_loss_by_dataset[bundle.name] = test_avg_loss
-                    test_weight_by_dataset[bundle.name] = bundle.test_size
-
-                test_weighted = weighted_average(test_loss_by_dataset, test_weight_by_dataset)
-                print(f"[eval] Step {global_step}: test_weighted_loss={test_weighted:.4f}")
+                batch_samples = int(batch["input_ids"].shape[0])
+                samples_seen += batch_samples
+                running_loss += raw_loss
+                n_batches += 1
 
                 if wb_run is not None:
-                    eval_log = {
-                        "test/sample": samples_seen,
-                        "test/average_loss": test_weighted,
-                    }
-                    for name in args.datasets:
-                        eval_log[f"test/{name}_loss"] = test_loss_by_dataset[name]
-                    wb_run.log(eval_log, commit=True)
-
-                if test_weighted < best_weighted_test:
-                    best_weighted_test = test_weighted
-                    best_epoch = epoch
-                    best_step = global_step
-                    print(f"[info] New best checkpoint at step {global_step}. Exporting merged model + LoRA adapter...")
-                    export_merged_checkpoint(
-                        model=model,
-                        tokenizer=tokenizer,
-                        output_dir=best_hf_model_dir,
-                        base_model=BASE_MODEL,
-                        system_prompt=SYSTEM_PROMPT_MCQ,
-                        temperature=args.export_temperature,
-                        top_p=args.export_top_p,
-                        top_k=args.export_top_k,
+                    wb_run.log(
+                        {
+                            "train/sample": samples_seen,
+                            "train/batch_loss": raw_loss,
+                            "train/running_loss": running_loss / n_batches,
+                        },
+                        commit=True,
                     )
 
-                    if best_lora_dir.exists():
-                        shutil.rmtree(best_lora_dir)
-                    model.save_pretrained(str(best_lora_dir))
+                if batch_sampler.update_ends_at(batch_idx):
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                    optimizer.step()
+                    scheduler.step()
+                    optimizer.zero_grad(set_to_none=True)
+                    global_step += 1
 
-        train_running = running_loss / n_batches if n_batches else float("inf")
-        print(f"train_running_loss={train_running:.4f}")
+                    if wb_run is not None:
+                        wb_run.log(
+                            {
+                                "other/global_step": global_step,
+                                "other/epoch": epoch,
+                                "other/samples_seen": samples_seen,
+                                "other/learning_rate": scheduler.get_last_lr()[0],
+                            },
+                            commit=True,
+                        )
 
-        if wb_run is not None:
-            wb_run.summary["best_test_average_loss"] = best_weighted_test
-            wb_run.summary["best_epoch"] = best_epoch
-            wb_run.summary["best_step"] = best_step
-            wb_run.summary["best_checkpoint_dir"] = str(best_checkpoint_dir)
-            wb_run.summary["best_hf_model_dir"] = str(best_hf_model_dir)
-            wb_run.summary["best_lora_dir"] = str(best_lora_dir)
+            train_running = running_loss / n_batches if n_batches else float("inf")
+            print(f"train_running_loss={train_running:.4f}")
+
+            if args.save_epoch_checkpoints:
+                epoch_dir, epoch_hf_dir, epoch_lora_dir = epoch_checkpoint_dirs(epoch_root, epoch)
+                print(f"[checkpoint] Exporting epoch {epoch} to {epoch_dir}")
+                export_merged_checkpoint(
+                    model=model,
+                    tokenizer=tokenizer,
+                    output_dir=epoch_hf_dir,
+                    base_model=BASE_MODEL,
+                    system_prompt=SYSTEM_PROMPT_MCQ,
+                    temperature=args.export_temperature,
+                    top_p=args.export_top_p,
+                    top_k=args.export_top_k,
+                )
+                if epoch_lora_dir.exists():
+                    shutil.rmtree(epoch_lora_dir)
+                model.save_pretrained(str(epoch_lora_dir))
+                saved_epochs.append(epoch)
+
+            if wb_run is not None:
+                wb_run.summary["last_epoch_train_running_loss"] = train_running
+                wb_run.summary["last_epoch"] = epoch
+                wb_run.summary["last_global_step"] = global_step
 
     print("\nTraining complete.")
 
-    print("[eval] End of training: Running final evaluation...")
-    final_test_loss_by_dataset: dict[str, float] = {}
-    final_test_weight_by_dataset: dict[str, int] = {}
-    for bundle in bundles:
-        test_avg_loss = evaluate_loss(
-            model,
-            bundle.test_loader,
-            device,
-        )
-        final_test_loss_by_dataset[bundle.name] = test_avg_loss
-        final_test_weight_by_dataset[bundle.name] = bundle.test_size
-
-    final_test_weighted = weighted_average(final_test_loss_by_dataset, final_test_weight_by_dataset)
-    print(f"[eval] Final test_weighted_loss={final_test_weighted:.4f}")
-
-    if wb_run is not None:
-        final_eval_log = {
-            "test/sample": samples_seen,
-            "test/average_loss": final_test_weighted,
-        }
-        for name in args.datasets:
-            final_eval_log[f"test/{name}_loss"] = final_test_loss_by_dataset[name]
-        wb_run.log(final_eval_log, commit=True)
-
-    if final_test_weighted < best_weighted_test:
-        best_weighted_test = final_test_weighted
-        best_epoch = args.epochs
-        best_step = global_step
-        print("[info] Final evaluation is the new best checkpoint. Exporting merged model + LoRA adapter...")
+    if not saved_epochs:
+        if args.skip_training:
+            raise RuntimeError(
+                "--skip_training was set but no epochs were selected for evaluation. "
+                "Provide --epochs > 0."
+            )
+        print("[checkpoint] No per-epoch checkpoints were saved; exporting final model as best checkpoint.")
         export_merged_checkpoint(
             model=model,
             tokenizer=tokenizer,
@@ -684,22 +951,119 @@ def train(args: argparse.Namespace) -> None:
             top_p=args.export_top_p,
             top_k=args.export_top_k,
         )
-
         if best_lora_dir.exists():
             shutil.rmtree(best_lora_dir)
         model.save_pretrained(str(best_lora_dir))
+        best_epoch = args.epochs
+        validation_records: list[dict[str, Any]] = []
+    else:
+        validation_records = []
+        best_epoch = saved_epochs[-1]
 
-    if wb_run is not None:
-        wb_run.summary["best_test_average_loss"] = best_weighted_test
-        wb_run.summary["best_epoch"] = best_epoch
-        wb_run.summary["best_step"] = best_step
+        if args.select_best_after_training:
+            print("[validation] Materializing SFT validation prompts before freeing tokenizer.")
+            validation_examples = materialize_validation_examples(
+                bundles=bundles,
+                tokenizer=tokenizer,
+                limit=args.validation_eval_limit,
+            )
+            print(f"[validation] Prepared {len(validation_examples)} validation examples.")
 
-    print(f"Best checkpoint root: {best_checkpoint_dir} (epoch {best_epoch}, step {best_step})")
+            # Free the training model/optimizer before starting vLLM. This is the key OOM-avoidance step.
+            del model, optimizer, scheduler, mixed_train_loader, bundles, tokenizer
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+
+            best_record: dict[str, Any] | None = None
+            for epoch in saved_epochs:
+                _, epoch_hf_dir, _ = epoch_checkpoint_dirs(epoch_root, epoch)
+                record = evaluate_checkpoint_on_validation_with_vllm(
+                    checkpoint_path=epoch_hf_dir,
+                    validation_examples=validation_examples,
+                    output_dir=args.validation_output_dir / run_name,
+                    run_name=run_name,
+                    epoch=epoch,
+                    temperature=args.validation_temperature,
+                    top_p=args.validation_top_p,
+                    top_k=args.validation_top_k,
+                    max_tokens=args.validation_max_tokens,
+                    seed=Random.SEED,
+                )
+                validation_records.append(record)
+
+                metrics = record["metrics"]
+                score = float(metrics.get("pass@1") or 0.0)
+                box = float(metrics.get("box_compliance_rate") or 0.0)
+                extracted = float(metrics.get("pass@1_among_extracted") or 0.0)
+
+                if best_record is None:
+                    best_record = record
+                else:
+                    best_metrics = best_record["metrics"]
+                    best_key = (
+                        float(best_metrics.get("pass@1") or 0.0),
+                        float(best_metrics.get("box_compliance_rate") or 0.0),
+                        float(best_metrics.get("pass@1_among_extracted") or 0.0),
+                    )
+                    if (score, box, extracted) > best_key:
+                        best_record = record
+
+                if wb_run is not None:
+                    wb_run.log(
+                        {
+                            "validation/epoch": epoch,
+                            "validation/pass@1": score,
+                            "validation/box_compliance_rate": box,
+                            "validation/pass@1_among_extracted": extracted,
+                        },
+                        commit=True,
+                    )
+
+            assert best_record is not None
+            best_epoch = int(best_record["epoch"])
+            print(f"[validation] Best epoch by pass@1: {best_epoch}")
+            copy_best_checkpoint(best_record, epoch_root, best_hf_model_dir, best_lora_dir)
+
+            if wb_run is not None:
+                best_metrics = best_record["metrics"]
+                wb_run.summary["best_epoch"] = best_epoch
+                wb_run.summary["best_validation_pass@1"] = best_metrics.get("pass@1")
+                wb_run.summary["best_validation_box_compliance_rate"] = best_metrics.get("box_compliance_rate")
+                wb_run.summary["best_validation_pass@1_among_extracted"] = best_metrics.get("pass@1_among_extracted")
+                wb_run.summary["best_validation_results_path"] = best_record.get("results_path")
+        else:
+            print("[checkpoint] Post-training validation disabled; using final epoch as best checkpoint.")
+            final_record = {"epoch": saved_epochs[-1]}
+            copy_best_checkpoint(final_record, epoch_root, best_hf_model_dir, best_lora_dir)
+
+    summary_path = best_checkpoint_dir / "validation_selection_summary.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(summary_path, "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "run_name": run_name,
+                "best_epoch": best_epoch,
+                "best_checkpoint_dir": str(best_checkpoint_dir),
+                "epoch_checkpoints_dir": str(epoch_root),
+                "records": validation_records,
+            },
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
+
+    print(f"Best checkpoint root: {best_checkpoint_dir} (epoch {best_epoch})")
     print(f"  HF merged model: {best_hf_model_dir}")
     print(f"  LoRA adapter   : {best_lora_dir}")
+    print(f"  Selection summary: {summary_path}")
 
     if wb_run is not None:
         wb_run.summary["final_epoch"] = args.epochs
+        wb_run.summary["best_checkpoint_dir"] = str(best_checkpoint_dir)
+        wb_run.summary["best_hf_model_dir"] = str(best_hf_model_dir)
+        wb_run.summary["best_lora_dir"] = str(best_lora_dir)
         wb_run.finish()
 
 

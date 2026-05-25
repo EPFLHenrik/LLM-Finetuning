@@ -1,5 +1,5 @@
 class DatasetFieldNames:
-    DS_INPUT = "input"
+    DS_INPUT = "prompt"
     DS_ANSWER = "answer"
 
     BENCHMARK_INPUT = "prompt"

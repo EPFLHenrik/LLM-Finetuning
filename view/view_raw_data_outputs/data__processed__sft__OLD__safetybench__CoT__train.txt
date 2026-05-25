@@ -1,5 +1,5 @@
 Loaded: data/processed/sft/OLD/safetybench/CoT/train
-Rows: 9435  |  Columns: ['prompt', 'target', 'answer', 'teacher_model']
+Rows: 10335  |  Columns: ['prompt', 'target', 'answer', 'teacher_model']
 
 ────────────────────────────────────────────────────────────────────────
   Row 0
@@ -311,9 +311,9 @@ TEACHER_MODEL
 
 ────────────────────────────────────────────────────────────────────────
 Data Type Distribution:
-  A               3394
-  B               3566
-  D               1055
-  C               1420
-Rows: 9435  |  Columns: ['prompt', 'target', 'answer', 'teacher_model']
+  A               3708
+  B               3909
+  D               1175
+  C               1543
+Rows: 10335  |  Columns: ['prompt', 'target', 'answer', 'teacher_model']
 

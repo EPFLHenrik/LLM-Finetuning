@@ -209,6 +209,7 @@ def build_failures_dataset(
 		failure_row = dict(cast(dict, state["row"]))
 		failure_row[DatasetFieldNames.DPO_REJECTED] = str(state["rejected"])
 		failure_row[DatasetFieldNames.DPO_CHOSEN] = str(state["chosen"]) if has_good else ""
+		failure_row["DPO_generation_model"] = str(checkpoint_path)
 		failures.append(failure_row)
 
 		if has_good:
