@@ -134,7 +134,7 @@ exec swift rlhf \
   --beta "$KL_BETA" \
   --model "$RL_MODEL" \
   --model_type qwen3 \
-  --train_type lora \
+  --template qwen3_thinking \
   --lora_rank 32 \
   --lora_alpha 64 \
   --target_modules all-linear \
