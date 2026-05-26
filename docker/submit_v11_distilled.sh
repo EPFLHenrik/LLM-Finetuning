@@ -22,7 +22,7 @@ LORA_R=16
 LORA_ALPHA=32
 LORA_DROPOUT=0.05
 EPOCHS=4
-LR="3e-5"
+LR="2e-5"
 BATCH_SIZE=2
 GRAD_ACCUM=8
 EVAL_STEPS=100
@@ -54,7 +54,7 @@ fi
 
 GPUS=1
 NODE="${NODE:-a100-40g}"
-SUFFIX="${1:-sft-v11-short-export}"
+SUFFIX="${1:-sft-v11-export}"
 JOB_NAME="cs552-${GASPAR}-${GROUP}-${SUFFIX}-$(date +%H%M%S)"
 PROJECT="course-cs-552-${GASPAR}"
 WANDB_ENTITY="nutemmax-epfl"
