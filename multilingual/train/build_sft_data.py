@@ -47,8 +47,6 @@ from multilingual.loaders.include_loader import load_include_recarved, load_incl
 from multilingual.loaders.mera_loader import load_mera_examples
 from multilingual.loaders.mgsm_loader import load_mgsm_examples
 from multilingual.loaders.milu_loader import load_milu_examples
-from multilingual.loaders.mmmlu_loader import load_mmmlu_examples
-from multilingual.loaders.xcopa_loader import load_xcopa_examples
 from multilingual.loaders.global_mmlu_loader import load_global_mmlu_examples
 from multilingual.loaders.global_piqa_loader import load_global_piqa_recarved, load_global_piqa_examples
 
@@ -81,20 +79,16 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
         "split_caps": {"train": 0, "val": None, "test": None},
     },
     "global_piqa": {
-        "languages":  None,
-        "mode":       "recarve",
-        "split_caps": {"train": 0, "val": None, "test": None},
-        "max_per_dataset": 0,
+        "languages": None,
+        "mode": "recarve",
+        "split_caps": {"val": 300},
+        "max_per_dataset": 2000
     },
     "mgsm": {
         "languages":        None,
         "max_per_language": 50,
         "max_per_dataset":  250,
         "split_caps":       {"val": 100},
-    },
-    "mmmlu": {
-        "languages":       ["spanish", "hindi", "italian", "chinese"],
-        "max_per_dataset": 0,
     },
     "milu": {
         "languages":        ["hindi"],
@@ -117,10 +111,6 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
         "max_per_language": 300,
         "max_per_dataset":  1500,
         "split_caps":       {"val": 100},
-    },
-    "xcopa": {
-        "languages":       ["italian", "chinese"],
-        "max_per_dataset": 0,
     },
     "exams": {
         "languages":  ["italian", "spanish"],
@@ -483,8 +473,6 @@ def _load_examples(
         return load_global_piqa_examples(language=language, n=n, split=split, mode=mode)
     if dataset == "mgsm":
         return load_mgsm_examples(language=language, n=n, split=split)
-    if dataset == "mmmlu":
-        return load_mmmlu_examples(language=language, n=n, split=split)
     if dataset == "milu":
         return load_milu_examples(n=n, split=split, hf_token=hf_token)
     if dataset == "ceval":
@@ -493,8 +481,6 @@ def _load_examples(
         return load_cultsportqa_examples(language=language, n=n, split=split)
     if dataset == "belebele":
         return load_belebele_examples(language=language, n=n, split=split)
-    if dataset == "xcopa":
-        return load_xcopa_examples(language=language, n=n, split=split)
     if dataset == "exams":
         return load_exams_examples(language=language, n=n, split=split)
     if dataset == "head_qa":

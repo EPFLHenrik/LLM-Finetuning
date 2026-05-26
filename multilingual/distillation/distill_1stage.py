@@ -149,9 +149,7 @@ def _system_message(language: str) -> str:
 
 
 def _user_message(prompt: str, language: str, no_think: bool = False) -> str:
-    prefix = "/no_think\n" if no_think else ""
     return (
-        f"{prefix}"
         f"The question is written in {language}. "
         f"Solve it independently. "
         f"If you know the answer, first write a short and simple explanation in {language}. "

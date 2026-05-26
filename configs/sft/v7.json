@@ -23,11 +23,6 @@
             "val": 100
         }
     },
-    "mmmlu": {
-      "languages": ["spanish", "hindi", "italian", "chinese"],
-      "max_per_language": 0,
-      "max_per_dataset": 0
-    },
     "milu": {
       "languages": ["hindi"],
       "max_per_language": 1000,
@@ -50,10 +45,6 @@
       "max_per_language": 100,
       "max_per_dataset": 500,
       "split_caps": {"val": 100}
-    },
-    "xcopa": {
-      "languages": ["italian", "chinese"],
-      "max_per_dataset": 0
     },
     "exams": {
       "languages": ["italian", "spanish"],

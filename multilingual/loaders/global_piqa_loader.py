@@ -1,29 +1,40 @@
 """multilingual/loaders/global_piqa_loader.py
 
-Loads Global-PIQA examples for eval only (never training).
+Loads Global-PIQA examples.
 
-HF only has a 'test' split. Two modes:
-  as_is  : val = carved 15%, test = remaining 85% (legacy behaviour).
-  recarve: merge all regional configs, recarve into val/test via split_caps
-           (default 50/50 per language).
+Data source priority:
+  1. Preprocessed disk file if available:
+       multilingual/data/processed/global_piqa/global_piqa_{language}_all.jsonl
+  2. HuggingFace fallback:
+       mrlbenchmarks/global-piqa-nonparallel
+
+Modes:
+  as_is:
+      legacy carve using get_train_val_split:
+        train/test pool = 85%
+        val = 15%
+
+  recarve:
+      recarve full pool into train/val/test using recarve_splits.
+      If only val/test are requested, behaves like the previous eval setup.
 """
 
 import json
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-
-from datasets import concatenate_datasets, load_dataset
-
+from datasets import Dataset, DatasetDict, concatenate_datasets, load_dataset
 from multilingual.loaders.recarve_utils import recarve_splits
 from multilingual.utils import VAL_SEED, get_train_val_split, select_at_most
 
+
+GLOBAL_PIQA_DISK_DIR = Path("multilingual/data/processed/global_piqa")
 GLOBAL_PIQA_CONFIGS = {
     "italian": ["ita_latn"],
     "spanish": ["spa_latn_mexi", "spa_latn_peru", "spa_latn_spai"],
-    "hindi":   ["hin_deva"],
-    "chinese": ["cmn_hans"],
+    "hindi": ["hin_deva", "hin_latn"],
+    "chinese": ["cmn_hans", "cmn_hant"],
     "russian": ["rus_cyrl"],
 }
-
 _LABEL_TO_LETTER = {0: "A", 1: "B"}
 
 
@@ -38,51 +49,99 @@ def _parse_supplement(x: Any) -> Dict[str, Any]:
 
 def _format_example(ex: Dict[str, Any], language: str, idx: int) -> Dict[str, Any]:
     prompt = str(ex["prompt"]).strip()
-    sol0   = str(ex["solution0"]).strip()
-    sol1   = str(ex["solution1"]).strip()
-    label  = int(ex["label"])
-
+    sol0 = str(ex["solution0"]).strip()
+    sol1 = str(ex["solution1"]).strip()
+    label = int(ex["label"])
     if not prompt or not sol0 or not sol1:
         raise ValueError("Empty prompt or solution.")
     if label not in _LABEL_TO_LETTER:
         raise ValueError(f"Unexpected label: {label!r}")
-
     supp = _parse_supplement(ex.get("supplement", {}))
     return {
-        "id":        f"global_piqa_{language}_{idx}",
-        "dataset":   "global_piqa",
-        "language":  language,
+        "id": f"global_piqa_{language}_{idx}",
+        "dataset": "global_piqa",
+        "language": language,
         "task_type": "mcq",
-        "prompt":    f"{prompt}\n\nA) {sol0}\nB) {sol1}",
-        "answer":    _LABEL_TO_LETTER[label],
+        "prompt": f"{prompt}\n\nA) {sol0}\nB) {sol1}",
+        "answer": _LABEL_TO_LETTER[label],
         "metadata": {
-            "config":                ex.get("language", ""),
+            "config": ex.get("language", ex.get("config_name", "")),
             "approx_cultural_score": ex.get("approx_cultural_score", ""),
-            "example_id":            ex.get("example_id", ""),
-            "category":              supp.get("category", ""),
+            "example_id": ex.get("example_id", ""),
+            "source_split": ex.get("source_split", "test"),
+            "category": supp.get("category", ""),
         },
     }
 
 
+def _validate_disk_example(ex: Dict[str, Any]) -> bool:
+    required = ["id", "dataset", "language", "task_type", "prompt", "answer", "metadata"]
+    for key in required:
+        if key not in ex:
+            return False
+    if ex["dataset"] != "global_piqa":
+        return False
+    if ex["task_type"] != "mcq":
+        return False
+    if ex["answer"] not in {"A", "B"}:
+        return False
+    if not str(ex["prompt"]).strip():
+        return False
+    if "A)" not in ex["prompt"] or "B)" not in ex["prompt"]:
+        return False
+    if not isinstance(ex["metadata"], dict):
+        return False
+    return True
+
+
+def _load_disk_pool(language: str) -> Optional[List[Dict[str, Any]]]:
+    path = GLOBAL_PIQA_DISK_DIR / f"global_piqa_{language}_all.jsonl"
+    if not path.exists():
+        return None
+    examples, skipped = [], 0
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            try:
+                ex = json.loads(line)
+            except json.JSONDecodeError:
+                skipped += 1
+                continue
+            if not _validate_disk_example(ex):
+                skipped += 1
+                continue
+            ex["language"] = language
+            if "metadata" not in ex or not isinstance(ex["metadata"], dict):
+                ex["metadata"] = {}
+            examples.append(ex)
+    if skipped:
+        print(f"[Global-PIQA] Skipped {skipped} invalid disk rows for {language}.")
+    if not examples:
+        print(f"[Global-PIQA] Disk file exists but no valid rows for {language}: {path}")
+        return None
+    print(f"[Global-PIQA] Loaded {len(examples)} processed examples from disk for {language}.")
+    return examples
+
+
 def _load_hf_pool(language: str):
-    """Concatenate all regional HF configs for a language (test split only)."""
     configs = GLOBAL_PIQA_CONFIGS.get(language)
     if not configs:
         print(f"[Global-PIQA] No config for {language}; skipping.")
         return None
-
     splits = []
     for config in configs:
         try:
             ds = load_dataset("mrlbenchmarks/global-piqa-nonparallel", config)
-            splits.append(ds["test"])
+            test_ds = ds["test"]
+            test_ds = test_ds.add_column("config_name", [config] * len(test_ds))
+            test_ds = test_ds.add_column("source_split", ["test"] * len(test_ds))
+            splits.append(test_ds)
         except Exception as e:
             print(f"[Global-PIQA] Failed to load config {config}: {e}")
-
     if not splits:
         print(f"[Global-PIQA] No data loaded for {language}.")
         return None
-
     return concatenate_datasets(splits).shuffle(seed=VAL_SEED)
 
 
@@ -94,8 +153,41 @@ def _examples_from_dataset(data, language: str) -> List[Dict[str, Any]]:
         except ValueError:
             skipped += 1
     if skipped:
-        print(f"[Global-PIQA] Skipped {skipped} invalid rows for {language}.")
+        print(f"[Global-PIQA] Skipped {skipped} invalid HF rows for {language}.")
     return examples
+
+
+def _load_example_pool(language: str) -> List[Dict[str, Any]]:
+    disk_examples = _load_disk_pool(language)
+    if disk_examples is not None:
+        return disk_examples
+    combined = _load_hf_pool(language)
+    if combined is None:
+        return []
+    return _examples_from_dataset(combined, language)
+
+
+def _examples_to_dataset(examples: List[Dict[str, Any]]) -> Dataset:
+    return Dataset.from_list(examples)
+
+
+def _dataset_to_examples(data) -> List[Dict[str, Any]]:
+    return [dict(row) for row in data]
+
+
+def _split_train_val_test_as_is(
+    examples: List[Dict[str, Any]],
+    n: Optional[int],
+    split: str,
+) -> List[Dict[str, Any]]:
+    dataset = _examples_to_dataset(examples)
+    ds_dict = DatasetDict({"test": dataset})
+    train_pool, val_set = get_train_val_split(ds_dict, "test")
+    if split == "val":
+        return _dataset_to_examples(select_at_most(val_set, n))
+    if split in {"train", "test"}:
+        return _dataset_to_examples(select_at_most(train_pool, n))
+    raise ValueError(f"Unsupported split for Global-PIQA: {split!r}")
 
 
 def load_global_piqa_examples(
@@ -105,31 +197,39 @@ def load_global_piqa_examples(
     mode: str = "recarve",
 ) -> List[Dict[str, Any]]:
     """
-    Load Global-PIQA examples for a single split (eval only, never train).
-
-    mode='recarve' (default): recarve HF test into val/test (50/50 default).
-    mode='as_is':             use get_train_val_split legacy 85/15 carve.
+    Load Global-PIQA examples for one split.
+    split:
+      - "train"
+      - "val"
+      - "test"
+    mode:
+      - "recarve": use recarve_splits for val/test; use shuffled full pool for train.
+      - "as_is": use legacy get_train_val_split carve.
     """
-    if split == "train":
-        return []  # never train on Global-PIQA
+    if split not in {"train", "val", "test"}:
+        raise ValueError(f"Unsupported split for Global-PIQA: {split!r}")
 
-    combined = _load_hf_pool(language)
-    if combined is None:
+    examples = _load_example_pool(language)
+    if not examples:
         return []
-
     if mode == "recarve":
-        n_val  = n if split == "val"  else None
-        n_test = n if split == "test" else None
-        val_ex, test_ex = load_global_piqa_recarved(language, n_val=n_val, n_test=n_test)
-        return val_ex if split == "val" else test_ex
+        if split == "train":
+            dataset = _examples_to_dataset(examples).shuffle(seed=VAL_SEED)
+            sampled = select_at_most(dataset, n)
+            return _dataset_to_examples(sampled)
 
-    # as_is: legacy 85/15 carve via get_train_val_split
-    from datasets import DatasetDict
-    ds_dict = DatasetDict({"test": combined})
-    train_pool, val_set = get_train_val_split(ds_dict, "test")
-    data    = val_set if split == "val" else train_pool
-    sampled = select_at_most(data, n)
-    return _examples_from_dataset(sampled, language)
+        n_val = n if split == "val" else None
+        n_test = n if split == "test" else None
+        val_ex, test_ex = load_global_piqa_recarved(
+            language,
+            n_val=n_val,
+            n_test=n_test,
+        )
+        return val_ex if split == "val" else test_ex
+    
+    if mode == "as_is":
+        return _split_train_val_test_as_is(examples, n, split)
+    raise ValueError(f"Unsupported Global-PIQA mode: {mode!r}")
 
 
 def load_global_piqa_recarved(
@@ -137,18 +237,19 @@ def load_global_piqa_recarved(
     n_val: Optional[int] = None,
     n_test: Optional[int] = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Recarve HF test pool into (val_examples, test_examples). Default 50/50."""
-    combined = _load_hf_pool(language)
-    if combined is None:
+    """Recarve full example pool into val/test examples using the existing helper."""
+    examples = _load_example_pool(language)
+    if not examples:
         return [], []
 
+    dataset = _examples_to_dataset(examples)
     val_data, test_data = recarve_splits(
-        [combined], n_val, n_test, "Global-PIQA", language
+        [dataset],
+        n_val,
+        n_test,
+        "Global-PIQA",
+        language,
     )
     if val_data is None:
         return [], []
-
-    return (
-        _examples_from_dataset(val_data,  language),
-        _examples_from_dataset(test_data, language),
-    )
+    return _dataset_to_examples(val_data),_dataset_to_examples(test_data)

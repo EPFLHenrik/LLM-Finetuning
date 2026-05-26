@@ -1,0 +1,359 @@
+nohup: ignoring input
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Sampling: first independent attempt temperature=0.0; later attempts temperature=0.35, top_p=0.95
+Jobs (10):
+  mera_clean_mamuramu.jsonl → mera_russian_mamuramu
+  mera_clean_ruopenbookqa.jsonl → mera_russian_ruopenbookqa
+  mera_clean_ruworldtree.jsonl → mera_russian_ruworldtree
+  global_piqa_italian_all.jsonl → global_piqa_italian
+  global_piqa_spanish_all.jsonl → global_piqa_spanish
+  global_piqa_hindi_all.jsonl → global_piqa_hindi
+  global_piqa_chinese_all.jsonl → global_piqa_chinese
+  global_piqa_russian_all.jsonl → global_piqa_russian
+  exams_italian_all.jsonl → exams_italian
+  exams_spanish_all.jsonl → exams_spanish
+
+── mera_clean_mamuramu.jsonl ──
+  Resuming: 285 already done
+  Processing: 0 remaining / 285 total
+  Already complete. Valid: 282/285
+  Done in 0.0s
+
+── mera_clean_ruopenbookqa.jsonl ──
+  Processing: 2338 remaining / 2338 total
+    20/2338 | valid=20 (100%) | 2.1 ex/s | ETA 1088s
+    40/2338 | valid=40 (100%) | 2.3 ex/s | ETA 983s
+    60/2338 | valid=60 (100%) | 2.2 ex/s | ETA 1029s
+    80/2338 | valid=80 (100%) | 1.8 ex/s | ETA 1279s
+    100/2338 | valid=100 (100%) | 1.4 ex/s | ETA 1549s
+    120/2338 | valid=120 (100%) | 1.6 ex/s | ETA 1423s
+    140/2338 | valid=140 (100%) | 1.4 ex/s | ETA 1537s
+    160/2338 | valid=160 (100%) | 1.4 ex/s | ETA 1507s
+    180/2338 | valid=180 (100%) | 1.4 ex/s | ETA 1504s
+    200/2338 | valid=200 (100%) | 1.5 ex/s | ETA 1473s
+    220/2338 | valid=220 (100%) | 1.5 ex/s | ETA 1436s
+    240/2338 | valid=240 (100%) | 1.5 ex/s | ETA 1388s
+    260/2338 | valid=260 (100%) | 1.5 ex/s | ETA 1380s
+    280/2338 | valid=279 (99%) | 1.5 ex/s | ETA 1417s
+    300/2338 | valid=299 (99%) | 1.4 ex/s | ETA 1417s
+    320/2338 | valid=319 (99%) | 1.4 ex/s | ETA 1415s
+    340/2338 | valid=339 (99%) | 1.3 ex/s | ETA 1485s
+    360/2338 | valid=359 (99%) | 1.3 ex/s | ETA 1493s
+    380/2338 | valid=379 (99%) | 1.4 ex/s | ETA 1445s
+    400/2338 | valid=399 (99%) | 1.4 ex/s | ETA 1415s
+    420/2338 | valid=419 (99%) | 1.4 ex/s | ETA 1370s
+    440/2338 | valid=439 (99%) | 1.4 ex/s | ETA 1362s
+    460/2338 | valid=459 (99%) | 1.4 ex/s | ETA 1323s
+    480/2338 | valid=479 (99%) | 1.4 ex/s | ETA 1294s
+    500/2338 | valid=499 (99%) | 1.5 ex/s | ETA 1260s
+    520/2338 | valid=519 (99%) | 1.5 ex/s | ETA 1223s
+    540/2338 | valid=539 (99%) | 1.5 ex/s | ETA 1203s
+    560/2338 | valid=559 (99%) | 1.5 ex/s | ETA 1182s
+    580/2338 | valid=579 (99%) | 1.5 ex/s | ETA 1182s
+    600/2338 | valid=599 (99%) | 1.5 ex/s | ETA 1168s
+    620/2338 | valid=619 (99%) | 1.4 ex/s | ETA 1188s
+    640/2338 | valid=639 (99%) | 1.4 ex/s | ETA 1207s
+    660/2338 | valid=659 (99%) | 1.4 ex/s | ETA 1190s
+    680/2338 | valid=679 (99%) | 1.4 ex/s | ETA 1177s
+    700/2338 | valid=699 (99%) | 1.4 ex/s | ETA 1176s
+    720/2338 | valid=719 (99%) | 1.4 ex/s | ETA 1184s
+    740/2338 | valid=739 (99%) | 1.4 ex/s | ETA 1167s
+    760/2338 | valid=759 (99%) | 1.4 ex/s | ETA 1151s
+    780/2338 | valid=779 (99%) | 1.4 ex/s | ETA 1145s
+    800/2338 | valid=799 (99%) | 1.3 ex/s | ETA 1150s
+    820/2338 | valid=819 (99%) | 1.3 ex/s | ETA 1147s
+    840/2338 | valid=839 (99%) | 1.3 ex/s | ETA 1118s
+    860/2338 | valid=859 (99%) | 1.3 ex/s | ETA 1120s
+    880/2338 | valid=879 (99%) | 1.3 ex/s | ETA 1104s
+    900/2338 | valid=899 (99%) | 1.3 ex/s | ETA 1098s
+    920/2338 | valid=919 (99%) | 1.3 ex/s | ETA 1094s
+    940/2338 | valid=939 (99%) | 1.3 ex/s | ETA 1080s
+    960/2338 | valid=959 (99%) | 1.3 ex/s | ETA 1059s
+    980/2338 | valid=979 (99%) | 1.3 ex/s | ETA 1034s
+    1000/2338 | valid=999 (99%) | 1.3 ex/s | ETA 1009s
+    1020/2338 | valid=1019 (99%) | 1.3 ex/s | ETA 985s
+    1040/2338 | valid=1039 (99%) | 1.3 ex/s | ETA 981s
+    1060/2338 | valid=1059 (99%) | 1.3 ex/s | ETA 969s
+    1080/2338 | valid=1079 (99%) | 1.3 ex/s | ETA 953s
+    1100/2338 | valid=1099 (99%) | 1.3 ex/s | ETA 934s
+    1120/2338 | valid=1119 (99%) | 1.3 ex/s | ETA 916s
+    1140/2338 | valid=1139 (99%) | 1.3 ex/s | ETA 903s
+    1160/2338 | valid=1159 (99%) | 1.3 ex/s | ETA 883s
+    1180/2338 | valid=1179 (99%) | 1.3 ex/s | ETA 863s
+    1200/2338 | valid=1198 (99%) | 1.3 ex/s | ETA 853s
+    1220/2338 | valid=1218 (99%) | 1.3 ex/s | ETA 840s
+    1240/2338 | valid=1238 (99%) | 1.3 ex/s | ETA 825s
+    1260/2338 | valid=1258 (99%) | 1.3 ex/s | ETA 810s
+    1280/2338 | valid=1278 (99%) | 1.3 ex/s | ETA 790s
+    1300/2338 | valid=1297 (99%) | 1.3 ex/s | ETA 780s
+    1320/2338 | valid=1317 (99%) | 1.3 ex/s | ETA 762s
+    1340/2338 | valid=1337 (99%) | 1.3 ex/s | ETA 747s
+    1360/2338 | valid=1357 (99%) | 1.3 ex/s | ETA 734s
+    1380/2338 | valid=1377 (99%) | 1.3 ex/s | ETA 720s
+    1400/2338 | valid=1397 (99%) | 1.3 ex/s | ETA 703s
+    1420/2338 | valid=1417 (99%) | 1.3 ex/s | ETA 692s
+    1440/2338 | valid=1437 (99%) | 1.3 ex/s | ETA 677s
+    1460/2338 | valid=1457 (99%) | 1.3 ex/s | ETA 660s
+    1480/2338 | valid=1477 (99%) | 1.3 ex/s | ETA 644s
+    1500/2338 | valid=1496 (99%) | 1.3 ex/s | ETA 628s
+    1520/2338 | valid=1516 (99%) | 1.3 ex/s | ETA 612s
+    1540/2338 | valid=1536 (99%) | 1.3 ex/s | ETA 600s
+    1560/2338 | valid=1556 (99%) | 1.3 ex/s | ETA 582s
+    1580/2338 | valid=1576 (99%) | 1.3 ex/s | ETA 568s
+    1600/2338 | valid=1596 (99%) | 1.3 ex/s | ETA 553s
+    1620/2338 | valid=1616 (99%) | 1.3 ex/s | ETA 545s
+    1640/2338 | valid=1636 (99%) | 1.3 ex/s | ETA 531s
+    1660/2338 | valid=1656 (99%) | 1.3 ex/s | ETA 518s
+    1680/2338 | valid=1676 (99%) | 1.3 ex/s | ETA 501s
+    1700/2338 | valid=1696 (99%) | 1.3 ex/s | ETA 487s
+    1720/2338 | valid=1716 (99%) | 1.3 ex/s | ETA 472s
+    1740/2338 | valid=1736 (99%) | 1.3 ex/s | ETA 461s
+    1760/2338 | valid=1756 (99%) | 1.3 ex/s | ETA 444s
+    1780/2338 | valid=1776 (99%) | 1.3 ex/s | ETA 432s
+    1800/2338 | valid=1796 (99%) | 1.3 ex/s | ETA 418s
+    1820/2338 | valid=1815 (99%) | 1.3 ex/s | ETA 402s
+    1840/2338 | valid=1835 (99%) | 1.3 ex/s | ETA 385s
+    1860/2338 | valid=1855 (99%) | 1.3 ex/s | ETA 370s
+    1880/2338 | valid=1875 (99%) | 1.3 ex/s | ETA 354s
+    1900/2338 | valid=1895 (99%) | 1.3 ex/s | ETA 339s
+    1920/2338 | valid=1915 (99%) | 1.3 ex/s | ETA 325s
+    1940/2338 | valid=1935 (99%) | 1.3 ex/s | ETA 309s
+    1960/2338 | valid=1955 (99%) | 1.3 ex/s | ETA 294s
+    1980/2338 | valid=1975 (99%) | 1.3 ex/s | ETA 278s
+    2000/2338 | valid=1995 (99%) | 1.3 ex/s | ETA 262s
+    2020/2338 | valid=2015 (99%) | 1.3 ex/s | ETA 245s
+    2040/2338 | valid=2035 (99%) | 1.3 ex/s | ETA 230s
+    2060/2338 | valid=2055 (99%) | 1.3 ex/s | ETA 214s
+    2080/2338 | valid=2075 (99%) | 1.3 ex/s | ETA 199s
+    2100/2338 | valid=2095 (99%) | 1.3 ex/s | ETA 184s
+    2120/2338 | valid=2115 (99%) | 1.3 ex/s | ETA 168s
+    2140/2338 | valid=2135 (99%) | 1.3 ex/s | ETA 153s
+    2160/2338 | valid=2154 (99%) | 1.3 ex/s | ETA 139s
+    2180/2338 | valid=2174 (99%) | 1.3 ex/s | ETA 123s
+    2200/2338 | valid=2194 (99%) | 1.3 ex/s | ETA 107s
+    2220/2338 | valid=2214 (99%) | 1.3 ex/s | ETA 92s
+    2240/2338 | valid=2234 (99%) | 1.3 ex/s | ETA 76s
+    2260/2338 | valid=2254 (99%) | 1.3 ex/s | ETA 61s
+    2280/2338 | valid=2274 (99%) | 1.3 ex/s | ETA 45s
+    2300/2338 | valid=2294 (99%) | 1.3 ex/s | ETA 30s
+    2320/2338 | valid=2314 (99%) | 1.3 ex/s | ETA 14s
+    2338/2338 | valid=2332 (99%) | 1.3 ex/s | ETA 0s
+  Valid: 2332/2338 (99%)
+  FAIL cases: 1
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 2302, 'swiss-ai/Apertus-70B-Instruct-2509': 31, 'none': 5}
+  Modes used: {'independent': 2232, 'gold_fallback': 100, 'none': 5, 'gold_fallback_fail': 1}
+  Invalid reasons: {'wrong_answer:B': 1, 'wrong_answer:C': 2, 'wrong_answer:D': 1, 'fail_corrupted_example': 1, 'wrong_answer:None': 1}
+  Done in 1830.1s
+
+── mera_clean_ruworldtree.jsonl ──
+  Processing: 115 remaining / 115 total
+    20/115 | valid=20 (100%) | 2.3 ex/s | ETA 41s
+    40/115 | valid=40 (100%) | 2.4 ex/s | ETA 31s
+    60/115 | valid=60 (100%) | 2.2 ex/s | ETA 25s
+    80/115 | valid=80 (100%) | 1.5 ex/s | ETA 23s
+    100/115 | valid=100 (100%) | 1.7 ex/s | ETA 9s
+    115/115 | valid=115 (100%) | 1.8 ex/s | ETA 0s
+  Valid: 115/115 (100%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 115}
+  Modes used: {'independent': 114, 'gold_fallback': 1}
+  Done in 65.3s
+
+── global_piqa_italian_all.jsonl ──
+  Processing: 100 remaining / 100 total
+    20/100 | valid=20 (100%) | 0.9 ex/s | ETA 90s
+    40/100 | valid=39 (97%) | 1.0 ex/s | ETA 63s
+    60/100 | valid=59 (98%) | 0.9 ex/s | ETA 44s
+    80/100 | valid=79 (98%) | 0.9 ex/s | ETA 23s
+    100/100 | valid=99 (99%) | 1.0 ex/s | ETA 0s
+  Valid: 99/100 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 94, 'swiss-ai/Apertus-70B-Instruct-2509': 5, 'none': 1}
+  Modes used: {'independent': 95, 'gold_fallback': 4, 'none': 1}
+  Invalid reasons: {'wrong_answer:B': 1}
+  Done in 103.6s
+
+── global_piqa_spanish_all.jsonl ──
+  Processing: 300 remaining / 300 total
+    20/300 | valid=20 (100%) | 1.7 ex/s | ETA 168s
+    40/300 | valid=40 (100%) | 1.8 ex/s | ETA 143s
+    60/300 | valid=60 (100%) | 1.8 ex/s | ETA 135s
+    80/300 | valid=80 (100%) | 1.6 ex/s | ETA 139s
+    100/300 | valid=99 (99%) | 1.5 ex/s | ETA 137s
+    120/300 | valid=119 (99%) | 1.3 ex/s | ETA 139s
+    140/300 | valid=139 (99%) | 1.3 ex/s | ETA 127s
+    160/300 | valid=159 (99%) | 1.3 ex/s | ETA 111s
+    180/300 | valid=179 (99%) | 1.2 ex/s | ETA 97s
+    200/300 | valid=199 (99%) | 1.3 ex/s | ETA 77s
+    220/300 | valid=219 (99%) | 1.2 ex/s | ETA 65s
+    240/300 | valid=239 (99%) | 1.3 ex/s | ETA 47s
+    260/300 | valid=259 (99%) | 1.2 ex/s | ETA 33s
+    280/300 | valid=279 (99%) | 1.2 ex/s | ETA 17s
+    300/300 | valid=299 (99%) | 1.2 ex/s | ETA 0s
+  Valid: 299/300 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 298, 'swiss-ai/Apertus-70B-Instruct-2509': 1, 'none': 1}
+  Modes used: {'independent': 292, 'gold_fallback': 7, 'none': 1}
+  Invalid reasons: {'wrong_answer:B': 1}
+  Done in 252.9s
+
+── global_piqa_hindi_all.jsonl ──
+  Processing: 200 remaining / 200 total
+    20/200 | valid=20 (100%) | 1.7 ex/s | ETA 105s
+    40/200 | valid=40 (100%) | 1.6 ex/s | ETA 98s
+    60/200 | valid=60 (100%) | 1.5 ex/s | ETA 96s
+    80/200 | valid=80 (100%) | 1.2 ex/s | ETA 104s
+    100/200 | valid=100 (100%) | 1.3 ex/s | ETA 78s
+    120/200 | valid=120 (100%) | 1.3 ex/s | ETA 63s
+    140/200 | valid=140 (100%) | 1.2 ex/s | ETA 49s
+    160/200 | valid=160 (100%) | 1.2 ex/s | ETA 33s
+    180/200 | valid=180 (100%) | 1.3 ex/s | ETA 16s
+    200/200 | valid=200 (100%) | 1.2 ex/s | ETA 0s
+  Valid: 200/200 (100%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 197, 'swiss-ai/Apertus-70B-Instruct-2509': 3}
+  Modes used: {'independent': 192, 'gold_fallback': 8}
+  Done in 169.4s
+
+── global_piqa_chinese_all.jsonl ──
+  Processing: 200 remaining / 200 total
+    20/200 | valid=20 (100%) | 1.8 ex/s | ETA 101s
+    40/200 | valid=40 (100%) | 1.7 ex/s | ETA 93s
+    60/200 | valid=60 (100%) | 1.5 ex/s | ETA 94s
+    80/200 | valid=80 (100%) | 1.3 ex/s | ETA 90s
+    100/200 | valid=100 (100%) | 1.2 ex/s | ETA 81s
+    120/200 | valid=120 (100%) | 1.2 ex/s | ETA 69s
+    140/200 | valid=140 (100%) | 1.2 ex/s | ETA 50s
+    160/200 | valid=160 (100%) | 1.2 ex/s | ETA 33s
+    180/200 | valid=179 (99%) | 1.2 ex/s | ETA 17s
+    200/200 | valid=199 (99%) | 1.2 ex/s | ETA 0s
+  Valid: 199/200 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 186, 'swiss-ai/Apertus-70B-Instruct-2509': 13, 'none': 1}
+  Modes used: {'independent': 174, 'gold_fallback': 25, 'none': 1}
+  Invalid reasons: {'wrong_answer:None': 1}
+  Done in 163.8s
+
+── global_piqa_russian_all.jsonl ──
+  Processing: 100 remaining / 100 total
+    20/100 | valid=20 (100%) | 1.1 ex/s | ETA 75s
+    40/100 | valid=40 (100%) | 1.1 ex/s | ETA 55s
+    60/100 | valid=60 (100%) | 1.1 ex/s | ETA 37s
+    80/100 | valid=80 (100%) | 1.1 ex/s | ETA 18s
+    100/100 | valid=100 (100%) | 1.2 ex/s | ETA 0s
+  Valid: 100/100 (100%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 96, 'swiss-ai/Apertus-70B-Instruct-2509': 4}
+  Modes used: {'independent': 96, 'gold_fallback': 4}
+  Done in 83.1s
+
+── exams_italian_all.jsonl ──
+  Processing: 1250 remaining / 1250 total
+    20/1250 | valid=20 (100%) | 1.5 ex/s | ETA 802s
+    40/1250 | valid=40 (100%) | 1.8 ex/s | ETA 682s
+    60/1250 | valid=59 (98%) | 0.9 ex/s | ETA 1288s
+    80/1250 | valid=79 (98%) | 0.9 ex/s | ETA 1331s
+    100/1250 | valid=98 (98%) | 0.9 ex/s | ETA 1342s
+    120/1250 | valid=118 (98%) | 0.9 ex/s | ETA 1268s
+    140/1250 | valid=138 (98%) | 0.8 ex/s | ETA 1345s
+    160/1250 | valid=158 (98%) | 0.8 ex/s | ETA 1343s
+    180/1250 | valid=177 (98%) | 0.8 ex/s | ETA 1359s
+    200/1250 | valid=197 (98%) | 0.8 ex/s | ETA 1332s
+    220/1250 | valid=217 (98%) | 0.8 ex/s | ETA 1368s
+    240/1250 | valid=237 (98%) | 0.8 ex/s | ETA 1273s
+    260/1250 | valid=257 (98%) | 0.7 ex/s | ETA 1328s
+    280/1250 | valid=276 (98%) | 0.8 ex/s | ETA 1286s
+    300/1250 | valid=296 (98%) | 0.8 ex/s | ETA 1246s
+    320/1250 | valid=316 (98%) | 0.8 ex/s | ETA 1221s
+    340/1250 | valid=336 (98%) | 0.7 ex/s | ETA 1228s
+    360/1250 | valid=356 (98%) | 0.7 ex/s | ETA 1201s
+    380/1250 | valid=375 (98%) | 0.7 ex/s | ETA 1215s
+    400/1250 | valid=395 (98%) | 0.7 ex/s | ETA 1187s
+    420/1250 | valid=415 (98%) | 0.7 ex/s | ETA 1147s
+    440/1250 | valid=435 (98%) | 0.7 ex/s | ETA 1091s
+    460/1250 | valid=455 (98%) | 0.8 ex/s | ETA 1037s
+    480/1250 | valid=474 (98%) | 0.8 ex/s | ETA 1009s
+    500/1250 | valid=494 (98%) | 0.8 ex/s | ETA 958s
+    520/1250 | valid=514 (98%) | 0.8 ex/s | ETA 952s
+    540/1250 | valid=534 (98%) | 0.8 ex/s | ETA 908s
+    560/1250 | valid=554 (98%) | 0.8 ex/s | ETA 865s
+    580/1250 | valid=574 (98%) | 0.8 ex/s | ETA 836s
+    600/1250 | valid=594 (99%) | 0.8 ex/s | ETA 796s
+    620/1250 | valid=614 (99%) | 0.8 ex/s | ETA 765s
+    640/1250 | valid=634 (99%) | 0.8 ex/s | ETA 741s
+    660/1250 | valid=654 (99%) | 0.8 ex/s | ETA 712s
+    680/1250 | valid=673 (98%) | 0.8 ex/s | ETA 699s
+    700/1250 | valid=693 (99%) | 0.8 ex/s | ETA 688s
+    720/1250 | valid=713 (99%) | 0.8 ex/s | ETA 663s
+    740/1250 | valid=732 (98%) | 0.8 ex/s | ETA 639s
+    760/1250 | valid=752 (98%) | 0.8 ex/s | ETA 608s
+    780/1250 | valid=772 (98%) | 0.8 ex/s | ETA 582s
+    800/1250 | valid=792 (99%) | 0.8 ex/s | ETA 554s
+    820/1250 | valid=812 (99%) | 0.8 ex/s | ETA 537s
+    840/1250 | valid=832 (99%) | 0.8 ex/s | ETA 512s
+    860/1250 | valid=852 (99%) | 0.8 ex/s | ETA 484s
+    880/1250 | valid=872 (99%) | 0.8 ex/s | ETA 466s
+    900/1250 | valid=892 (99%) | 0.8 ex/s | ETA 446s
+    920/1250 | valid=912 (99%) | 0.8 ex/s | ETA 426s
+    940/1250 | valid=932 (99%) | 0.8 ex/s | ETA 402s
+    960/1250 | valid=951 (99%) | 0.8 ex/s | ETA 374s
+    980/1250 | valid=971 (99%) | 0.8 ex/s | ETA 348s
+    1000/1250 | valid=991 (99%) | 0.8 ex/s | ETA 322s
+    1020/1250 | valid=1011 (99%) | 0.8 ex/s | ETA 293s
+    1040/1250 | valid=1031 (99%) | 0.8 ex/s | ETA 266s
+    1060/1250 | valid=1051 (99%) | 0.8 ex/s | ETA 245s
+    1080/1250 | valid=1071 (99%) | 0.8 ex/s | ETA 219s
+    1100/1250 | valid=1091 (99%) | 0.8 ex/s | ETA 191s
+    1120/1250 | valid=1111 (99%) | 0.8 ex/s | ETA 166s
+    1140/1250 | valid=1131 (99%) | 0.8 ex/s | ETA 140s
+    1160/1250 | valid=1151 (99%) | 0.8 ex/s | ETA 115s
+    1180/1250 | valid=1171 (99%) | 0.8 ex/s | ETA 89s
+    1200/1250 | valid=1190 (99%) | 0.8 ex/s | ETA 64s
+    1220/1250 | valid=1209 (99%) | 0.8 ex/s | ETA 38s
+    1240/1250 | valid=1229 (99%) | 0.8 ex/s | ETA 13s
+    1250/1250 | valid=1239 (99%) | 0.8 ex/s | ETA 0s
+  Valid: 1239/1250 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 1227, 'none': 11, 'swiss-ai/Apertus-70B-Instruct-2509': 12}
+  Modes used: {'independent': 1173, 'gold_fallback': 66, 'none': 11}
+  Invalid reasons: {'wrong_answer:None': 2, 'wrong_answer:B': 2, 'too_long': 3, 'wrong_answer:D': 2, 'wrong_answer:A': 1, 'wrong_answer:C': 1}
+  Done in 1588.5s
+
+── exams_spanish_all.jsonl ──
+  Processing: 235 remaining / 235 total
+    20/235 | valid=20 (100%) | 0.7 ex/s | ETA 302s
+    40/235 | valid=40 (100%) | 0.8 ex/s | ETA 240s
+    60/235 | valid=60 (100%) | 0.7 ex/s | ETA 243s
+    80/235 | valid=80 (100%) | 0.7 ex/s | ETA 219s
+    100/235 | valid=100 (100%) | 0.7 ex/s | ETA 188s
+    120/235 | valid=120 (100%) | 0.7 ex/s | ETA 164s
+    140/235 | valid=140 (100%) | 0.7 ex/s | ETA 127s
+    160/235 | valid=160 (100%) | 0.7 ex/s | ETA 102s
+    180/235 | valid=180 (100%) | 0.7 ex/s | ETA 78s
+    200/235 | valid=199 (99%) | 0.7 ex/s | ETA 50s
+    220/235 | valid=219 (99%) | 0.7 ex/s | ETA 22s
+    235/235 | valid=234 (99%) | 0.7 ex/s | ETA 0s
+  Valid: 234/235 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 228, 'swiss-ai/Apertus-70B-Instruct-2509': 6, 'none': 1}
+  Modes used: {'independent': 210, 'gold_fallback': 24, 'none': 1}
+  Invalid reasons: {'wrong_answer:None': 1}
+  Done in 345.8s
+
+============================================================
+DISTILLATION SUMMARY
+============================================================
+  mera_clean_mamuramu.jsonl                           total= 285  valid= 282 (98%)  stop=unknown  (0.0s)
+  mera_clean_ruopenbookqa.jsonl                       total=2338  valid=2332 (99%)  stop=exhausted  (1830.1s)
+  mera_clean_ruworldtree.jsonl                        total= 115  valid= 115 (100%)  stop=exhausted  (65.3s)
+  global_piqa_italian_all.jsonl                       total= 100  valid=  99 (99%)  stop=exhausted  (103.6s)
+  global_piqa_spanish_all.jsonl                       total= 300  valid= 299 (99%)  stop=exhausted  (252.9s)
+  global_piqa_hindi_all.jsonl                         total= 200  valid= 200 (100%)  stop=exhausted  (169.4s)
+  global_piqa_chinese_all.jsonl                       total= 200  valid= 199 (99%)  stop=exhausted  (163.8s)
+  global_piqa_russian_all.jsonl                       total= 100  valid= 100 (100%)  stop=exhausted  (83.1s)
+  exams_italian_all.jsonl                             total=1250  valid=1239 (99%)  stop=exhausted  (1588.5s)
+  exams_spanish_all.jsonl                             total= 235  valid= 234 (99%)  stop=exhausted  (345.8s)
+
+  TOTAL: 5123 → valid 5099 (99%)
+Summary: multilingual/data/distilled/v2_fallback/distill_summary.json

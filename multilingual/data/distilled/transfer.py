@@ -2,9 +2,8 @@
 import shutil
 from pathlib import Path
 
-SRC = Path("/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/all")
-DST = Path("/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/")
-
+SRC = Path("/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/v2_fallback")
+DST = Path("/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/distilled/v2_fallback/sft_1")
 DST.mkdir(parents=True, exist_ok=True)
 
 files = sorted(SRC.glob("*_distilled.jsonl"))

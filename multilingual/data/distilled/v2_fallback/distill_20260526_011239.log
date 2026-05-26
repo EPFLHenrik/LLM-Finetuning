@@ -1,0 +1,75 @@
+nohup: ignoring input
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Sampling: first independent attempt temperature=0.0; later attempts temperature=0.35, top_p=0.95
+Jobs (3):
+  global_mmlu_russian_shuffled_region_agnostic.jsonl → global_mmlu_russian_region_agnostic
+  global_mmlu_italian_shuffled_region_agnostic.jsonl → global_mmlu_italian_region_agnostic
+  global_mmlu_spanish_shuffled_region_agnostic.jsonl → global_mmlu_spanish_region_agnostic
+
+── global_mmlu_russian_shuffled_region_agnostic.jsonl ──
+  Processing: 13182 remaining / 13182 total
+    20/13182 | valid=20 (100%) | 0.8 ex/s | ETA 17079s
+    40/13182 | valid=40 (100%) | 0.8 ex/s | ETA 15858s
+    60/13182 | valid=60 (100%) | 0.8 ex/s | ETA 16754s
+    80/13182 | valid=80 (100%) | 0.8 ex/s | ETA 16077s
+    100/13182 | valid=100 (100%) | 0.8 ex/s | ETA 15836s
+    120/13182 | valid=120 (100%) | 0.8 ex/s | ETA 15877s
+    140/13182 | valid=140 (100%) | 0.8 ex/s | ETA 16117s
+    160/13182 | valid=160 (100%) | 0.8 ex/s | ETA 17060s
+    180/13182 | valid=179 (99%) | 0.7 ex/s | ETA 18488s
+    200/13182 | valid=199 (99%) | 0.7 ex/s | ETA 17448s
+    220/13182 | valid=219 (99%) | 0.7 ex/s | ETA 18065s
+    240/13182 | valid=239 (99%) | 0.7 ex/s | ETA 18100s
+    260/13182 | valid=259 (99%) | 0.7 ex/s | ETA 17870s
+    280/13182 | valid=279 (99%) | 0.7 ex/s | ETA 18192s
+    300/13182 | valid=299 (99%) | 0.7 ex/s | ETA 17679s
+    320/13182 | valid=318 (99%) | 0.7 ex/s | ETA 17333s
+    340/13182 | valid=338 (99%) | 0.8 ex/s | ETA 16927s
+    360/13182 | valid=358 (99%) | 0.7 ex/s | ETA 17105s
+    380/13182 | valid=378 (99%) | 0.8 ex/s | ETA 16926s
+    400/13182 | valid=398 (99%) | 0.8 ex/s | ETA 16684s
+    420/13182 | valid=418 (99%) | 0.8 ex/s | ETA 16779s
+    440/13182 | valid=438 (99%) | 0.8 ex/s | ETA 16554s
+    460/13182 | valid=458 (99%) | 0.8 ex/s | ETA 16299s
+    480/13182 | valid=478 (99%) | 0.8 ex/s | ETA 16162s
+    500/13182 | valid=498 (99%) | 0.8 ex/s | ETA 16322s
+    520/13182 | valid=518 (99%) | 0.8 ex/s | ETA 16393s
+    540/13182 | valid=538 (99%) | 0.8 ex/s | ETA 16314s
+    560/13182 | valid=558 (99%) | 0.8 ex/s | ETA 16084s
+    580/13182 | valid=578 (99%) | 0.8 ex/s | ETA 16272s
+    600/13182 | valid=598 (99%) | 0.8 ex/s | ETA 16078s
+    620/13182 | valid=618 (99%) | 0.8 ex/s | ETA 15957s
+    640/13182 | valid=638 (99%) | 0.8 ex/s | ETA 15730s
+    660/13182 | valid=658 (99%) | 0.8 ex/s | ETA 15565s
+    680/13182 | valid=677 (99%) | 0.8 ex/s | ETA 15711s
+    700/13182 | valid=697 (99%) | 0.8 ex/s | ETA 15414s
+    720/13182 | valid=716 (99%) | 0.8 ex/s | ETA 15292s
+    740/13182 | valid=735 (99%) | 0.8 ex/s | ETA 15169s
+    760/13182 | valid=754 (99%) | 0.8 ex/s | ETA 15506s
+    780/13182 | valid=774 (99%) | 0.8 ex/s | ETA 15744s
+    800/13182 | valid=794 (99%) | 0.8 ex/s | ETA 15631s
+    820/13182 | valid=814 (99%) | 0.8 ex/s | ETA 15728s
+    840/13182 | valid=834 (99%) | 0.8 ex/s | ETA 15821s
+    860/13182 | valid=853 (99%) | 0.8 ex/s | ETA 15890s
+    880/13182 | valid=872 (99%) | 0.8 ex/s | ETA 16096s
+    900/13182 | valid=892 (99%) | 0.8 ex/s | ETA 15974s
+    920/13182 | valid=911 (99%) | 0.8 ex/s | ETA 16211s
+    940/13182 | valid=931 (99%) | 0.8 ex/s | ETA 16111s
+    960/13182 | valid=951 (99%) | 0.8 ex/s | ETA 15887s
+    980/13182 | valid=971 (99%) | 0.8 ex/s | ETA 15823s
+    1000/13182 | valid=991 (99%) | 0.8 ex/s | ETA 15926s
+    1020/13182 | valid=1011 (99%) | 0.8 ex/s | ETA 15793s
+    1040/13182 | valid=1031 (99%) | 0.8 ex/s | ETA 15718s
+    1060/13182 | valid=1051 (99%) | 0.8 ex/s | ETA 15874s
+    1080/13182 | valid=1071 (99%) | 0.8 ex/s | ETA 15829s
+    1100/13182 | valid=1091 (99%) | 0.8 ex/s | ETA 15727s
+    1120/13182 | valid=1110 (99%) | 0.8 ex/s | ETA 15718s
+    1140/13182 | valid=1130 (99%) | 0.8 ex/s | ETA 15633s
+    1160/13182 | valid=1150 (99%) | 0.8 ex/s | ETA 15523s
+    1180/13182 | valid=1170 (99%) | 0.8 ex/s | ETA 15376s
+    1200/13182 | valid=1190 (99%) | 0.8 ex/s | ETA 15232s
+    1220/13182 | valid=1209 (99%) | 0.8 ex/s | ETA 15138s
+    1240/13182 | valid=1228 (99%) | 0.8 ex/s | ETA 15080s
+    1260/13182 | valid=1248 (99%) | 0.8 ex/s | ETA 15096s
+    1280/13182 | valid=1268 (99%) | 0.8 ex/s | ETA 15002s

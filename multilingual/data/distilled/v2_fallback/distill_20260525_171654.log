@@ -1,0 +1,1486 @@
+nohup: ignoring input
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Sampling: first independent attempt temperature=0.0; later attempts temperature=0.35, top_p=0.95
+Jobs (19):
+  ceval_chinese_regional.jsonl → ceval_chinese_regional
+  ceval_chinese_regional_implicit.jsonl → ceval_chinese_regional_implicit
+  milu_hindi_train_regional.jsonl → milu_hindi_regional
+  milu_hindi_train_regional_implicit.jsonl → milu_hindi_regional_implicit
+  mera_clean_mamuramu.jsonl → mera_russian_mamuramu
+  global_mmlu_russian_regional.jsonl → global_mmlu_russian_regional
+  global_mmlu_chinese_regional.jsonl → global_mmlu_chinese_regional
+  global_mmlu_italian_regional.jsonl → global_mmlu_italian_regional
+  global_mmlu_spanish_regional.jsonl → global_mmlu_spanish_regional
+  global_mmlu_hindi_regional.jsonl → global_mmlu_hindi_regional
+  include_russian_all.jsonl → include_russian_all
+  include_chinese_all.jsonl → include_chinese_all
+  include_italian_all.jsonl → include_italian_all
+  include_spanish_all.jsonl → include_spanish_all
+  include_hindi_all.jsonl → include_hindi_all
+  cultsportqa_hindi_all.jsonl → cultsportqa_hindi
+  cultsportqa_chinese_all.jsonl → cultsportqa_chinese
+  head_qa_spanish_all.jsonl → head_qa_spanish
+  head_qa_italian_all.jsonl → head_qa_italian
+
+── ceval_chinese_regional.jsonl ──
+  Processing: 3347 remaining / 3347 total
+    20/3347 | valid=20 (100%) | 0.9 ex/s | ETA 3517s
+    40/3347 | valid=40 (100%) | 0.7 ex/s | ETA 4460s
+    60/3347 | valid=60 (100%) | 0.8 ex/s | ETA 4117s
+    80/3347 | valid=80 (100%) | 0.9 ex/s | ETA 3788s
+    100/3347 | valid=99 (99%) | 0.7 ex/s | ETA 4516s
+    120/3347 | valid=119 (99%) | 0.7 ex/s | ETA 4706s
+    140/3347 | valid=139 (99%) | 0.7 ex/s | ETA 4615s
+    160/3347 | valid=159 (99%) | 0.7 ex/s | ETA 4501s
+    180/3347 | valid=179 (99%) | 0.7 ex/s | ETA 4391s
+    200/3347 | valid=199 (99%) | 0.7 ex/s | ETA 4226s
+    220/3347 | valid=219 (99%) | 0.8 ex/s | ETA 4064s
+    240/3347 | valid=239 (99%) | 0.8 ex/s | ETA 3912s
+    260/3347 | valid=259 (99%) | 0.8 ex/s | ETA 3842s
+    280/3347 | valid=279 (99%) | 0.8 ex/s | ETA 3697s
+    300/3347 | valid=299 (99%) | 0.8 ex/s | ETA 3637s
+    320/3347 | valid=319 (99%) | 0.9 ex/s | ETA 3472s
+    340/3347 | valid=339 (99%) | 0.9 ex/s | ETA 3441s
+    360/3347 | valid=359 (99%) | 0.9 ex/s | ETA 3510s
+    380/3347 | valid=379 (99%) | 0.9 ex/s | ETA 3386s
+    400/3347 | valid=399 (99%) | 0.8 ex/s | ETA 3480s
+    420/3347 | valid=419 (99%) | 0.9 ex/s | ETA 3426s
+    440/3347 | valid=439 (99%) | 0.8 ex/s | ETA 3438s
+    460/3347 | valid=459 (99%) | 0.8 ex/s | ETA 3456s
+    480/3347 | valid=478 (99%) | 0.8 ex/s | ETA 3515s
+    500/3347 | valid=498 (99%) | 0.8 ex/s | ETA 3447s
+    520/3347 | valid=518 (99%) | 0.8 ex/s | ETA 3455s
+    540/3347 | valid=538 (99%) | 0.8 ex/s | ETA 3395s
+    560/3347 | valid=558 (99%) | 0.8 ex/s | ETA 3414s
+    580/3347 | valid=578 (99%) | 0.8 ex/s | ETA 3336s
+    600/3347 | valid=598 (99%) | 0.8 ex/s | ETA 3316s
+    620/3347 | valid=617 (99%) | 0.8 ex/s | ETA 3299s
+    640/3347 | valid=637 (99%) | 0.8 ex/s | ETA 3242s
+    660/3347 | valid=657 (99%) | 0.8 ex/s | ETA 3203s
+    680/3347 | valid=677 (99%) | 0.9 ex/s | ETA 3134s
+    700/3347 | valid=697 (99%) | 0.9 ex/s | ETA 3069s
+    720/3347 | valid=717 (99%) | 0.9 ex/s | ETA 3023s
+    740/3347 | valid=737 (99%) | 0.9 ex/s | ETA 3022s
+    760/3347 | valid=757 (99%) | 0.9 ex/s | ETA 2980s
+    780/3347 | valid=777 (99%) | 0.9 ex/s | ETA 2921s
+    800/3347 | valid=797 (99%) | 0.9 ex/s | ETA 2881s
+    820/3347 | valid=817 (99%) | 0.9 ex/s | ETA 2834s
+    840/3347 | valid=836 (99%) | 0.9 ex/s | ETA 2808s
+    860/3347 | valid=856 (99%) | 0.9 ex/s | ETA 2775s
+    880/3347 | valid=876 (99%) | 0.9 ex/s | ETA 2726s
+    900/3347 | valid=896 (99%) | 0.9 ex/s | ETA 2715s
+    920/3347 | valid=916 (99%) | 0.9 ex/s | ETA 2707s
+    940/3347 | valid=936 (99%) | 0.9 ex/s | ETA 2695s
+    960/3347 | valid=956 (99%) | 0.9 ex/s | ETA 2696s
+    980/3347 | valid=976 (99%) | 0.9 ex/s | ETA 2659s
+    1000/3347 | valid=996 (99%) | 0.9 ex/s | ETA 2656s
+    1020/3347 | valid=1016 (99%) | 0.9 ex/s | ETA 2627s
+    1040/3347 | valid=1036 (99%) | 0.9 ex/s | ETA 2594s
+    1060/3347 | valid=1056 (99%) | 0.9 ex/s | ETA 2562s
+    1080/3347 | valid=1076 (99%) | 0.9 ex/s | ETA 2535s
+    1100/3347 | valid=1096 (99%) | 0.9 ex/s | ETA 2503s
+    1120/3347 | valid=1116 (99%) | 0.9 ex/s | ETA 2465s
+    1140/3347 | valid=1136 (99%) | 0.9 ex/s | ETA 2465s
+    1160/3347 | valid=1156 (99%) | 0.9 ex/s | ETA 2447s
+    1180/3347 | valid=1176 (99%) | 0.9 ex/s | ETA 2436s
+    1200/3347 | valid=1196 (99%) | 0.9 ex/s | ETA 2446s
+    1220/3347 | valid=1216 (99%) | 0.8 ex/s | ETA 2512s
+    1240/3347 | valid=1236 (99%) | 0.9 ex/s | ETA 2471s
+    1260/3347 | valid=1256 (99%) | 0.9 ex/s | ETA 2446s
+    1280/3347 | valid=1276 (99%) | 0.9 ex/s | ETA 2409s
+    1300/3347 | valid=1296 (99%) | 0.9 ex/s | ETA 2370s
+    1320/3347 | valid=1316 (99%) | 0.9 ex/s | ETA 2330s
+    1340/3347 | valid=1336 (99%) | 0.9 ex/s | ETA 2311s
+    1360/3347 | valid=1356 (99%) | 0.9 ex/s | ETA 2277s
+    1380/3347 | valid=1376 (99%) | 0.9 ex/s | ETA 2246s
+    1400/3347 | valid=1396 (99%) | 0.9 ex/s | ETA 2221s
+    1420/3347 | valid=1416 (99%) | 0.9 ex/s | ETA 2194s
+    1440/3347 | valid=1436 (99%) | 0.9 ex/s | ETA 2164s
+    1460/3347 | valid=1456 (99%) | 0.9 ex/s | ETA 2153s
+    1480/3347 | valid=1476 (99%) | 0.9 ex/s | ETA 2129s
+    1500/3347 | valid=1496 (99%) | 0.9 ex/s | ETA 2093s
+    1520/3347 | valid=1516 (99%) | 0.9 ex/s | ETA 2090s
+    1540/3347 | valid=1536 (99%) | 0.9 ex/s | ETA 2075s
+    1560/3347 | valid=1555 (99%) | 0.9 ex/s | ETA 2041s
+    1580/3347 | valid=1575 (99%) | 0.9 ex/s | ETA 2005s
+    1600/3347 | valid=1595 (99%) | 0.9 ex/s | ETA 1977s
+    1620/3347 | valid=1615 (99%) | 0.9 ex/s | ETA 1941s
+    1640/3347 | valid=1635 (99%) | 0.9 ex/s | ETA 1908s
+    1660/3347 | valid=1655 (99%) | 0.9 ex/s | ETA 1871s
+    1680/3347 | valid=1675 (99%) | 0.9 ex/s | ETA 1845s
+    1700/3347 | valid=1695 (99%) | 0.9 ex/s | ETA 1816s
+    1720/3347 | valid=1715 (99%) | 0.9 ex/s | ETA 1787s
+    1740/3347 | valid=1735 (99%) | 0.9 ex/s | ETA 1763s
+    1760/3347 | valid=1755 (99%) | 0.9 ex/s | ETA 1733s
+    1780/3347 | valid=1775 (99%) | 0.9 ex/s | ETA 1724s
+    1800/3347 | valid=1795 (99%) | 0.9 ex/s | ETA 1696s
+    1820/3347 | valid=1815 (99%) | 0.9 ex/s | ETA 1681s
+    1840/3347 | valid=1835 (99%) | 0.9 ex/s | ETA 1649s
+    1860/3347 | valid=1855 (99%) | 0.9 ex/s | ETA 1629s
+    1880/3347 | valid=1875 (99%) | 0.9 ex/s | ETA 1605s
+    1900/3347 | valid=1895 (99%) | 0.9 ex/s | ETA 1583s
+    1920/3347 | valid=1915 (99%) | 0.9 ex/s | ETA 1565s
+    1940/3347 | valid=1935 (99%) | 0.9 ex/s | ETA 1544s
+    1960/3347 | valid=1955 (99%) | 0.9 ex/s | ETA 1517s
+    1980/3347 | valid=1975 (99%) | 0.9 ex/s | ETA 1494s
+    2000/3347 | valid=1995 (99%) | 0.9 ex/s | ETA 1466s
+    2020/3347 | valid=2015 (99%) | 0.9 ex/s | ETA 1451s
+    2040/3347 | valid=2035 (99%) | 0.9 ex/s | ETA 1435s
+    2060/3347 | valid=2054 (99%) | 0.9 ex/s | ETA 1431s
+    2080/3347 | valid=2074 (99%) | 0.9 ex/s | ETA 1411s
+    2100/3347 | valid=2093 (99%) | 0.9 ex/s | ETA 1393s
+    2120/3347 | valid=2113 (99%) | 0.9 ex/s | ETA 1375s
+    2140/3347 | valid=2132 (99%) | 0.9 ex/s | ETA 1355s
+    2160/3347 | valid=2152 (99%) | 0.9 ex/s | ETA 1329s
+    2180/3347 | valid=2171 (99%) | 0.9 ex/s | ETA 1306s
+    2200/3347 | valid=2190 (99%) | 0.9 ex/s | ETA 1284s
+    2220/3347 | valid=2210 (99%) | 0.9 ex/s | ETA 1264s
+    2240/3347 | valid=2230 (99%) | 0.9 ex/s | ETA 1238s
+    2260/3347 | valid=2250 (99%) | 0.9 ex/s | ETA 1210s
+    2280/3347 | valid=2270 (99%) | 0.9 ex/s | ETA 1183s
+    2300/3347 | valid=2290 (99%) | 0.9 ex/s | ETA 1166s
+    2320/3347 | valid=2310 (99%) | 0.9 ex/s | ETA 1140s
+    2340/3347 | valid=2330 (99%) | 0.9 ex/s | ETA 1113s
+    2360/3347 | valid=2350 (99%) | 0.9 ex/s | ETA 1090s
+    2380/3347 | valid=2370 (99%) | 0.9 ex/s | ETA 1066s
+    2400/3347 | valid=2390 (99%) | 0.9 ex/s | ETA 1043s
+    2420/3347 | valid=2410 (99%) | 0.9 ex/s | ETA 1020s
+    2440/3347 | valid=2430 (99%) | 0.9 ex/s | ETA 996s
+    2460/3347 | valid=2450 (99%) | 0.9 ex/s | ETA 973s
+    2480/3347 | valid=2470 (99%) | 0.9 ex/s | ETA 949s
+    2500/3347 | valid=2490 (99%) | 0.9 ex/s | ETA 927s
+    2520/3347 | valid=2510 (99%) | 0.9 ex/s | ETA 906s
+    2540/3347 | valid=2530 (99%) | 0.9 ex/s | ETA 883s
+    2560/3347 | valid=2550 (99%) | 0.9 ex/s | ETA 864s
+    2580/3347 | valid=2569 (99%) | 0.9 ex/s | ETA 849s
+    2600/3347 | valid=2588 (99%) | 0.9 ex/s | ETA 836s
+    2620/3347 | valid=2608 (99%) | 0.9 ex/s | ETA 814s
+    2640/3347 | valid=2628 (99%) | 0.9 ex/s | ETA 793s
+    2660/3347 | valid=2647 (99%) | 0.9 ex/s | ETA 771s
+    2680/3347 | valid=2667 (99%) | 0.9 ex/s | ETA 746s
+    2700/3347 | valid=2687 (99%) | 0.9 ex/s | ETA 724s
+    2720/3347 | valid=2707 (99%) | 0.9 ex/s | ETA 702s
+    2740/3347 | valid=2727 (99%) | 0.9 ex/s | ETA 681s
+    2760/3347 | valid=2747 (99%) | 0.9 ex/s | ETA 659s
+    2780/3347 | valid=2767 (99%) | 0.9 ex/s | ETA 638s
+    2800/3347 | valid=2787 (99%) | 0.9 ex/s | ETA 615s
+    2820/3347 | valid=2807 (99%) | 0.9 ex/s | ETA 592s
+    2840/3347 | valid=2827 (99%) | 0.9 ex/s | ETA 569s
+    2860/3347 | valid=2847 (99%) | 0.9 ex/s | ETA 547s
+    2880/3347 | valid=2867 (99%) | 0.9 ex/s | ETA 525s
+    2900/3347 | valid=2887 (99%) | 0.9 ex/s | ETA 501s
+    2920/3347 | valid=2907 (99%) | 0.9 ex/s | ETA 481s
+    2940/3347 | valid=2927 (99%) | 0.9 ex/s | ETA 457s
+    2960/3347 | valid=2947 (99%) | 0.9 ex/s | ETA 432s
+    2980/3347 | valid=2967 (99%) | 0.9 ex/s | ETA 410s
+    3000/3347 | valid=2987 (99%) | 0.9 ex/s | ETA 389s
+    3020/3347 | valid=3007 (99%) | 0.9 ex/s | ETA 366s
+  Valid: 3000/3013 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 2817, 'swiss-ai/Apertus-70B-Instruct-2509': 183, 'none': 13}
+  Modes used: {'independent': 2502, 'gold_fallback': 498, 'none': 13}
+  Invalid reasons: {'wrong_answer:None': 7, 'wrong_answer:A': 1, 'wrong_answer:C': 2, 'wrong_answer:D': 1, 'wrong_answer:B': 1, 'not_ending_with_boxed': 1}
+  Done in 3380.7s
+
+── ceval_chinese_regional_implicit.jsonl ──
+  Processing: 6110 remaining / 6110 total
+    20/6110 | valid=20 (100%) | 1.1 ex/s | ETA 5781s
+    40/6110 | valid=40 (100%) | 0.9 ex/s | ETA 6478s
+    60/6110 | valid=59 (98%) | 0.8 ex/s | ETA 7500s
+    80/6110 | valid=79 (98%) | 0.9 ex/s | ETA 6922s
+    100/6110 | valid=99 (99%) | 0.8 ex/s | ETA 7430s
+    120/6110 | valid=119 (99%) | 0.8 ex/s | ETA 7269s
+    140/6110 | valid=138 (98%) | 0.8 ex/s | ETA 7047s
+    160/6110 | valid=158 (98%) | 0.9 ex/s | ETA 6949s
+    180/6110 | valid=178 (98%) | 0.9 ex/s | ETA 6636s
+    200/6110 | valid=198 (99%) | 0.9 ex/s | ETA 6545s
+    220/6110 | valid=218 (99%) | 0.9 ex/s | ETA 6361s
+    240/6110 | valid=238 (99%) | 0.9 ex/s | ETA 6229s
+    260/6110 | valid=258 (99%) | 0.9 ex/s | ETA 6176s
+    280/6110 | valid=278 (99%) | 1.0 ex/s | ETA 5943s
+    300/6110 | valid=298 (99%) | 1.0 ex/s | ETA 6035s
+    320/6110 | valid=317 (99%) | 0.9 ex/s | ETA 6130s
+    340/6110 | valid=337 (99%) | 0.9 ex/s | ETA 6290s
+    360/6110 | valid=357 (99%) | 0.9 ex/s | ETA 6211s
+    380/6110 | valid=377 (99%) | 0.9 ex/s | ETA 6107s
+    400/6110 | valid=397 (99%) | 0.9 ex/s | ETA 6061s
+    420/6110 | valid=416 (99%) | 0.9 ex/s | ETA 6042s
+    440/6110 | valid=436 (99%) | 0.9 ex/s | ETA 6194s
+    460/6110 | valid=456 (99%) | 0.9 ex/s | ETA 6126s
+    480/6110 | valid=476 (99%) | 0.9 ex/s | ETA 6085s
+    500/6110 | valid=496 (99%) | 0.9 ex/s | ETA 6005s
+    520/6110 | valid=516 (99%) | 0.9 ex/s | ETA 5954s
+    540/6110 | valid=536 (99%) | 0.9 ex/s | ETA 6002s
+    560/6110 | valid=556 (99%) | 0.9 ex/s | ETA 5928s
+    580/6110 | valid=576 (99%) | 0.9 ex/s | ETA 5898s
+    600/6110 | valid=596 (99%) | 0.9 ex/s | ETA 5881s
+    620/6110 | valid=616 (99%) | 1.0 ex/s | ETA 5770s
+    640/6110 | valid=635 (99%) | 0.9 ex/s | ETA 5773s
+    660/6110 | valid=655 (99%) | 1.0 ex/s | ETA 5721s
+    680/6110 | valid=675 (99%) | 0.9 ex/s | ETA 5756s
+    700/6110 | valid=695 (99%) | 0.9 ex/s | ETA 5719s
+    720/6110 | valid=714 (99%) | 1.0 ex/s | ETA 5629s
+    740/6110 | valid=734 (99%) | 1.0 ex/s | ETA 5541s
+    760/6110 | valid=754 (99%) | 1.0 ex/s | ETA 5521s
+    780/6110 | valid=774 (99%) | 1.0 ex/s | ETA 5510s
+    800/6110 | valid=794 (99%) | 1.0 ex/s | ETA 5516s
+    820/6110 | valid=814 (99%) | 1.0 ex/s | ETA 5473s
+    840/6110 | valid=834 (99%) | 1.0 ex/s | ETA 5462s
+    860/6110 | valid=854 (99%) | 1.0 ex/s | ETA 5473s
+    880/6110 | valid=874 (99%) | 1.0 ex/s | ETA 5482s
+    900/6110 | valid=894 (99%) | 1.0 ex/s | ETA 5446s
+    920/6110 | valid=914 (99%) | 1.0 ex/s | ETA 5373s
+    940/6110 | valid=934 (99%) | 1.0 ex/s | ETA 5392s
+    960/6110 | valid=954 (99%) | 0.9 ex/s | ETA 5472s
+    980/6110 | valid=974 (99%) | 0.9 ex/s | ETA 5457s
+    1000/6110 | valid=993 (99%) | 0.9 ex/s | ETA 5512s
+    1020/6110 | valid=1013 (99%) | 0.9 ex/s | ETA 5542s
+    1040/6110 | valid=1032 (99%) | 0.9 ex/s | ETA 5611s
+    1060/6110 | valid=1052 (99%) | 0.9 ex/s | ETA 5555s
+    1080/6110 | valid=1072 (99%) | 0.9 ex/s | ETA 5550s
+    1100/6110 | valid=1092 (99%) | 0.9 ex/s | ETA 5511s
+    1120/6110 | valid=1112 (99%) | 0.9 ex/s | ETA 5506s
+    1140/6110 | valid=1132 (99%) | 0.9 ex/s | ETA 5490s
+    1160/6110 | valid=1152 (99%) | 0.9 ex/s | ETA 5461s
+    1180/6110 | valid=1172 (99%) | 0.9 ex/s | ETA 5416s
+    1200/6110 | valid=1192 (99%) | 0.9 ex/s | ETA 5399s
+    1220/6110 | valid=1212 (99%) | 0.9 ex/s | ETA 5389s
+    1240/6110 | valid=1232 (99%) | 0.9 ex/s | ETA 5325s
+    1260/6110 | valid=1251 (99%) | 0.9 ex/s | ETA 5368s
+    1280/6110 | valid=1271 (99%) | 0.9 ex/s | ETA 5320s
+    1300/6110 | valid=1291 (99%) | 0.9 ex/s | ETA 5344s
+    1320/6110 | valid=1311 (99%) | 0.9 ex/s | ETA 5308s
+    1340/6110 | valid=1329 (99%) | 0.9 ex/s | ETA 5270s
+    1360/6110 | valid=1349 (99%) | 0.9 ex/s | ETA 5267s
+    1380/6110 | valid=1369 (99%) | 0.9 ex/s | ETA 5210s
+    1400/6110 | valid=1389 (99%) | 0.9 ex/s | ETA 5149s
+    1420/6110 | valid=1409 (99%) | 0.9 ex/s | ETA 5092s
+    1440/6110 | valid=1429 (99%) | 0.9 ex/s | ETA 5037s
+    1460/6110 | valid=1448 (99%) | 0.9 ex/s | ETA 5000s
+    1480/6110 | valid=1468 (99%) | 0.9 ex/s | ETA 4955s
+    1500/6110 | valid=1488 (99%) | 0.9 ex/s | ETA 4921s
+    1520/6110 | valid=1508 (99%) | 0.9 ex/s | ETA 4887s
+    1540/6110 | valid=1527 (99%) | 0.9 ex/s | ETA 4888s
+    1560/6110 | valid=1547 (99%) | 0.9 ex/s | ETA 4866s
+    1580/6110 | valid=1567 (99%) | 0.9 ex/s | ETA 4871s
+    1600/6110 | valid=1587 (99%) | 0.9 ex/s | ETA 4821s
+    1620/6110 | valid=1606 (99%) | 0.9 ex/s | ETA 4849s
+    1640/6110 | valid=1626 (99%) | 0.9 ex/s | ETA 4803s
+    1660/6110 | valid=1646 (99%) | 0.9 ex/s | ETA 4787s
+    1680/6110 | valid=1665 (99%) | 0.9 ex/s | ETA 4775s
+    1700/6110 | valid=1685 (99%) | 0.9 ex/s | ETA 4743s
+    1720/6110 | valid=1705 (99%) | 0.9 ex/s | ETA 4704s
+    1740/6110 | valid=1725 (99%) | 0.9 ex/s | ETA 4708s
+    1760/6110 | valid=1745 (99%) | 0.9 ex/s | ETA 4678s
+    1780/6110 | valid=1765 (99%) | 0.9 ex/s | ETA 4662s
+    1800/6110 | valid=1785 (99%) | 0.9 ex/s | ETA 4686s
+    1820/6110 | valid=1804 (99%) | 0.9 ex/s | ETA 4671s
+    1840/6110 | valid=1824 (99%) | 0.9 ex/s | ETA 4639s
+    1860/6110 | valid=1844 (99%) | 0.9 ex/s | ETA 4618s
+    1880/6110 | valid=1864 (99%) | 0.9 ex/s | ETA 4570s
+    1900/6110 | valid=1884 (99%) | 0.9 ex/s | ETA 4524s
+    1920/6110 | valid=1904 (99%) | 0.9 ex/s | ETA 4497s
+    1940/6110 | valid=1924 (99%) | 0.9 ex/s | ETA 4493s
+    1960/6110 | valid=1944 (99%) | 0.9 ex/s | ETA 4484s
+    1980/6110 | valid=1964 (99%) | 0.9 ex/s | ETA 4457s
+    2000/6110 | valid=1984 (99%) | 0.9 ex/s | ETA 4437s
+    2020/6110 | valid=2004 (99%) | 0.9 ex/s | ETA 4418s
+    2040/6110 | valid=2023 (99%) | 0.9 ex/s | ETA 4382s
+    2060/6110 | valid=2043 (99%) | 0.9 ex/s | ETA 4356s
+    2080/6110 | valid=2063 (99%) | 0.9 ex/s | ETA 4361s
+    2100/6110 | valid=2083 (99%) | 0.9 ex/s | ETA 4346s
+    2120/6110 | valid=2103 (99%) | 0.9 ex/s | ETA 4320s
+    2140/6110 | valid=2123 (99%) | 0.9 ex/s | ETA 4280s
+    2160/6110 | valid=2143 (99%) | 0.9 ex/s | ETA 4258s
+    2180/6110 | valid=2163 (99%) | 0.9 ex/s | ETA 4230s
+    2200/6110 | valid=2183 (99%) | 0.9 ex/s | ETA 4192s
+    2220/6110 | valid=2203 (99%) | 0.9 ex/s | ETA 4151s
+    2240/6110 | valid=2223 (99%) | 0.9 ex/s | ETA 4125s
+    2260/6110 | valid=2243 (99%) | 0.9 ex/s | ETA 4122s
+    2280/6110 | valid=2263 (99%) | 0.9 ex/s | ETA 4108s
+    2300/6110 | valid=2283 (99%) | 0.9 ex/s | ETA 4094s
+    2320/6110 | valid=2303 (99%) | 0.9 ex/s | ETA 4060s
+    2340/6110 | valid=2323 (99%) | 0.9 ex/s | ETA 4037s
+    2360/6110 | valid=2343 (99%) | 0.9 ex/s | ETA 4020s
+    2380/6110 | valid=2363 (99%) | 0.9 ex/s | ETA 3997s
+    2400/6110 | valid=2383 (99%) | 0.9 ex/s | ETA 3991s
+    2420/6110 | valid=2403 (99%) | 0.9 ex/s | ETA 3977s
+    2440/6110 | valid=2423 (99%) | 0.9 ex/s | ETA 3951s
+    2460/6110 | valid=2443 (99%) | 0.9 ex/s | ETA 3928s
+    2480/6110 | valid=2463 (99%) | 0.9 ex/s | ETA 3899s
+    2500/6110 | valid=2482 (99%) | 0.9 ex/s | ETA 3879s
+    2520/6110 | valid=2499 (99%) | 0.9 ex/s | ETA 3862s
+    2540/6110 | valid=2519 (99%) | 0.9 ex/s | ETA 3840s
+    2560/6110 | valid=2539 (99%) | 0.9 ex/s | ETA 3836s
+    2580/6110 | valid=2559 (99%) | 0.9 ex/s | ETA 3812s
+    2600/6110 | valid=2579 (99%) | 0.9 ex/s | ETA 3779s
+    2620/6110 | valid=2599 (99%) | 0.9 ex/s | ETA 3758s
+    2640/6110 | valid=2619 (99%) | 0.9 ex/s | ETA 3744s
+    2660/6110 | valid=2639 (99%) | 0.9 ex/s | ETA 3715s
+    2680/6110 | valid=2659 (99%) | 0.9 ex/s | ETA 3684s
+    2700/6110 | valid=2679 (99%) | 0.9 ex/s | ETA 3651s
+    2720/6110 | valid=2699 (99%) | 0.9 ex/s | ETA 3629s
+    2740/6110 | valid=2719 (99%) | 0.9 ex/s | ETA 3612s
+    2760/6110 | valid=2739 (99%) | 0.9 ex/s | ETA 3595s
+    2780/6110 | valid=2759 (99%) | 0.9 ex/s | ETA 3580s
+    2800/6110 | valid=2779 (99%) | 0.9 ex/s | ETA 3555s
+    2820/6110 | valid=2798 (99%) | 0.9 ex/s | ETA 3547s
+    2840/6110 | valid=2818 (99%) | 0.9 ex/s | ETA 3521s
+    2860/6110 | valid=2838 (99%) | 0.9 ex/s | ETA 3497s
+    2880/6110 | valid=2858 (99%) | 0.9 ex/s | ETA 3470s
+    2900/6110 | valid=2878 (99%) | 0.9 ex/s | ETA 3441s
+    2920/6110 | valid=2898 (99%) | 0.9 ex/s | ETA 3444s
+    2940/6110 | valid=2918 (99%) | 0.9 ex/s | ETA 3417s
+    2960/6110 | valid=2938 (99%) | 0.9 ex/s | ETA 3399s
+    2980/6110 | valid=2958 (99%) | 0.9 ex/s | ETA 3361s
+    3000/6110 | valid=2978 (99%) | 0.9 ex/s | ETA 3334s
+    3020/6110 | valid=2998 (99%) | 0.9 ex/s | ETA 3319s
+    3040/6110 | valid=3018 (99%) | 0.9 ex/s | ETA 3296s
+  Valid: 3000/3022 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 2817, 'swiss-ai/Apertus-70B-Instruct-2509': 183, 'none': 22}
+  Modes used: {'independent': 2414, 'gold_fallback': 586, 'none': 22}
+  Invalid reasons: {'wrong_answer:None': 10, 'wrong_answer:A': 5, 'wrong_answer:B': 4, 'wrong_answer:C': 1, 'wrong_answer:D': 2}
+  Done in 3264.0s
+
+── milu_hindi_train_regional.jsonl ──
+  Processing: 3931 remaining / 3931 total
+    20/3931 | valid=20 (100%) | 0.9 ex/s | ETA 4159s
+    40/3931 | valid=40 (100%) | 0.9 ex/s | ETA 4463s
+    60/3931 | valid=60 (100%) | 0.9 ex/s | ETA 4290s
+    80/3931 | valid=78 (97%) | 0.8 ex/s | ETA 4575s
+    100/3931 | valid=98 (98%) | 0.7 ex/s | ETA 5214s
+    120/3931 | valid=118 (98%) | 0.8 ex/s | ETA 4783s
+    140/3931 | valid=138 (98%) | 0.8 ex/s | ETA 4617s
+    160/3931 | valid=158 (98%) | 0.8 ex/s | ETA 4459s
+    180/3931 | valid=178 (98%) | 0.9 ex/s | ETA 4338s
+    200/3931 | valid=198 (99%) | 0.8 ex/s | ETA 4455s
+    220/3931 | valid=218 (99%) | 0.9 ex/s | ETA 4355s
+    240/3931 | valid=238 (99%) | 0.8 ex/s | ETA 4427s
+    260/3931 | valid=257 (98%) | 0.8 ex/s | ETA 4417s
+    280/3931 | valid=277 (98%) | 0.8 ex/s | ETA 4396s
+    300/3931 | valid=297 (99%) | 0.8 ex/s | ETA 4358s
+    320/3931 | valid=317 (99%) | 0.8 ex/s | ETA 4293s
+    340/3931 | valid=337 (99%) | 0.8 ex/s | ETA 4328s
+    360/3931 | valid=356 (98%) | 0.8 ex/s | ETA 4395s
+    380/3931 | valid=376 (98%) | 0.8 ex/s | ETA 4303s
+    400/3931 | valid=396 (99%) | 0.8 ex/s | ETA 4321s
+    420/3931 | valid=416 (99%) | 0.8 ex/s | ETA 4204s
+    440/3931 | valid=435 (98%) | 0.8 ex/s | ETA 4243s
+    460/3931 | valid=455 (98%) | 0.8 ex/s | ETA 4249s
+    480/3931 | valid=475 (98%) | 0.8 ex/s | ETA 4267s
+    500/3931 | valid=495 (99%) | 0.8 ex/s | ETA 4207s
+    520/3931 | valid=515 (99%) | 0.8 ex/s | ETA 4114s
+    540/3931 | valid=535 (99%) | 0.8 ex/s | ETA 4146s
+    560/3931 | valid=555 (99%) | 0.8 ex/s | ETA 4090s
+    580/3931 | valid=575 (99%) | 0.8 ex/s | ETA 4049s
+    600/3931 | valid=594 (99%) | 0.8 ex/s | ETA 4114s
+    620/3931 | valid=614 (99%) | 0.8 ex/s | ETA 4113s
+    640/3931 | valid=634 (99%) | 0.8 ex/s | ETA 4142s
+    660/3931 | valid=654 (99%) | 0.8 ex/s | ETA 4124s
+    680/3931 | valid=674 (99%) | 0.8 ex/s | ETA 4156s
+    700/3931 | valid=694 (99%) | 0.8 ex/s | ETA 4146s
+    720/3931 | valid=712 (98%) | 0.8 ex/s | ETA 4157s
+    740/3931 | valid=732 (98%) | 0.8 ex/s | ETA 4141s
+    760/3931 | valid=752 (98%) | 0.8 ex/s | ETA 4041s
+    780/3931 | valid=771 (98%) | 0.8 ex/s | ETA 4045s
+    800/3931 | valid=791 (98%) | 0.8 ex/s | ETA 4042s
+    820/3931 | valid=811 (98%) | 0.8 ex/s | ETA 3990s
+    840/3931 | valid=831 (98%) | 0.8 ex/s | ETA 3954s
+    860/3931 | valid=851 (98%) | 0.8 ex/s | ETA 3901s
+    880/3931 | valid=871 (98%) | 0.8 ex/s | ETA 3885s
+    900/3931 | valid=891 (99%) | 0.8 ex/s | ETA 3889s
+    920/3931 | valid=911 (99%) | 0.8 ex/s | ETA 3829s
+    940/3931 | valid=930 (98%) | 0.8 ex/s | ETA 3787s
+    960/3931 | valid=950 (98%) | 0.8 ex/s | ETA 3745s
+    980/3931 | valid=970 (98%) | 0.8 ex/s | ETA 3700s
+    1000/3931 | valid=990 (99%) | 0.8 ex/s | ETA 3653s
+    1020/3931 | valid=1010 (99%) | 0.8 ex/s | ETA 3650s
+    1040/3931 | valid=1030 (99%) | 0.8 ex/s | ETA 3614s
+    1060/3931 | valid=1050 (99%) | 0.8 ex/s | ETA 3573s
+    1080/3931 | valid=1070 (99%) | 0.8 ex/s | ETA 3544s
+    1100/3931 | valid=1090 (99%) | 0.8 ex/s | ETA 3544s
+    1120/3931 | valid=1108 (98%) | 0.8 ex/s | ETA 3568s
+    1140/3931 | valid=1127 (98%) | 0.8 ex/s | ETA 3543s
+    1160/3931 | valid=1147 (98%) | 0.8 ex/s | ETA 3515s
+    1180/3931 | valid=1167 (98%) | 0.8 ex/s | ETA 3474s
+    1200/3931 | valid=1187 (98%) | 0.8 ex/s | ETA 3440s
+    1220/3931 | valid=1207 (98%) | 0.8 ex/s | ETA 3391s
+    1240/3931 | valid=1227 (98%) | 0.8 ex/s | ETA 3374s
+    1260/3931 | valid=1247 (98%) | 0.8 ex/s | ETA 3351s
+    1280/3931 | valid=1267 (98%) | 0.8 ex/s | ETA 3311s
+    1300/3931 | valid=1287 (99%) | 0.8 ex/s | ETA 3289s
+    1320/3931 | valid=1306 (98%) | 0.8 ex/s | ETA 3284s
+    1340/3931 | valid=1326 (98%) | 0.8 ex/s | ETA 3246s
+    1360/3931 | valid=1346 (98%) | 0.8 ex/s | ETA 3218s
+    1380/3931 | valid=1365 (98%) | 0.8 ex/s | ETA 3206s
+    1400/3931 | valid=1385 (98%) | 0.8 ex/s | ETA 3166s
+    1420/3931 | valid=1405 (98%) | 0.8 ex/s | ETA 3148s
+    1440/3931 | valid=1425 (98%) | 0.8 ex/s | ETA 3106s
+    1460/3931 | valid=1445 (98%) | 0.8 ex/s | ETA 3074s
+    1480/3931 | valid=1465 (98%) | 0.8 ex/s | ETA 3050s
+    1500/3931 | valid=1485 (99%) | 0.8 ex/s | ETA 3028s
+    1520/3931 | valid=1505 (99%) | 0.8 ex/s | ETA 3005s
+    1540/3931 | valid=1525 (99%) | 0.8 ex/s | ETA 2970s
+    1560/3931 | valid=1545 (99%) | 0.8 ex/s | ETA 2944s
+    1580/3931 | valid=1565 (99%) | 0.8 ex/s | ETA 2914s
+    1600/3931 | valid=1585 (99%) | 0.8 ex/s | ETA 2891s
+    1620/3931 | valid=1605 (99%) | 0.8 ex/s | ETA 2871s
+    1640/3931 | valid=1625 (99%) | 0.8 ex/s | ETA 2852s
+    1660/3931 | valid=1644 (99%) | 0.8 ex/s | ETA 2828s
+    1680/3931 | valid=1664 (99%) | 0.8 ex/s | ETA 2800s
+    1700/3931 | valid=1684 (99%) | 0.8 ex/s | ETA 2758s
+    1720/3931 | valid=1704 (99%) | 0.8 ex/s | ETA 2725s
+    1740/3931 | valid=1724 (99%) | 0.8 ex/s | ETA 2710s
+    1760/3931 | valid=1744 (99%) | 0.8 ex/s | ETA 2675s
+    1780/3931 | valid=1763 (99%) | 0.8 ex/s | ETA 2651s
+    1800/3931 | valid=1783 (99%) | 0.8 ex/s | ETA 2633s
+    1820/3931 | valid=1802 (99%) | 0.8 ex/s | ETA 2608s
+    1840/3931 | valid=1822 (99%) | 0.8 ex/s | ETA 2608s
+    1860/3931 | valid=1842 (99%) | 0.8 ex/s | ETA 2598s
+    1880/3931 | valid=1862 (99%) | 0.8 ex/s | ETA 2584s
+    1900/3931 | valid=1882 (99%) | 0.8 ex/s | ETA 2560s
+    1920/3931 | valid=1902 (99%) | 0.8 ex/s | ETA 2531s
+    1940/3931 | valid=1922 (99%) | 0.8 ex/s | ETA 2512s
+    1960/3931 | valid=1942 (99%) | 0.8 ex/s | ETA 2491s
+    1980/3931 | valid=1962 (99%) | 0.8 ex/s | ETA 2467s
+    2000/3931 | valid=1982 (99%) | 0.8 ex/s | ETA 2446s
+    2020/3931 | valid=2002 (99%) | 0.8 ex/s | ETA 2419s
+    2040/3931 | valid=2022 (99%) | 0.8 ex/s | ETA 2383s
+    2060/3931 | valid=2042 (99%) | 0.8 ex/s | ETA 2355s
+    2080/3931 | valid=2061 (99%) | 0.8 ex/s | ETA 2336s
+    2100/3931 | valid=2081 (99%) | 0.8 ex/s | ETA 2305s
+    2120/3931 | valid=2101 (99%) | 0.8 ex/s | ETA 2284s
+    2140/3931 | valid=2121 (99%) | 0.8 ex/s | ETA 2261s
+    2160/3931 | valid=2141 (99%) | 0.8 ex/s | ETA 2241s
+    2180/3931 | valid=2160 (99%) | 0.8 ex/s | ETA 2221s
+    2200/3931 | valid=2180 (99%) | 0.8 ex/s | ETA 2187s
+    2220/3931 | valid=2200 (99%) | 0.8 ex/s | ETA 2163s
+    2240/3931 | valid=2220 (99%) | 0.8 ex/s | ETA 2139s
+    2260/3931 | valid=2240 (99%) | 0.8 ex/s | ETA 2115s
+    2280/3931 | valid=2260 (99%) | 0.8 ex/s | ETA 2093s
+    2300/3931 | valid=2280 (99%) | 0.8 ex/s | ETA 2062s
+    2320/3931 | valid=2300 (99%) | 0.8 ex/s | ETA 2035s
+    2340/3931 | valid=2320 (99%) | 0.8 ex/s | ETA 2010s
+    2360/3931 | valid=2340 (99%) | 0.8 ex/s | ETA 1979s
+    2380/3931 | valid=2360 (99%) | 0.8 ex/s | ETA 1960s
+    2400/3931 | valid=2380 (99%) | 0.8 ex/s | ETA 1938s
+    2420/3931 | valid=2400 (99%) | 0.8 ex/s | ETA 1914s
+    2440/3931 | valid=2420 (99%) | 0.8 ex/s | ETA 1885s
+    2460/3931 | valid=2440 (99%) | 0.8 ex/s | ETA 1858s
+    2480/3931 | valid=2460 (99%) | 0.8 ex/s | ETA 1829s
+    2500/3931 | valid=2480 (99%) | 0.8 ex/s | ETA 1799s
+    2520/3931 | valid=2500 (99%) | 0.8 ex/s | ETA 1775s
+    2540/3931 | valid=2520 (99%) | 0.8 ex/s | ETA 1750s
+    2560/3931 | valid=2540 (99%) | 0.8 ex/s | ETA 1729s
+    2580/3931 | valid=2559 (99%) | 0.8 ex/s | ETA 1704s
+    2600/3931 | valid=2579 (99%) | 0.8 ex/s | ETA 1680s
+    2620/3931 | valid=2599 (99%) | 0.8 ex/s | ETA 1652s
+    2640/3931 | valid=2619 (99%) | 0.8 ex/s | ETA 1628s
+    2660/3931 | valid=2639 (99%) | 0.8 ex/s | ETA 1600s
+    2680/3931 | valid=2659 (99%) | 0.8 ex/s | ETA 1577s
+    2700/3931 | valid=2679 (99%) | 0.8 ex/s | ETA 1555s
+    2720/3931 | valid=2699 (99%) | 0.8 ex/s | ETA 1529s
+    2740/3931 | valid=2719 (99%) | 0.8 ex/s | ETA 1499s
+    2760/3931 | valid=2739 (99%) | 0.8 ex/s | ETA 1473s
+    2780/3931 | valid=2758 (99%) | 0.8 ex/s | ETA 1448s
+    2800/3931 | valid=2778 (99%) | 0.8 ex/s | ETA 1421s
+    2820/3931 | valid=2798 (99%) | 0.8 ex/s | ETA 1391s
+    2840/3931 | valid=2817 (99%) | 0.8 ex/s | ETA 1371s
+    2860/3931 | valid=2836 (99%) | 0.8 ex/s | ETA 1351s
+    2880/3931 | valid=2856 (99%) | 0.8 ex/s | ETA 1326s
+    2900/3931 | valid=2876 (99%) | 0.8 ex/s | ETA 1302s
+    2920/3931 | valid=2896 (99%) | 0.8 ex/s | ETA 1274s
+    2940/3931 | valid=2916 (99%) | 0.8 ex/s | ETA 1250s
+    2960/3931 | valid=2936 (99%) | 0.8 ex/s | ETA 1223s
+    2980/3931 | valid=2955 (99%) | 0.8 ex/s | ETA 1199s
+    3000/3931 | valid=2975 (99%) | 0.8 ex/s | ETA 1174s
+    3020/3931 | valid=2995 (99%) | 0.8 ex/s | ETA 1148s
+    3040/3931 | valid=3015 (99%) | 0.8 ex/s | ETA 1121s
+  Valid: 3000/3025 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 2880, 'swiss-ai/Apertus-70B-Instruct-2509': 120, 'none': 25}
+  Modes used: {'gold_fallback': 396, 'independent': 2604, 'none': 25}
+  Invalid reasons: {'not_ending_with_boxed': 13, 'wrong_answer:A': 2, 'wrong_answer:None': 10}
+  Done in 3826.5s
+
+── milu_hindi_train_regional_implicit.jsonl ──
+  Processing: 6639 remaining / 6639 total
+    20/6639 | valid=20 (100%) | 0.6 ex/s | ETA 11174s
+    40/6639 | valid=39 (97%) | 0.5 ex/s | ETA 12565s
+    60/6639 | valid=59 (98%) | 0.6 ex/s | ETA 11852s
+    80/6639 | valid=79 (98%) | 0.6 ex/s | ETA 11429s
+    100/6639 | valid=99 (99%) | 0.6 ex/s | ETA 10526s
+    120/6639 | valid=119 (99%) | 0.6 ex/s | ETA 10183s
+    140/6639 | valid=137 (97%) | 0.6 ex/s | ETA 10825s
+    160/6639 | valid=157 (98%) | 0.6 ex/s | ETA 10748s
+    180/6639 | valid=176 (97%) | 0.6 ex/s | ETA 10732s
+    200/6639 | valid=195 (97%) | 0.6 ex/s | ETA 11079s
+    220/6639 | valid=215 (97%) | 0.6 ex/s | ETA 11077s
+    240/6639 | valid=235 (97%) | 0.6 ex/s | ETA 11104s
+    260/6639 | valid=254 (97%) | 0.6 ex/s | ETA 11125s
+    280/6639 | valid=274 (97%) | 0.6 ex/s | ETA 10764s
+    300/6639 | valid=294 (98%) | 0.6 ex/s | ETA 10664s
+    320/6639 | valid=313 (97%) | 0.6 ex/s | ETA 10662s
+    340/6639 | valid=333 (97%) | 0.6 ex/s | ETA 10785s
+    360/6639 | valid=353 (98%) | 0.6 ex/s | ETA 10607s
+    380/6639 | valid=372 (97%) | 0.6 ex/s | ETA 10535s
+    400/6639 | valid=391 (97%) | 0.6 ex/s | ETA 10696s
+    420/6639 | valid=411 (97%) | 0.6 ex/s | ETA 10626s
+    440/6639 | valid=431 (97%) | 0.6 ex/s | ETA 10783s
+    460/6639 | valid=451 (98%) | 0.6 ex/s | ETA 10883s
+    480/6639 | valid=471 (98%) | 0.6 ex/s | ETA 10901s
+    500/6639 | valid=491 (98%) | 0.6 ex/s | ETA 10718s
+    520/6639 | valid=511 (98%) | 0.6 ex/s | ETA 10401s
+    540/6639 | valid=531 (98%) | 0.6 ex/s | ETA 10119s
+    560/6639 | valid=551 (98%) | 0.6 ex/s | ETA 10185s
+    580/6639 | valid=570 (98%) | 0.6 ex/s | ETA 10094s
+    600/6639 | valid=590 (98%) | 0.6 ex/s | ETA 10004s
+    620/6639 | valid=610 (98%) | 0.6 ex/s | ETA 10065s
+    640/6639 | valid=629 (98%) | 0.6 ex/s | ETA 10092s
+    660/6639 | valid=648 (98%) | 0.6 ex/s | ETA 9986s
+    680/6639 | valid=668 (98%) | 0.6 ex/s | ETA 9882s
+    700/6639 | valid=688 (98%) | 0.6 ex/s | ETA 9828s
+    720/6639 | valid=708 (98%) | 0.6 ex/s | ETA 9723s
+    740/6639 | valid=728 (98%) | 0.6 ex/s | ETA 9789s
+    760/6639 | valid=748 (98%) | 0.6 ex/s | ETA 9724s
+    780/6639 | valid=767 (98%) | 0.6 ex/s | ETA 9704s
+    800/6639 | valid=787 (98%) | 0.6 ex/s | ETA 9559s
+    820/6639 | valid=807 (98%) | 0.6 ex/s | ETA 9552s
+    840/6639 | valid=827 (98%) | 0.6 ex/s | ETA 9395s
+    860/6639 | valid=846 (98%) | 0.6 ex/s | ETA 9417s
+    880/6639 | valid=866 (98%) | 0.6 ex/s | ETA 9308s
+    900/6639 | valid=886 (98%) | 0.6 ex/s | ETA 9281s
+    920/6639 | valid=906 (98%) | 0.6 ex/s | ETA 9200s
+    940/6639 | valid=925 (98%) | 0.6 ex/s | ETA 9238s
+    960/6639 | valid=945 (98%) | 0.6 ex/s | ETA 9172s
+    980/6639 | valid=965 (98%) | 0.6 ex/s | ETA 9160s
+    1000/6639 | valid=985 (98%) | 0.6 ex/s | ETA 9114s
+    1020/6639 | valid=1004 (98%) | 0.6 ex/s | ETA 9113s
+    1040/6639 | valid=1023 (98%) | 0.6 ex/s | ETA 9142s
+    1060/6639 | valid=1043 (98%) | 0.6 ex/s | ETA 9070s
+    1080/6639 | valid=1062 (98%) | 0.6 ex/s | ETA 9006s
+    1100/6639 | valid=1081 (98%) | 0.6 ex/s | ETA 8954s
+    1120/6639 | valid=1101 (98%) | 0.6 ex/s | ETA 8940s
+    1140/6639 | valid=1121 (98%) | 0.6 ex/s | ETA 8884s
+    1160/6639 | valid=1141 (98%) | 0.6 ex/s | ETA 8870s
+    1180/6639 | valid=1161 (98%) | 0.6 ex/s | ETA 8837s
+    1200/6639 | valid=1181 (98%) | 0.6 ex/s | ETA 8820s
+    1220/6639 | valid=1200 (98%) | 0.6 ex/s | ETA 8851s
+    1240/6639 | valid=1220 (98%) | 0.6 ex/s | ETA 8741s
+    1260/6639 | valid=1238 (98%) | 0.6 ex/s | ETA 8776s
+    1280/6639 | valid=1258 (98%) | 0.6 ex/s | ETA 8692s
+    1300/6639 | valid=1278 (98%) | 0.6 ex/s | ETA 8648s
+    1320/6639 | valid=1298 (98%) | 0.6 ex/s | ETA 8638s
+    1340/6639 | valid=1318 (98%) | 0.6 ex/s | ETA 8636s
+    1360/6639 | valid=1338 (98%) | 0.6 ex/s | ETA 8622s
+    1380/6639 | valid=1358 (98%) | 0.6 ex/s | ETA 8595s
+    1400/6639 | valid=1378 (98%) | 0.6 ex/s | ETA 8497s
+    1420/6639 | valid=1397 (98%) | 0.6 ex/s | ETA 8494s
+    1440/6639 | valid=1416 (98%) | 0.6 ex/s | ETA 8482s
+    1460/6639 | valid=1436 (98%) | 0.6 ex/s | ETA 8441s
+    1480/6639 | valid=1456 (98%) | 0.6 ex/s | ETA 8416s
+    1500/6639 | valid=1474 (98%) | 0.6 ex/s | ETA 8415s
+    1520/6639 | valid=1493 (98%) | 0.6 ex/s | ETA 8419s
+    1540/6639 | valid=1513 (98%) | 0.6 ex/s | ETA 8390s
+    1560/6639 | valid=1533 (98%) | 0.6 ex/s | ETA 8320s
+    1580/6639 | valid=1552 (98%) | 0.6 ex/s | ETA 8339s
+    1600/6639 | valid=1572 (98%) | 0.6 ex/s | ETA 8302s
+    1620/6639 | valid=1592 (98%) | 0.6 ex/s | ETA 8233s
+    1640/6639 | valid=1612 (98%) | 0.6 ex/s | ETA 8160s
+    1660/6639 | valid=1632 (98%) | 0.6 ex/s | ETA 8095s
+    1680/6639 | valid=1651 (98%) | 0.6 ex/s | ETA 8104s
+    1700/6639 | valid=1671 (98%) | 0.6 ex/s | ETA 8083s
+    1720/6639 | valid=1691 (98%) | 0.6 ex/s | ETA 8081s
+    1740/6639 | valid=1711 (98%) | 0.6 ex/s | ETA 8012s
+    1760/6639 | valid=1731 (98%) | 0.6 ex/s | ETA 7940s
+    1780/6639 | valid=1751 (98%) | 0.6 ex/s | ETA 7866s
+    1800/6639 | valid=1769 (98%) | 0.6 ex/s | ETA 7859s
+    1820/6639 | valid=1788 (98%) | 0.6 ex/s | ETA 7858s
+    1840/6639 | valid=1808 (98%) | 0.6 ex/s | ETA 7846s
+    1860/6639 | valid=1828 (98%) | 0.6 ex/s | ETA 7789s
+    1880/6639 | valid=1848 (98%) | 0.6 ex/s | ETA 7741s
+    1900/6639 | valid=1866 (98%) | 0.6 ex/s | ETA 7745s
+    1920/6639 | valid=1886 (98%) | 0.6 ex/s | ETA 7693s
+    1940/6639 | valid=1906 (98%) | 0.6 ex/s | ETA 7662s
+    1960/6639 | valid=1926 (98%) | 0.6 ex/s | ETA 7594s
+    1980/6639 | valid=1946 (98%) | 0.6 ex/s | ETA 7531s
+    2000/6639 | valid=1966 (98%) | 0.6 ex/s | ETA 7507s
+    2020/6639 | valid=1986 (98%) | 0.6 ex/s | ETA 7462s
+    2040/6639 | valid=2006 (98%) | 0.6 ex/s | ETA 7402s
+    2060/6639 | valid=2026 (98%) | 0.6 ex/s | ETA 7361s
+    2080/6639 | valid=2045 (98%) | 0.6 ex/s | ETA 7334s
+    2100/6639 | valid=2065 (98%) | 0.6 ex/s | ETA 7291s
+    2120/6639 | valid=2084 (98%) | 0.6 ex/s | ETA 7280s
+    2140/6639 | valid=2104 (98%) | 0.6 ex/s | ETA 7266s
+    2160/6639 | valid=2123 (98%) | 0.6 ex/s | ETA 7252s
+    2180/6639 | valid=2142 (98%) | 0.6 ex/s | ETA 7236s
+    2200/6639 | valid=2162 (98%) | 0.6 ex/s | ETA 7174s
+    2220/6639 | valid=2182 (98%) | 0.6 ex/s | ETA 7146s
+    2240/6639 | valid=2201 (98%) | 0.6 ex/s | ETA 7135s
+    2260/6639 | valid=2220 (98%) | 0.6 ex/s | ETA 7126s
+    2280/6639 | valid=2240 (98%) | 0.6 ex/s | ETA 7067s
+    2300/6639 | valid=2260 (98%) | 0.6 ex/s | ETA 7004s
+    2320/6639 | valid=2279 (98%) | 0.6 ex/s | ETA 6995s
+    2340/6639 | valid=2299 (98%) | 0.6 ex/s | ETA 6948s
+    2360/6639 | valid=2319 (98%) | 0.6 ex/s | ETA 6907s
+    2380/6639 | valid=2339 (98%) | 0.6 ex/s | ETA 6847s
+    2400/6639 | valid=2359 (98%) | 0.6 ex/s | ETA 6811s
+    2420/6639 | valid=2379 (98%) | 0.6 ex/s | ETA 6781s
+    2440/6639 | valid=2398 (98%) | 0.6 ex/s | ETA 6747s
+    2460/6639 | valid=2418 (98%) | 0.6 ex/s | ETA 6696s
+    2480/6639 | valid=2438 (98%) | 0.6 ex/s | ETA 6681s
+    2500/6639 | valid=2458 (98%) | 0.6 ex/s | ETA 6628s
+    2520/6639 | valid=2478 (98%) | 0.6 ex/s | ETA 6588s
+    2540/6639 | valid=2497 (98%) | 0.6 ex/s | ETA 6574s
+    2560/6639 | valid=2517 (98%) | 0.6 ex/s | ETA 6525s
+    2580/6639 | valid=2536 (98%) | 0.6 ex/s | ETA 6546s
+    2600/6639 | valid=2555 (98%) | 0.6 ex/s | ETA 6504s
+    2620/6639 | valid=2575 (98%) | 0.6 ex/s | ETA 6466s
+    2640/6639 | valid=2594 (98%) | 0.6 ex/s | ETA 6444s
+    2660/6639 | valid=2614 (98%) | 0.6 ex/s | ETA 6397s
+    2680/6639 | valid=2633 (98%) | 0.6 ex/s | ETA 6364s
+    2700/6639 | valid=2653 (98%) | 0.6 ex/s | ETA 6342s
+    2720/6639 | valid=2673 (98%) | 0.6 ex/s | ETA 6290s
+    2740/6639 | valid=2692 (98%) | 0.6 ex/s | ETA 6275s
+    2760/6639 | valid=2712 (98%) | 0.6 ex/s | ETA 6239s
+    2780/6639 | valid=2732 (98%) | 0.6 ex/s | ETA 6197s
+    2800/6639 | valid=2752 (98%) | 0.6 ex/s | ETA 6143s
+    2820/6639 | valid=2772 (98%) | 0.6 ex/s | ETA 6097s
+    2840/6639 | valid=2792 (98%) | 0.6 ex/s | ETA 6068s
+    2860/6639 | valid=2812 (98%) | 0.6 ex/s | ETA 6048s
+    2880/6639 | valid=2832 (98%) | 0.6 ex/s | ETA 6016s
+    2900/6639 | valid=2852 (98%) | 0.6 ex/s | ETA 5966s
+    2920/6639 | valid=2872 (98%) | 0.6 ex/s | ETA 5934s
+    2940/6639 | valid=2891 (98%) | 0.6 ex/s | ETA 5888s
+    2960/6639 | valid=2911 (98%) | 0.6 ex/s | ETA 5837s
+    2980/6639 | valid=2931 (98%) | 0.6 ex/s | ETA 5790s
+    3000/6639 | valid=2951 (98%) | 0.6 ex/s | ETA 5755s
+    3020/6639 | valid=2971 (98%) | 0.6 ex/s | ETA 5726s
+    3040/6639 | valid=2991 (98%) | 0.6 ex/s | ETA 5680s
+    3060/6639 | valid=3011 (98%) | 0.6 ex/s | ETA 5662s
+  Valid: 3000/3049 (98%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 2881, 'none': 49, 'swiss-ai/Apertus-70B-Instruct-2509': 119}
+  Modes used: {'independent': 2553, 'gold_fallback': 447, 'none': 49}
+  Invalid reasons: {'wrong_answer:None': 37, 'wrong_answer:A': 2, 'not_ending_with_boxed': 5, 'too_long': 5}
+  Done in 4841.1s
+
+── mera_clean_mamuramu.jsonl ──
+  Processing: 285 remaining / 285 total
+    20/285 | valid=19 (95%) | 1.8 ex/s | ETA 151s
+    40/285 | valid=39 (97%) | 1.7 ex/s | ETA 141s
+    60/285 | valid=59 (98%) | 1.7 ex/s | ETA 133s
+    80/285 | valid=79 (98%) | 1.1 ex/s | ETA 189s
+    100/285 | valid=99 (99%) | 1.1 ex/s | ETA 175s
+    120/285 | valid=119 (99%) | 1.1 ex/s | ETA 151s
+    140/285 | valid=139 (99%) | 1.2 ex/s | ETA 124s
+    160/285 | valid=158 (98%) | 1.1 ex/s | ETA 109s
+    180/285 | valid=177 (98%) | 1.2 ex/s | ETA 91s
+    200/285 | valid=197 (98%) | 1.1 ex/s | ETA 74s
+    220/285 | valid=217 (98%) | 1.2 ex/s | ETA 56s
+    240/285 | valid=237 (98%) | 1.1 ex/s | ETA 40s
+    260/285 | valid=257 (98%) | 1.1 ex/s | ETA 22s
+    280/285 | valid=277 (98%) | 1.2 ex/s | ETA 4s
+    285/285 | valid=282 (98%) | 1.2 ex/s | ETA 0s
+  Valid: 282/285 (98%)
+  FAIL cases: 1
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 272, 'swiss-ai/Apertus-70B-Instruct-2509': 11, 'none': 2}
+  Modes used: {'independent': 264, 'gold_fallback_fail': 1, 'gold_fallback': 18, 'none': 2}
+  Invalid reasons: {'fail_corrupted_example': 1, 'wrong_answer:None': 1, 'wrong_answer:D': 1}
+  Done in 240.0s
+
+── global_mmlu_russian_regional.jsonl ──
+  Processing: 792 remaining / 792 total
+    20/792 | valid=20 (100%) | 1.0 ex/s | ETA 784s
+    40/792 | valid=40 (100%) | 1.3 ex/s | ETA 595s
+    60/792 | valid=60 (100%) | 1.0 ex/s | ETA 729s
+    80/792 | valid=80 (100%) | 1.1 ex/s | ETA 667s
+    100/792 | valid=99 (99%) | 1.1 ex/s | ETA 644s
+    120/792 | valid=119 (99%) | 1.1 ex/s | ETA 592s
+    140/792 | valid=139 (99%) | 1.2 ex/s | ETA 559s
+    160/792 | valid=158 (98%) | 1.1 ex/s | ETA 595s
+    180/792 | valid=177 (98%) | 1.1 ex/s | ETA 572s
+    200/792 | valid=197 (98%) | 1.1 ex/s | ETA 543s
+    220/792 | valid=217 (98%) | 1.1 ex/s | ETA 520s
+    240/792 | valid=237 (98%) | 1.1 ex/s | ETA 498s
+    260/792 | valid=257 (98%) | 1.1 ex/s | ETA 492s
+    280/792 | valid=277 (98%) | 1.1 ex/s | ETA 464s
+    300/792 | valid=297 (99%) | 1.0 ex/s | ETA 474s
+    320/792 | valid=317 (99%) | 1.0 ex/s | ETA 460s
+    340/792 | valid=337 (99%) | 1.0 ex/s | ETA 431s
+    360/792 | valid=357 (99%) | 1.0 ex/s | ETA 424s
+    380/792 | valid=377 (99%) | 1.0 ex/s | ETA 403s
+    400/792 | valid=397 (99%) | 1.0 ex/s | ETA 377s
+    420/792 | valid=417 (99%) | 1.0 ex/s | ETA 363s
+    440/792 | valid=437 (99%) | 1.0 ex/s | ETA 342s
+    460/792 | valid=457 (99%) | 1.0 ex/s | ETA 319s
+    480/792 | valid=477 (99%) | 1.0 ex/s | ETA 306s
+    500/792 | valid=496 (99%) | 1.0 ex/s | ETA 287s
+    520/792 | valid=516 (99%) | 1.0 ex/s | ETA 272s
+    540/792 | valid=536 (99%) | 1.0 ex/s | ETA 249s
+    560/792 | valid=556 (99%) | 1.0 ex/s | ETA 231s
+    580/792 | valid=575 (99%) | 1.0 ex/s | ETA 209s
+    600/792 | valid=595 (99%) | 1.0 ex/s | ETA 191s
+    620/792 | valid=615 (99%) | 1.0 ex/s | ETA 172s
+    640/792 | valid=635 (99%) | 1.0 ex/s | ETA 150s
+    660/792 | valid=655 (99%) | 1.0 ex/s | ETA 130s
+    680/792 | valid=675 (99%) | 1.0 ex/s | ETA 110s
+    700/792 | valid=694 (99%) | 1.0 ex/s | ETA 91s
+    720/792 | valid=714 (99%) | 1.0 ex/s | ETA 71s
+    740/792 | valid=734 (99%) | 1.0 ex/s | ETA 51s
+    760/792 | valid=754 (99%) | 1.0 ex/s | ETA 32s
+    780/792 | valid=774 (99%) | 1.0 ex/s | ETA 12s
+    792/792 | valid=786 (99%) | 1.0 ex/s | ETA 0s
+  Valid: 786/792 (99%)
+  FAIL cases: 1
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 759, 'swiss-ai/Apertus-70B-Instruct-2509': 28, 'none': 5}
+  Modes used: {'independent': 701, 'gold_fallback': 85, 'none': 5, 'gold_fallback_fail': 1}
+  Invalid reasons: {'wrong_answer:C': 3, 'wrong_answer:None': 2, 'fail_corrupted_example': 1}
+  Done in 778.8s
+
+── global_mmlu_chinese_regional.jsonl ──
+  Processing: 792 remaining / 792 total
+    20/792 | valid=20 (100%) | 0.9 ex/s | ETA 867s
+    40/792 | valid=40 (100%) | 1.1 ex/s | ETA 686s
+    60/792 | valid=60 (100%) | 1.1 ex/s | ETA 643s
+    80/792 | valid=80 (100%) | 1.1 ex/s | ETA 653s
+    100/792 | valid=100 (100%) | 1.2 ex/s | ETA 578s
+    120/792 | valid=120 (100%) | 1.1 ex/s | ETA 603s
+    140/792 | valid=140 (100%) | 1.1 ex/s | ETA 589s
+    160/792 | valid=160 (100%) | 1.0 ex/s | ETA 607s
+    180/792 | valid=179 (99%) | 1.1 ex/s | ETA 573s
+    200/792 | valid=199 (99%) | 1.1 ex/s | ETA 536s
+    220/792 | valid=219 (99%) | 1.1 ex/s | ETA 508s
+    240/792 | valid=239 (99%) | 1.2 ex/s | ETA 477s
+    260/792 | valid=259 (99%) | 1.2 ex/s | ETA 458s
+    280/792 | valid=279 (99%) | 1.2 ex/s | ETA 439s
+    300/792 | valid=299 (99%) | 1.1 ex/s | ETA 443s
+    320/792 | valid=319 (99%) | 1.1 ex/s | ETA 419s
+    340/792 | valid=339 (99%) | 1.2 ex/s | ETA 391s
+    360/792 | valid=359 (99%) | 1.2 ex/s | ETA 370s
+    380/792 | valid=379 (99%) | 1.2 ex/s | ETA 353s
+    400/792 | valid=398 (99%) | 1.2 ex/s | ETA 335s
+    420/792 | valid=418 (99%) | 1.2 ex/s | ETA 316s
+    440/792 | valid=438 (99%) | 1.2 ex/s | ETA 297s
+    460/792 | valid=458 (99%) | 1.2 ex/s | ETA 279s
+    480/792 | valid=478 (99%) | 1.2 ex/s | ETA 264s
+    500/792 | valid=497 (99%) | 1.2 ex/s | ETA 248s
+    520/792 | valid=517 (99%) | 1.2 ex/s | ETA 231s
+    540/792 | valid=537 (99%) | 1.2 ex/s | ETA 214s
+    560/792 | valid=556 (99%) | 1.2 ex/s | ETA 198s
+    580/792 | valid=575 (99%) | 1.2 ex/s | ETA 181s
+    600/792 | valid=595 (99%) | 1.2 ex/s | ETA 163s
+    620/792 | valid=615 (99%) | 1.2 ex/s | ETA 145s
+    640/792 | valid=635 (99%) | 1.2 ex/s | ETA 128s
+    660/792 | valid=655 (99%) | 1.2 ex/s | ETA 111s
+    680/792 | valid=675 (99%) | 1.2 ex/s | ETA 94s
+    700/792 | valid=694 (99%) | 1.2 ex/s | ETA 78s
+    720/792 | valid=714 (99%) | 1.2 ex/s | ETA 61s
+    740/792 | valid=734 (99%) | 1.2 ex/s | ETA 44s
+    760/792 | valid=754 (99%) | 1.1 ex/s | ETA 28s
+    780/792 | valid=774 (99%) | 1.2 ex/s | ETA 10s
+    792/792 | valid=786 (99%) | 1.1 ex/s | ETA 0s
+  Valid: 786/792 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 738, 'swiss-ai/Apertus-70B-Instruct-2509': 48, 'none': 6}
+  Modes used: {'independent': 682, 'gold_fallback': 104, 'none': 6}
+  Invalid reasons: {'wrong_answer:D': 1, 'wrong_answer:B': 2, 'wrong_answer:C': 3}
+  Done in 689.9s
+
+── global_mmlu_italian_regional.jsonl ──
+  Processing: 792 remaining / 792 total
+    20/792 | valid=20 (100%) | 0.8 ex/s | ETA 1001s
+    40/792 | valid=40 (100%) | 1.2 ex/s | ETA 625s
+    60/792 | valid=60 (100%) | 1.1 ex/s | ETA 645s
+    80/792 | valid=80 (100%) | 1.0 ex/s | ETA 732s
+    100/792 | valid=98 (98%) | 1.0 ex/s | ETA 685s
+    120/792 | valid=118 (98%) | 1.0 ex/s | ETA 695s
+    140/792 | valid=138 (98%) | 1.0 ex/s | ETA 686s
+    160/792 | valid=158 (98%) | 1.0 ex/s | ETA 638s
+    180/792 | valid=177 (98%) | 1.0 ex/s | ETA 616s
+    200/792 | valid=197 (98%) | 1.0 ex/s | ETA 593s
+    220/792 | valid=217 (98%) | 1.0 ex/s | ETA 565s
+    240/792 | valid=237 (98%) | 1.0 ex/s | ETA 528s
+    260/792 | valid=257 (98%) | 1.0 ex/s | ETA 517s
+    280/792 | valid=277 (98%) | 1.0 ex/s | ETA 498s
+    300/792 | valid=297 (99%) | 1.0 ex/s | ETA 485s
+    320/792 | valid=317 (99%) | 1.0 ex/s | ETA 463s
+    340/792 | valid=337 (99%) | 1.0 ex/s | ETA 444s
+    360/792 | valid=357 (99%) | 1.0 ex/s | ETA 443s
+    380/792 | valid=377 (99%) | 1.0 ex/s | ETA 424s
+    400/792 | valid=396 (99%) | 1.0 ex/s | ETA 399s
+    420/792 | valid=416 (99%) | 1.0 ex/s | ETA 381s
+    440/792 | valid=436 (99%) | 1.0 ex/s | ETA 361s
+    460/792 | valid=456 (99%) | 1.0 ex/s | ETA 342s
+    480/792 | valid=475 (98%) | 0.9 ex/s | ETA 334s
+    500/792 | valid=494 (98%) | 0.9 ex/s | ETA 313s
+    520/792 | valid=514 (98%) | 0.9 ex/s | ETA 291s
+    540/792 | valid=534 (98%) | 0.9 ex/s | ETA 268s
+    560/792 | valid=554 (98%) | 0.9 ex/s | ETA 251s
+    580/792 | valid=573 (98%) | 0.9 ex/s | ETA 229s
+    600/792 | valid=593 (98%) | 0.9 ex/s | ETA 205s
+    620/792 | valid=613 (98%) | 0.9 ex/s | ETA 185s
+    640/792 | valid=633 (98%) | 0.9 ex/s | ETA 164s
+    660/792 | valid=653 (98%) | 0.9 ex/s | ETA 143s
+    680/792 | valid=673 (98%) | 0.9 ex/s | ETA 121s
+    700/792 | valid=692 (98%) | 0.9 ex/s | ETA 99s
+    720/792 | valid=712 (98%) | 0.9 ex/s | ETA 77s
+    740/792 | valid=731 (98%) | 0.9 ex/s | ETA 56s
+    760/792 | valid=751 (98%) | 0.9 ex/s | ETA 35s
+    780/792 | valid=771 (98%) | 0.9 ex/s | ETA 13s
+    792/792 | valid=783 (98%) | 0.9 ex/s | ETA 0s
+  Valid: 783/792 (98%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 757, 'swiss-ai/Apertus-70B-Instruct-2509': 26, 'none': 9}
+  Modes used: {'independent': 707, 'gold_fallback': 76, 'none': 9}
+  Invalid reasons: {'wrong_answer:C': 3, 'wrong_answer:B': 3, 'wrong_answer:A': 1, 'too_long': 1, 'wrong_answer:None': 1}
+  Done in 878.5s
+
+── global_mmlu_spanish_regional.jsonl ──
+  Processing: 792 remaining / 792 total
+    20/792 | valid=20 (100%) | 0.6 ex/s | ETA 1318s
+    40/792 | valid=40 (100%) | 0.8 ex/s | ETA 1002s
+    60/792 | valid=60 (100%) | 0.8 ex/s | ETA 921s
+    80/792 | valid=80 (100%) | 0.8 ex/s | ETA 932s
+    100/792 | valid=98 (98%) | 0.8 ex/s | ETA 842s
+    120/792 | valid=118 (98%) | 0.8 ex/s | ETA 845s
+    140/792 | valid=138 (98%) | 0.8 ex/s | ETA 844s
+    160/792 | valid=158 (98%) | 0.7 ex/s | ETA 851s
+    180/792 | valid=177 (98%) | 0.7 ex/s | ETA 821s
+    200/792 | valid=197 (98%) | 0.8 ex/s | ETA 763s
+    220/792 | valid=216 (98%) | 0.8 ex/s | ETA 725s
+    240/792 | valid=236 (98%) | 0.8 ex/s | ETA 681s
+    260/792 | valid=256 (98%) | 0.8 ex/s | ETA 658s
+    280/792 | valid=276 (98%) | 0.8 ex/s | ETA 622s
+    300/792 | valid=295 (98%) | 0.8 ex/s | ETA 625s
+    320/792 | valid=314 (98%) | 0.8 ex/s | ETA 589s
+    340/792 | valid=334 (98%) | 0.8 ex/s | ETA 564s
+    360/792 | valid=354 (98%) | 0.8 ex/s | ETA 546s
+    380/792 | valid=374 (98%) | 0.8 ex/s | ETA 523s
+    400/792 | valid=394 (98%) | 0.8 ex/s | ETA 494s
+    420/792 | valid=413 (98%) | 0.8 ex/s | ETA 459s
+    440/792 | valid=433 (98%) | 0.8 ex/s | ETA 428s
+    460/792 | valid=453 (98%) | 0.8 ex/s | ETA 401s
+    480/792 | valid=472 (98%) | 0.8 ex/s | ETA 379s
+    500/792 | valid=491 (98%) | 0.8 ex/s | ETA 352s
+    520/792 | valid=511 (98%) | 0.8 ex/s | ETA 324s
+    540/792 | valid=531 (98%) | 0.8 ex/s | ETA 303s
+    560/792 | valid=551 (98%) | 0.8 ex/s | ETA 276s
+    580/792 | valid=571 (98%) | 0.8 ex/s | ETA 251s
+    600/792 | valid=591 (98%) | 0.9 ex/s | ETA 226s
+    620/792 | valid=611 (98%) | 0.8 ex/s | ETA 203s
+    640/792 | valid=631 (98%) | 0.9 ex/s | ETA 177s
+    660/792 | valid=650 (98%) | 0.8 ex/s | ETA 157s
+    680/792 | valid=669 (98%) | 0.8 ex/s | ETA 133s
+    700/792 | valid=688 (98%) | 0.8 ex/s | ETA 109s
+    720/792 | valid=707 (98%) | 0.8 ex/s | ETA 86s
+    740/792 | valid=726 (98%) | 0.8 ex/s | ETA 63s
+    760/792 | valid=746 (98%) | 0.8 ex/s | ETA 38s
+    780/792 | valid=766 (98%) | 0.8 ex/s | ETA 14s
+    792/792 | valid=778 (98%) | 0.8 ex/s | ETA 0s
+  Valid: 778/792 (98%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 743, 'swiss-ai/Apertus-70B-Instruct-2509': 35, 'none': 14}
+  Modes used: {'independent': 699, 'gold_fallback': 79, 'none': 14}
+  Invalid reasons: {'wrong_answer:C': 3, 'wrong_answer:B': 4, 'wrong_answer:A': 2, 'wrong_answer:None': 2, 'too_long': 3}
+  Done in 955.8s
+
+── global_mmlu_hindi_regional.jsonl ──
+  Processing: 792 remaining / 792 total
+    20/792 | valid=19 (95%) | 0.5 ex/s | ETA 1650s
+    40/792 | valid=39 (97%) | 0.6 ex/s | ETA 1306s
+    60/792 | valid=59 (98%) | 0.6 ex/s | ETA 1273s
+    80/792 | valid=78 (97%) | 0.6 ex/s | ETA 1257s
+    100/792 | valid=98 (98%) | 0.6 ex/s | ETA 1137s
+    120/792 | valid=118 (98%) | 0.6 ex/s | ETA 1112s
+    140/792 | valid=137 (97%) | 0.6 ex/s | ETA 1079s
+    160/792 | valid=156 (97%) | 0.6 ex/s | ETA 1023s
+    180/792 | valid=175 (97%) | 0.6 ex/s | ETA 998s
+    200/792 | valid=194 (97%) | 0.6 ex/s | ETA 953s
+    220/792 | valid=213 (96%) | 0.6 ex/s | ETA 913s
+    240/792 | valid=233 (97%) | 0.6 ex/s | ETA 872s
+    260/792 | valid=253 (97%) | 0.6 ex/s | ETA 845s
+    280/792 | valid=273 (97%) | 0.6 ex/s | ETA 822s
+    300/792 | valid=293 (97%) | 0.6 ex/s | ETA 790s
+    320/792 | valid=313 (97%) | 0.6 ex/s | ETA 752s
+    340/792 | valid=333 (97%) | 0.6 ex/s | ETA 715s
+    360/792 | valid=353 (98%) | 0.6 ex/s | ETA 698s
+    380/792 | valid=373 (98%) | 0.6 ex/s | ETA 664s
+    400/792 | valid=393 (98%) | 0.6 ex/s | ETA 623s
+    420/792 | valid=413 (98%) | 0.6 ex/s | ETA 589s
+    440/792 | valid=433 (98%) | 0.6 ex/s | ETA 560s
+    460/792 | valid=453 (98%) | 0.6 ex/s | ETA 527s
+    480/792 | valid=472 (98%) | 0.6 ex/s | ETA 499s
+    500/792 | valid=491 (98%) | 0.6 ex/s | ETA 466s
+    520/792 | valid=510 (98%) | 0.6 ex/s | ETA 436s
+    540/792 | valid=530 (98%) | 0.6 ex/s | ETA 409s
+    560/792 | valid=550 (98%) | 0.6 ex/s | ETA 373s
+    580/792 | valid=570 (98%) | 0.6 ex/s | ETA 338s
+    600/792 | valid=590 (98%) | 0.6 ex/s | ETA 306s
+    620/792 | valid=610 (98%) | 0.6 ex/s | ETA 273s
+    640/792 | valid=630 (98%) | 0.6 ex/s | ETA 242s
+    660/792 | valid=649 (98%) | 0.6 ex/s | ETA 212s
+    680/792 | valid=668 (98%) | 0.6 ex/s | ETA 181s
+    700/792 | valid=688 (98%) | 0.6 ex/s | ETA 150s
+    720/792 | valid=708 (98%) | 0.6 ex/s | ETA 118s
+    740/792 | valid=727 (98%) | 0.6 ex/s | ETA 85s
+    760/792 | valid=747 (98%) | 0.6 ex/s | ETA 52s
+    780/792 | valid=767 (98%) | 0.6 ex/s | ETA 20s
+    792/792 | valid=779 (98%) | 0.6 ex/s | ETA 0s
+  Valid: 779/792 (98%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 740, 'swiss-ai/Apertus-70B-Instruct-2509': 39, 'none': 13}
+  Modes used: {'independent': 661, 'gold_fallback': 118, 'none': 13}
+  Invalid reasons: {'wrong_answer:None': 9, 'not_ending_with_boxed': 4}
+  Done in 1280.2s
+
+── include_russian_all.jsonl ──
+  Processing: 586 remaining / 586 total
+    20/586 | valid=20 (100%) | 1.2 ex/s | ETA 470s
+    40/586 | valid=40 (100%) | 0.9 ex/s | ETA 590s
+    60/586 | valid=60 (100%) | 1.1 ex/s | ETA 495s
+    80/586 | valid=80 (100%) | 1.0 ex/s | ETA 498s
+    100/586 | valid=100 (100%) | 1.0 ex/s | ETA 467s
+    120/586 | valid=119 (99%) | 1.0 ex/s | ETA 465s
+    140/586 | valid=139 (99%) | 1.0 ex/s | ETA 443s
+    160/586 | valid=158 (98%) | 1.0 ex/s | ETA 411s
+    180/586 | valid=178 (98%) | 1.0 ex/s | ETA 388s
+    200/586 | valid=198 (99%) | 1.1 ex/s | ETA 362s
+    220/586 | valid=218 (99%) | 1.0 ex/s | ETA 361s
+    240/586 | valid=238 (99%) | 1.0 ex/s | ETA 339s
+    260/586 | valid=258 (99%) | 1.0 ex/s | ETA 317s
+    280/586 | valid=278 (99%) | 1.1 ex/s | ETA 289s
+    300/586 | valid=298 (99%) | 1.1 ex/s | ETA 267s
+    320/586 | valid=318 (99%) | 1.0 ex/s | ETA 260s
+    340/586 | valid=338 (99%) | 1.0 ex/s | ETA 238s
+    360/586 | valid=358 (99%) | 1.0 ex/s | ETA 220s
+    380/586 | valid=378 (99%) | 1.0 ex/s | ETA 201s
+    400/586 | valid=398 (99%) | 1.0 ex/s | ETA 182s
+    420/586 | valid=417 (99%) | 1.0 ex/s | ETA 170s
+    440/586 | valid=436 (99%) | 1.0 ex/s | ETA 150s
+    460/586 | valid=456 (99%) | 1.0 ex/s | ETA 127s
+    480/586 | valid=476 (99%) | 1.0 ex/s | ETA 106s
+    500/586 | valid=496 (99%) | 1.0 ex/s | ETA 86s
+    520/586 | valid=516 (99%) | 1.0 ex/s | ETA 66s
+    540/586 | valid=535 (99%) | 1.0 ex/s | ETA 48s
+    560/586 | valid=554 (98%) | 0.9 ex/s | ETA 28s
+    580/586 | valid=574 (98%) | 0.9 ex/s | ETA 7s
+    586/586 | valid=580 (98%) | 0.9 ex/s | ETA 0s
+  Valid: 580/586 (98%)
+  FAIL cases: 1
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 544, 'swiss-ai/Apertus-70B-Instruct-2509': 37, 'none': 5}
+  Modes used: {'independent': 459, 'gold_fallback': 121, 'none': 5, 'gold_fallback_fail': 1}
+  Invalid reasons: {'wrong_answer:D': 2, 'wrong_answer:None': 2, 'fail_corrupted_example': 1, 'wrong_answer:A': 1}
+  Done in 642.1s
+
+── include_chinese_all.jsonl ──
+  Processing: 584 remaining / 584 total
+    20/584 | valid=20 (100%) | 1.1 ex/s | ETA 495s
+    40/584 | valid=40 (100%) | 1.3 ex/s | ETA 430s
+    60/584 | valid=60 (100%) | 1.4 ex/s | ETA 365s
+    80/584 | valid=80 (100%) | 1.1 ex/s | ETA 452s
+    100/584 | valid=100 (100%) | 1.2 ex/s | ETA 412s
+    120/584 | valid=120 (100%) | 1.2 ex/s | ETA 374s
+    140/584 | valid=140 (100%) | 1.2 ex/s | ETA 362s
+    160/584 | valid=160 (100%) | 1.2 ex/s | ETA 341s
+    180/584 | valid=180 (100%) | 1.2 ex/s | ETA 351s
+    200/584 | valid=200 (100%) | 1.2 ex/s | ETA 329s
+    220/584 | valid=220 (100%) | 1.1 ex/s | ETA 318s
+    240/584 | valid=240 (100%) | 1.2 ex/s | ETA 293s
+    260/584 | valid=260 (100%) | 1.2 ex/s | ETA 269s
+    280/584 | valid=279 (99%) | 1.2 ex/s | ETA 251s
+    300/584 | valid=299 (99%) | 1.1 ex/s | ETA 254s
+    320/584 | valid=319 (99%) | 1.1 ex/s | ETA 234s
+    340/584 | valid=339 (99%) | 1.1 ex/s | ETA 213s
+    360/584 | valid=358 (99%) | 1.1 ex/s | ETA 201s
+    380/584 | valid=378 (99%) | 1.1 ex/s | ETA 183s
+    400/584 | valid=398 (99%) | 1.1 ex/s | ETA 165s
+    420/584 | valid=418 (99%) | 1.1 ex/s | ETA 147s
+    440/584 | valid=438 (99%) | 1.1 ex/s | ETA 127s
+    460/584 | valid=457 (99%) | 1.1 ex/s | ETA 109s
+    480/584 | valid=477 (99%) | 1.1 ex/s | ETA 92s
+    500/584 | valid=497 (99%) | 1.1 ex/s | ETA 75s
+    520/584 | valid=517 (99%) | 1.1 ex/s | ETA 57s
+    540/584 | valid=537 (99%) | 1.1 ex/s | ETA 39s
+    560/584 | valid=557 (99%) | 1.1 ex/s | ETA 21s
+    580/584 | valid=577 (99%) | 1.1 ex/s | ETA 4s
+    584/584 | valid=581 (99%) | 1.1 ex/s | ETA 0s
+  Valid: 581/584 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 563, 'swiss-ai/Apertus-70B-Instruct-2509': 18, 'none': 3}
+  Modes used: {'gold_fallback': 98, 'independent': 483, 'none': 3}
+  Invalid reasons: {'wrong_answer:None': 1, 'wrong_answer:A': 1, 'wrong_answer:C': 1}
+  Done in 544.2s
+
+── include_italian_all.jsonl ──
+  Processing: 575 remaining / 575 total
+    20/575 | valid=20 (100%) | 1.3 ex/s | ETA 444s
+    40/575 | valid=40 (100%) | 1.2 ex/s | ETA 460s
+    60/575 | valid=60 (100%) | 1.2 ex/s | ETA 445s
+    80/575 | valid=80 (100%) | 1.2 ex/s | ETA 428s
+    100/575 | valid=100 (100%) | 1.1 ex/s | ETA 416s
+    120/575 | valid=120 (100%) | 1.2 ex/s | ETA 394s
+    140/575 | valid=140 (100%) | 1.2 ex/s | ETA 354s
+    160/575 | valid=159 (99%) | 1.1 ex/s | ETA 390s
+    180/575 | valid=178 (98%) | 1.0 ex/s | ETA 410s
+    200/575 | valid=198 (99%) | 1.0 ex/s | ETA 386s
+    220/575 | valid=217 (98%) | 1.0 ex/s | ETA 349s
+    240/575 | valid=237 (98%) | 1.1 ex/s | ETA 311s
+    260/575 | valid=256 (98%) | 1.0 ex/s | ETA 311s
+    280/575 | valid=276 (98%) | 1.0 ex/s | ETA 282s
+    300/575 | valid=295 (98%) | 1.0 ex/s | ETA 262s
+    320/575 | valid=315 (98%) | 1.1 ex/s | ETA 238s
+    340/575 | valid=335 (98%) | 1.0 ex/s | ETA 225s
+    360/575 | valid=355 (98%) | 1.0 ex/s | ETA 207s
+    380/575 | valid=375 (98%) | 1.0 ex/s | ETA 189s
+    400/575 | valid=395 (98%) | 1.0 ex/s | ETA 168s
+    420/575 | valid=415 (98%) | 1.1 ex/s | ETA 144s
+    440/575 | valid=435 (98%) | 1.1 ex/s | ETA 124s
+    460/575 | valid=455 (98%) | 1.1 ex/s | ETA 109s
+    480/575 | valid=475 (98%) | 1.1 ex/s | ETA 89s
+    500/575 | valid=495 (99%) | 1.1 ex/s | ETA 70s
+    520/575 | valid=515 (99%) | 1.1 ex/s | ETA 51s
+    540/575 | valid=534 (98%) | 1.1 ex/s | ETA 33s
+    560/575 | valid=553 (98%) | 1.0 ex/s | ETA 14s
+    575/575 | valid=568 (98%) | 1.0 ex/s | ETA 0s
+  Valid: 568/575 (98%)
+  FAIL cases: 1
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 559, 'none': 6, 'swiss-ai/Apertus-70B-Instruct-2509': 10}
+  Modes used: {'independent': 528, 'gold_fallback': 40, 'none': 6, 'gold_fallback_fail': 1}
+  Invalid reasons: {'too_long': 1, 'wrong_answer:None': 2, 'fail_corrupted_example': 1, 'wrong_answer:B': 1, 'wrong_answer:C': 1, 'wrong_answer:A': 1}
+  Done in 552.3s
+
+── include_spanish_all.jsonl ──
+  Processing: 570 remaining / 570 total
+    20/570 | valid=20 (100%) | 1.0 ex/s | ETA 527s
+    40/570 | valid=40 (100%) | 1.1 ex/s | ETA 473s
+    60/570 | valid=60 (100%) | 1.0 ex/s | ETA 534s
+    80/570 | valid=80 (100%) | 0.9 ex/s | ETA 546s
+    100/570 | valid=100 (100%) | 1.0 ex/s | ETA 493s
+    120/570 | valid=120 (100%) | 0.9 ex/s | ETA 480s
+    140/570 | valid=140 (100%) | 1.0 ex/s | ETA 452s
+    160/570 | valid=159 (99%) | 0.9 ex/s | ETA 471s
+    180/570 | valid=179 (99%) | 0.9 ex/s | ETA 453s
+    200/570 | valid=199 (99%) | 0.9 ex/s | ETA 409s
+    220/570 | valid=219 (99%) | 0.9 ex/s | ETA 387s
+    240/570 | valid=238 (99%) | 0.9 ex/s | ETA 356s
+    260/570 | valid=258 (99%) | 1.0 ex/s | ETA 326s
+    280/570 | valid=277 (98%) | 1.0 ex/s | ETA 300s
+    300/570 | valid=297 (99%) | 0.9 ex/s | ETA 288s
+    320/570 | valid=316 (98%) | 0.9 ex/s | ETA 267s
+    340/570 | valid=336 (98%) | 0.9 ex/s | ETA 248s
+    360/570 | valid=356 (98%) | 0.9 ex/s | ETA 228s
+    380/570 | valid=376 (98%) | 0.9 ex/s | ETA 203s
+    400/570 | valid=395 (98%) | 0.9 ex/s | ETA 192s
+    420/570 | valid=414 (98%) | 0.9 ex/s | ETA 171s
+    440/570 | valid=434 (98%) | 0.9 ex/s | ETA 149s
+    460/570 | valid=453 (98%) | 0.9 ex/s | ETA 127s
+    480/570 | valid=472 (98%) | 0.9 ex/s | ETA 103s
+    500/570 | valid=491 (98%) | 0.9 ex/s | ETA 80s
+    520/570 | valid=511 (98%) | 0.9 ex/s | ETA 57s
+    540/570 | valid=531 (98%) | 0.9 ex/s | ETA 35s
+    560/570 | valid=551 (98%) | 0.9 ex/s | ETA 12s
+    570/570 | valid=561 (98%) | 0.9 ex/s | ETA 0s
+  Valid: 561/570 (98%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 541, 'swiss-ai/Apertus-70B-Instruct-2509': 20, 'none': 9}
+  Modes used: {'independent': 480, 'gold_fallback': 81, 'none': 9}
+  Invalid reasons: {'too_long': 2, 'wrong_answer:D': 1, 'wrong_answer:None': 3, 'wrong_answer:A': 1, 'wrong_answer:B': 1, 'wrong_answer:C': 1}
+  Done in 663.3s
+
+── include_hindi_all.jsonl ──
+  Processing: 584 remaining / 584 total
+    20/584 | valid=20 (100%) | 0.7 ex/s | ETA 756s
+    40/584 | valid=40 (100%) | 0.7 ex/s | ETA 787s
+    60/584 | valid=59 (98%) | 0.7 ex/s | ETA 725s
+    80/584 | valid=77 (96%) | 0.7 ex/s | ETA 706s
+    100/584 | valid=97 (97%) | 0.8 ex/s | ETA 624s
+    120/584 | valid=117 (97%) | 0.8 ex/s | ETA 599s
+    140/584 | valid=137 (97%) | 0.7 ex/s | ETA 599s
+    160/584 | valid=157 (98%) | 0.7 ex/s | ETA 599s
+    180/584 | valid=176 (97%) | 0.7 ex/s | ETA 562s
+    200/584 | valid=194 (97%) | 0.7 ex/s | ETA 565s
+    220/584 | valid=214 (97%) | 0.7 ex/s | ETA 536s
+    240/584 | valid=234 (97%) | 0.7 ex/s | ETA 527s
+    260/584 | valid=254 (97%) | 0.7 ex/s | ETA 495s
+    280/584 | valid=273 (97%) | 0.7 ex/s | ETA 456s
+    300/584 | valid=292 (97%) | 0.6 ex/s | ETA 440s
+    320/584 | valid=311 (97%) | 0.6 ex/s | ETA 421s
+    340/584 | valid=331 (97%) | 0.6 ex/s | ETA 381s
+    360/584 | valid=350 (97%) | 0.6 ex/s | ETA 352s
+    380/584 | valid=370 (97%) | 0.6 ex/s | ETA 317s
+    400/584 | valid=388 (97%) | 0.6 ex/s | ETA 294s
+    420/584 | valid=408 (97%) | 0.6 ex/s | ETA 259s
+    440/584 | valid=428 (97%) | 0.6 ex/s | ETA 229s
+    460/584 | valid=446 (96%) | 0.6 ex/s | ETA 201s
+    480/584 | valid=464 (96%) | 0.6 ex/s | ETA 171s
+    500/584 | valid=484 (96%) | 0.6 ex/s | ETA 137s
+    520/584 | valid=504 (96%) | 0.6 ex/s | ETA 105s
+    540/584 | valid=523 (96%) | 0.6 ex/s | ETA 73s
+    560/584 | valid=542 (96%) | 0.6 ex/s | ETA 40s
+    580/584 | valid=562 (96%) | 0.6 ex/s | ETA 7s
+    584/584 | valid=566 (96%) | 0.6 ex/s | ETA 0s
+  Valid: 566/584 (96%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 540, 'swiss-ai/Apertus-70B-Instruct-2509': 27, 'none': 17}
+  Modes used: {'independent': 461, 'gold_fallback': 105, 'none': 17, 'gold_fallback_not_sure': 1}
+  Invalid reasons: {'wrong_answer:None': 10, 'wrong_answer:B': 2, 'not_ending_with_boxed': 1, 'wrong_answer:A': 2, 'wrong_answer:D': 1, 'not_sure': 1, 'wrong_answer:C': 1}
+  Done in 981.8s
+
+── cultsportqa_hindi_all.jsonl ──
+  Processing: 12810 remaining / 12810 total
+    20/12810 | valid=20 (100%) | 0.8 ex/s | ETA 16288s
+    40/12810 | valid=40 (100%) | 0.9 ex/s | ETA 13968s
+    60/12810 | valid=60 (100%) | 0.9 ex/s | ETA 13681s
+    80/12810 | valid=79 (98%) | 0.8 ex/s | ETA 15322s
+    100/12810 | valid=99 (99%) | 0.9 ex/s | ETA 14660s
+    120/12810 | valid=119 (99%) | 0.9 ex/s | ETA 14714s
+    140/12810 | valid=139 (99%) | 0.9 ex/s | ETA 14550s
+    160/12810 | valid=159 (99%) | 0.9 ex/s | ETA 14624s
+    180/12810 | valid=179 (99%) | 0.9 ex/s | ETA 14848s
+    200/12810 | valid=199 (99%) | 0.9 ex/s | ETA 14557s
+    220/12810 | valid=219 (99%) | 0.8 ex/s | ETA 14812s
+    240/12810 | valid=239 (99%) | 0.8 ex/s | ETA 15288s
+    260/12810 | valid=259 (99%) | 0.8 ex/s | ETA 15084s
+    280/12810 | valid=279 (99%) | 0.8 ex/s | ETA 15242s
+    300/12810 | valid=299 (99%) | 0.8 ex/s | ETA 15220s
+    320/12810 | valid=319 (99%) | 0.8 ex/s | ETA 15138s
+    340/12810 | valid=339 (99%) | 0.8 ex/s | ETA 15312s
+    360/12810 | valid=359 (99%) | 0.8 ex/s | ETA 15492s
+    380/12810 | valid=379 (99%) | 0.8 ex/s | ETA 15585s
+    400/12810 | valid=398 (99%) | 0.8 ex/s | ETA 15598s
+    420/12810 | valid=418 (99%) | 0.8 ex/s | ETA 15383s
+    440/12810 | valid=438 (99%) | 0.8 ex/s | ETA 15620s
+    460/12810 | valid=458 (99%) | 0.8 ex/s | ETA 15562s
+    480/12810 | valid=478 (99%) | 0.8 ex/s | ETA 15564s
+    500/12810 | valid=498 (99%) | 0.8 ex/s | ETA 15674s
+    520/12810 | valid=518 (99%) | 0.8 ex/s | ETA 15566s
+    540/12810 | valid=538 (99%) | 0.8 ex/s | ETA 15667s
+    560/12810 | valid=558 (99%) | 0.8 ex/s | ETA 15650s
+    580/12810 | valid=578 (99%) | 0.8 ex/s | ETA 15469s
+    600/12810 | valid=598 (99%) | 0.8 ex/s | ETA 15460s
+    620/12810 | valid=617 (99%) | 0.8 ex/s | ETA 15447s
+    640/12810 | valid=637 (99%) | 0.8 ex/s | ETA 15589s
+    660/12810 | valid=656 (99%) | 0.8 ex/s | ETA 15640s
+    680/12810 | valid=676 (99%) | 0.8 ex/s | ETA 15662s
+    700/12810 | valid=696 (99%) | 0.8 ex/s | ETA 15737s
+    720/12810 | valid=716 (99%) | 0.8 ex/s | ETA 15772s
+    740/12810 | valid=736 (99%) | 0.8 ex/s | ETA 15750s
+    760/12810 | valid=756 (99%) | 0.8 ex/s | ETA 15717s
+    780/12810 | valid=776 (99%) | 0.8 ex/s | ETA 15647s
+    800/12810 | valid=796 (99%) | 0.8 ex/s | ETA 15587s
+    820/12810 | valid=815 (99%) | 0.8 ex/s | ETA 15587s
+    840/12810 | valid=835 (99%) | 0.8 ex/s | ETA 15541s
+    860/12810 | valid=855 (99%) | 0.8 ex/s | ETA 15526s
+    880/12810 | valid=875 (99%) | 0.8 ex/s | ETA 15442s
+    900/12810 | valid=895 (99%) | 0.8 ex/s | ETA 15379s
+    920/12810 | valid=915 (99%) | 0.8 ex/s | ETA 15313s
+    940/12810 | valid=935 (99%) | 0.8 ex/s | ETA 15383s
+    960/12810 | valid=955 (99%) | 0.8 ex/s | ETA 15255s
+    980/12810 | valid=975 (99%) | 0.8 ex/s | ETA 15231s
+    1000/12810 | valid=995 (99%) | 0.8 ex/s | ETA 15208s
+    1020/12810 | valid=1015 (99%) | 0.8 ex/s | ETA 15120s
+    1040/12810 | valid=1035 (99%) | 0.8 ex/s | ETA 15022s
+    1060/12810 | valid=1054 (99%) | 0.8 ex/s | ETA 15026s
+    1080/12810 | valid=1074 (99%) | 0.8 ex/s | ETA 15045s
+    1100/12810 | valid=1094 (99%) | 0.8 ex/s | ETA 15086s
+    1120/12810 | valid=1113 (99%) | 0.8 ex/s | ETA 15057s
+    1140/12810 | valid=1133 (99%) | 0.8 ex/s | ETA 15049s
+    1160/12810 | valid=1153 (99%) | 0.8 ex/s | ETA 15072s
+    1180/12810 | valid=1173 (99%) | 0.8 ex/s | ETA 14990s
+    1200/12810 | valid=1193 (99%) | 0.8 ex/s | ETA 14985s
+    1220/12810 | valid=1213 (99%) | 0.8 ex/s | ETA 14978s
+    1240/12810 | valid=1233 (99%) | 0.8 ex/s | ETA 14936s
+    1260/12810 | valid=1253 (99%) | 0.8 ex/s | ETA 14878s
+    1280/12810 | valid=1273 (99%) | 0.8 ex/s | ETA 14809s
+    1300/12810 | valid=1293 (99%) | 0.8 ex/s | ETA 14747s
+    1320/12810 | valid=1313 (99%) | 0.8 ex/s | ETA 14742s
+    1340/12810 | valid=1333 (99%) | 0.8 ex/s | ETA 14690s
+    1360/12810 | valid=1353 (99%) | 0.8 ex/s | ETA 14695s
+    1380/12810 | valid=1373 (99%) | 0.8 ex/s | ETA 14627s
+    1400/12810 | valid=1392 (99%) | 0.8 ex/s | ETA 14555s
+    1420/12810 | valid=1411 (99%) | 0.8 ex/s | ETA 14510s
+    1440/12810 | valid=1431 (99%) | 0.8 ex/s | ETA 14497s
+    1460/12810 | valid=1451 (99%) | 0.8 ex/s | ETA 14455s
+    1480/12810 | valid=1471 (99%) | 0.8 ex/s | ETA 14475s
+    1500/12810 | valid=1491 (99%) | 0.8 ex/s | ETA 14453s
+    1520/12810 | valid=1511 (99%) | 0.8 ex/s | ETA 14427s
+    1540/12810 | valid=1531 (99%) | 0.8 ex/s | ETA 14367s
+    1560/12810 | valid=1551 (99%) | 0.8 ex/s | ETA 14329s
+    1580/12810 | valid=1571 (99%) | 0.8 ex/s | ETA 14345s
+    1600/12810 | valid=1591 (99%) | 0.8 ex/s | ETA 14291s
+    1620/12810 | valid=1611 (99%) | 0.8 ex/s | ETA 14310s
+    1640/12810 | valid=1631 (99%) | 0.8 ex/s | ETA 14266s
+    1660/12810 | valid=1651 (99%) | 0.8 ex/s | ETA 14198s
+    1680/12810 | valid=1671 (99%) | 0.8 ex/s | ETA 14155s
+    1700/12810 | valid=1691 (99%) | 0.8 ex/s | ETA 14183s
+    1720/12810 | valid=1711 (99%) | 0.8 ex/s | ETA 14178s
+    1740/12810 | valid=1731 (99%) | 0.8 ex/s | ETA 14177s
+    1760/12810 | valid=1751 (99%) | 0.8 ex/s | ETA 14126s
+    1780/12810 | valid=1770 (99%) | 0.8 ex/s | ETA 14161s
+    1800/12810 | valid=1790 (99%) | 0.8 ex/s | ETA 14128s
+    1820/12810 | valid=1809 (99%) | 0.8 ex/s | ETA 14194s
+    1840/12810 | valid=1829 (99%) | 0.8 ex/s | ETA 14179s
+    1860/12810 | valid=1849 (99%) | 0.8 ex/s | ETA 14174s
+    1880/12810 | valid=1869 (99%) | 0.8 ex/s | ETA 14132s
+    1900/12810 | valid=1889 (99%) | 0.8 ex/s | ETA 14127s
+    1920/12810 | valid=1909 (99%) | 0.8 ex/s | ETA 14107s
+    1940/12810 | valid=1929 (99%) | 0.8 ex/s | ETA 14067s
+    1960/12810 | valid=1949 (99%) | 0.8 ex/s | ETA 14028s
+    1980/12810 | valid=1968 (99%) | 0.8 ex/s | ETA 13993s
+    2000/12810 | valid=1988 (99%) | 0.8 ex/s | ETA 13945s
+    2020/12810 | valid=2008 (99%) | 0.8 ex/s | ETA 13894s
+    2040/12810 | valid=2028 (99%) | 0.8 ex/s | ETA 13868s
+    2060/12810 | valid=2048 (99%) | 0.8 ex/s | ETA 13818s
+    2080/12810 | valid=2068 (99%) | 0.8 ex/s | ETA 13765s
+    2100/12810 | valid=2088 (99%) | 0.8 ex/s | ETA 13704s
+    2120/12810 | valid=2108 (99%) | 0.8 ex/s | ETA 13671s
+    2140/12810 | valid=2128 (99%) | 0.8 ex/s | ETA 13620s
+    2160/12810 | valid=2148 (99%) | 0.8 ex/s | ETA 13586s
+    2180/12810 | valid=2168 (99%) | 0.8 ex/s | ETA 13519s
+    2200/12810 | valid=2188 (99%) | 0.8 ex/s | ETA 13461s
+    2220/12810 | valid=2208 (99%) | 0.8 ex/s | ETA 13437s
+    2240/12810 | valid=2228 (99%) | 0.8 ex/s | ETA 13379s
+    2260/12810 | valid=2248 (99%) | 0.8 ex/s | ETA 13349s
+    2280/12810 | valid=2268 (99%) | 0.8 ex/s | ETA 13309s
+    2300/12810 | valid=2288 (99%) | 0.8 ex/s | ETA 13272s
+    2320/12810 | valid=2308 (99%) | 0.8 ex/s | ETA 13242s
+    2340/12810 | valid=2328 (99%) | 0.8 ex/s | ETA 13204s
+    2360/12810 | valid=2348 (99%) | 0.8 ex/s | ETA 13205s
+    2380/12810 | valid=2368 (99%) | 0.8 ex/s | ETA 13158s
+    2400/12810 | valid=2388 (99%) | 0.8 ex/s | ETA 13119s
+    2420/12810 | valid=2408 (99%) | 0.8 ex/s | ETA 13083s
+    2440/12810 | valid=2427 (99%) | 0.8 ex/s | ETA 13071s
+    2460/12810 | valid=2447 (99%) | 0.8 ex/s | ETA 13066s
+    2480/12810 | valid=2467 (99%) | 0.8 ex/s | ETA 13038s
+    2500/12810 | valid=2487 (99%) | 0.8 ex/s | ETA 13028s
+    2520/12810 | valid=2507 (99%) | 0.8 ex/s | ETA 13017s
+    2540/12810 | valid=2527 (99%) | 0.8 ex/s | ETA 13014s
+    2560/12810 | valid=2547 (99%) | 0.8 ex/s | ETA 12979s
+    2580/12810 | valid=2567 (99%) | 0.8 ex/s | ETA 12941s
+    2600/12810 | valid=2587 (99%) | 0.8 ex/s | ETA 12919s
+    2620/12810 | valid=2607 (99%) | 0.8 ex/s | ETA 12879s
+    2640/12810 | valid=2627 (99%) | 0.8 ex/s | ETA 12854s
+    2660/12810 | valid=2647 (99%) | 0.8 ex/s | ETA 12826s
+    2680/12810 | valid=2667 (99%) | 0.8 ex/s | ETA 12815s
+    2700/12810 | valid=2687 (99%) | 0.8 ex/s | ETA 12783s
+    2720/12810 | valid=2707 (99%) | 0.8 ex/s | ETA 12749s
+    2740/12810 | valid=2727 (99%) | 0.8 ex/s | ETA 12701s
+    2760/12810 | valid=2747 (99%) | 0.8 ex/s | ETA 12670s
+    2780/12810 | valid=2767 (99%) | 0.8 ex/s | ETA 12634s
+    2800/12810 | valid=2787 (99%) | 0.8 ex/s | ETA 12588s
+    2820/12810 | valid=2807 (99%) | 0.8 ex/s | ETA 12548s
+    2840/12810 | valid=2827 (99%) | 0.8 ex/s | ETA 12508s
+    2860/12810 | valid=2847 (99%) | 0.8 ex/s | ETA 12473s
+    2880/12810 | valid=2867 (99%) | 0.8 ex/s | ETA 12455s
+    2900/12810 | valid=2887 (99%) | 0.8 ex/s | ETA 12412s
+    2920/12810 | valid=2907 (99%) | 0.8 ex/s | ETA 12373s
+    2940/12810 | valid=2927 (99%) | 0.8 ex/s | ETA 12333s
+    2960/12810 | valid=2947 (99%) | 0.8 ex/s | ETA 12297s
+    2980/12810 | valid=2967 (99%) | 0.8 ex/s | ETA 12297s
+    3000/12810 | valid=2987 (99%) | 0.8 ex/s | ETA 12276s
+    3020/12810 | valid=3007 (99%) | 0.8 ex/s | ETA 12258s
+  Valid: 3000/3013 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 2793, 'swiss-ai/Apertus-70B-Instruct-2509': 208, 'none': 12}
+  Modes used: {'gold_fallback': 617, 'independent': 2383, 'none': 12, 'gold_fallback_not_sure': 1}
+  Invalid reasons: {'wrong_answer:None': 6, 'not_sure': 1, 'not_ending_with_boxed': 3, 'too_long': 1, 'wrong_answer:D': 1, 'wrong_answer:B': 1}
+  Done in 3781.9s
+
+── cultsportqa_chinese_all.jsonl ──
+  Processing: 2429 remaining / 2429 total
+    20/2429 | valid=20 (100%) | 1.6 ex/s | ETA 1527s
+    40/2429 | valid=39 (97%) | 1.6 ex/s | ETA 1487s
+    60/2429 | valid=59 (98%) | 1.5 ex/s | ETA 1554s
+    80/2429 | valid=79 (98%) | 1.3 ex/s | ETA 1770s
+    100/2429 | valid=99 (99%) | 1.4 ex/s | ETA 1700s
+    120/2429 | valid=119 (99%) | 1.5 ex/s | ETA 1570s
+    140/2429 | valid=139 (99%) | 1.5 ex/s | ETA 1515s
+    160/2429 | valid=159 (99%) | 1.5 ex/s | ETA 1509s
+    180/2429 | valid=179 (99%) | 1.5 ex/s | ETA 1501s
+    200/2429 | valid=199 (99%) | 1.5 ex/s | ETA 1461s
+    220/2429 | valid=219 (99%) | 1.6 ex/s | ETA 1397s
+    240/2429 | valid=239 (99%) | 1.6 ex/s | ETA 1359s
+    260/2429 | valid=259 (99%) | 1.6 ex/s | ETA 1339s
+    280/2429 | valid=279 (99%) | 1.6 ex/s | ETA 1337s
+    300/2429 | valid=299 (99%) | 1.6 ex/s | ETA 1306s
+    320/2429 | valid=319 (99%) | 1.7 ex/s | ETA 1271s
+    340/2429 | valid=339 (99%) | 1.6 ex/s | ETA 1271s
+    360/2429 | valid=359 (99%) | 1.7 ex/s | ETA 1253s
+    380/2429 | valid=379 (99%) | 1.7 ex/s | ETA 1233s
+    400/2429 | valid=399 (99%) | 1.7 ex/s | ETA 1225s
+    420/2429 | valid=419 (99%) | 1.7 ex/s | ETA 1217s
+    440/2429 | valid=439 (99%) | 1.7 ex/s | ETA 1195s
+    460/2429 | valid=459 (99%) | 1.7 ex/s | ETA 1169s
+    480/2429 | valid=479 (99%) | 1.7 ex/s | ETA 1125s
+    500/2429 | valid=499 (99%) | 1.8 ex/s | ETA 1101s
+    520/2429 | valid=519 (99%) | 1.8 ex/s | ETA 1077s
+    540/2429 | valid=539 (99%) | 1.8 ex/s | ETA 1060s
+    560/2429 | valid=559 (99%) | 1.8 ex/s | ETA 1061s
+    580/2429 | valid=579 (99%) | 1.8 ex/s | ETA 1028s
+    600/2429 | valid=599 (99%) | 1.8 ex/s | ETA 1028s
+    620/2429 | valid=619 (99%) | 1.8 ex/s | ETA 1019s
+    640/2429 | valid=639 (99%) | 1.8 ex/s | ETA 1006s
+    660/2429 | valid=659 (99%) | 1.8 ex/s | ETA 990s
+    680/2429 | valid=679 (99%) | 1.8 ex/s | ETA 969s
+    700/2429 | valid=699 (99%) | 1.8 ex/s | ETA 958s
+    720/2429 | valid=719 (99%) | 1.8 ex/s | ETA 934s
+    740/2429 | valid=739 (99%) | 1.8 ex/s | ETA 923s
+    760/2429 | valid=759 (99%) | 1.8 ex/s | ETA 933s
+    780/2429 | valid=779 (99%) | 1.8 ex/s | ETA 925s
+    800/2429 | valid=799 (99%) | 1.8 ex/s | ETA 912s
+    820/2429 | valid=819 (99%) | 1.8 ex/s | ETA 887s
+    840/2429 | valid=839 (99%) | 1.8 ex/s | ETA 872s
+    860/2429 | valid=859 (99%) | 1.8 ex/s | ETA 858s
+    880/2429 | valid=879 (99%) | 1.8 ex/s | ETA 848s
+    900/2429 | valid=899 (99%) | 1.8 ex/s | ETA 834s
+    920/2429 | valid=919 (99%) | 1.8 ex/s | ETA 821s
+    940/2429 | valid=938 (99%) | 1.7 ex/s | ETA 852s
+    960/2429 | valid=958 (99%) | 1.8 ex/s | ETA 839s
+    980/2429 | valid=978 (99%) | 1.8 ex/s | ETA 819s
+    1000/2429 | valid=998 (99%) | 1.8 ex/s | ETA 803s
+    1020/2429 | valid=1018 (99%) | 1.8 ex/s | ETA 792s
+    1040/2429 | valid=1038 (99%) | 1.8 ex/s | ETA 775s
+    1060/2429 | valid=1058 (99%) | 1.8 ex/s | ETA 759s
+    1080/2429 | valid=1078 (99%) | 1.8 ex/s | ETA 743s
+    1100/2429 | valid=1098 (99%) | 1.8 ex/s | ETA 729s
+    1120/2429 | valid=1118 (99%) | 1.8 ex/s | ETA 729s
+    1140/2429 | valid=1138 (99%) | 1.8 ex/s | ETA 723s
+    1160/2429 | valid=1158 (99%) | 1.8 ex/s | ETA 708s
+    1180/2429 | valid=1178 (99%) | 1.8 ex/s | ETA 697s
+    1200/2429 | valid=1198 (99%) | 1.8 ex/s | ETA 685s
+    1220/2429 | valid=1218 (99%) | 1.8 ex/s | ETA 676s
+    1240/2429 | valid=1238 (99%) | 1.8 ex/s | ETA 664s
+    1260/2429 | valid=1258 (99%) | 1.8 ex/s | ETA 649s
+    1280/2429 | valid=1278 (99%) | 1.8 ex/s | ETA 636s
+    1300/2429 | valid=1298 (99%) | 1.8 ex/s | ETA 624s
+    1320/2429 | valid=1318 (99%) | 1.8 ex/s | ETA 614s
+    1340/2429 | valid=1338 (99%) | 1.8 ex/s | ETA 602s
+    1360/2429 | valid=1358 (99%) | 1.8 ex/s | ETA 596s
+    1380/2429 | valid=1378 (99%) | 1.8 ex/s | ETA 580s
+    1400/2429 | valid=1398 (99%) | 1.8 ex/s | ETA 563s
+    1420/2429 | valid=1418 (99%) | 1.8 ex/s | ETA 552s
+    1440/2429 | valid=1438 (99%) | 1.8 ex/s | ETA 543s
+    1460/2429 | valid=1458 (99%) | 1.8 ex/s | ETA 536s
+    1480/2429 | valid=1478 (99%) | 1.8 ex/s | ETA 524s
+    1500/2429 | valid=1498 (99%) | 1.8 ex/s | ETA 512s
+    1520/2429 | valid=1518 (99%) | 1.8 ex/s | ETA 499s
+    1540/2429 | valid=1538 (99%) | 1.8 ex/s | ETA 484s
+    1560/2429 | valid=1558 (99%) | 1.8 ex/s | ETA 473s
+    1580/2429 | valid=1578 (99%) | 1.8 ex/s | ETA 465s
+    1600/2429 | valid=1598 (99%) | 1.8 ex/s | ETA 450s
+    1620/2429 | valid=1618 (99%) | 1.8 ex/s | ETA 440s
+    1640/2429 | valid=1638 (99%) | 1.8 ex/s | ETA 429s
+    1660/2429 | valid=1658 (99%) | 1.8 ex/s | ETA 418s
+    1680/2429 | valid=1678 (99%) | 1.8 ex/s | ETA 416s
+    1700/2429 | valid=1698 (99%) | 1.8 ex/s | ETA 406s
+    1720/2429 | valid=1718 (99%) | 1.8 ex/s | ETA 395s
+    1740/2429 | valid=1738 (99%) | 1.8 ex/s | ETA 383s
+    1760/2429 | valid=1758 (99%) | 1.8 ex/s | ETA 371s
+    1780/2429 | valid=1778 (99%) | 1.8 ex/s | ETA 359s
+    1800/2429 | valid=1798 (99%) | 1.8 ex/s | ETA 348s
+    1820/2429 | valid=1818 (99%) | 1.8 ex/s | ETA 336s
+    1840/2429 | valid=1838 (99%) | 1.8 ex/s | ETA 324s
+    1860/2429 | valid=1858 (99%) | 1.8 ex/s | ETA 314s
+    1880/2429 | valid=1878 (99%) | 1.8 ex/s | ETA 302s
+    1900/2429 | valid=1898 (99%) | 1.8 ex/s | ETA 291s
+    1920/2429 | valid=1918 (99%) | 1.8 ex/s | ETA 280s
+    1940/2429 | valid=1938 (99%) | 1.8 ex/s | ETA 269s
+    1960/2429 | valid=1958 (99%) | 1.8 ex/s | ETA 257s
+    1980/2429 | valid=1978 (99%) | 1.8 ex/s | ETA 247s
+    2000/2429 | valid=1998 (99%) | 1.8 ex/s | ETA 237s
+    2020/2429 | valid=2018 (99%) | 1.8 ex/s | ETA 226s
+    2040/2429 | valid=2038 (99%) | 1.8 ex/s | ETA 215s
+    2060/2429 | valid=2058 (99%) | 1.8 ex/s | ETA 205s
+    2080/2429 | valid=2078 (99%) | 1.8 ex/s | ETA 193s
+    2100/2429 | valid=2098 (99%) | 1.8 ex/s | ETA 182s
+    2120/2429 | valid=2118 (99%) | 1.8 ex/s | ETA 171s
+    2140/2429 | valid=2138 (99%) | 1.8 ex/s | ETA 160s
+    2160/2429 | valid=2158 (99%) | 1.8 ex/s | ETA 149s
+    2180/2429 | valid=2178 (99%) | 1.8 ex/s | ETA 139s
+    2200/2429 | valid=2198 (99%) | 1.8 ex/s | ETA 127s
+    2220/2429 | valid=2218 (99%) | 1.8 ex/s | ETA 116s
+    2240/2429 | valid=2238 (99%) | 1.8 ex/s | ETA 105s
+    2260/2429 | valid=2258 (99%) | 1.8 ex/s | ETA 94s
+    2280/2429 | valid=2278 (99%) | 1.8 ex/s | ETA 82s
+    2300/2429 | valid=2298 (99%) | 1.8 ex/s | ETA 72s
+    2320/2429 | valid=2318 (99%) | 1.8 ex/s | ETA 60s
+    2340/2429 | valid=2338 (99%) | 1.8 ex/s | ETA 49s
+    2360/2429 | valid=2358 (99%) | 1.8 ex/s | ETA 38s
+    2380/2429 | valid=2378 (99%) | 1.8 ex/s | ETA 27s
+    2400/2429 | valid=2398 (99%) | 1.8 ex/s | ETA 16s
+    2420/2429 | valid=2418 (99%) | 1.8 ex/s | ETA 5s
+    2429/2429 | valid=2427 (99%) | 1.8 ex/s | ETA 0s
+  Valid: 2427/2429 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 2329, 'none': 2, 'swiss-ai/Apertus-70B-Instruct-2509': 98}
+  Modes used: {'independent': 2276, 'gold_fallback': 151, 'none': 2}
+  Invalid reasons: {'wrong_answer:None': 2}
+  Done in 1341.2s
+
+── head_qa_spanish_all.jsonl ──
+  Processing: 12389 remaining / 12389 total
+    20/12389 | valid=20 (100%) | 0.8 ex/s | ETA 15122s
+    40/12389 | valid=40 (100%) | 0.7 ex/s | ETA 16568s
+    60/12389 | valid=59 (98%) | 0.7 ex/s | ETA 16538s
+    80/12389 | valid=79 (98%) | 0.8 ex/s | ETA 15113s
+    100/12389 | valid=99 (99%) | 0.8 ex/s | ETA 14877s
+    120/12389 | valid=119 (99%) | 0.9 ex/s | ETA 14164s
+    140/12389 | valid=139 (99%) | 0.9 ex/s | ETA 14356s
+    160/12389 | valid=158 (98%) | 0.9 ex/s | ETA 14324s
+    180/12389 | valid=178 (98%) | 0.9 ex/s | ETA 13604s
+    200/12389 | valid=198 (99%) | 1.0 ex/s | ETA 12689s
+    220/12389 | valid=217 (98%) | 0.9 ex/s | ETA 12865s
+    240/12389 | valid=237 (98%) | 0.9 ex/s | ETA 12988s
+    260/12389 | valid=257 (98%) | 0.9 ex/s | ETA 13105s
+    280/12389 | valid=277 (98%) | 0.9 ex/s | ETA 13101s
+    300/12389 | valid=297 (99%) | 0.9 ex/s | ETA 13131s
+    320/12389 | valid=317 (99%) | 0.9 ex/s | ETA 13530s
+    340/12389 | valid=337 (99%) | 0.9 ex/s | ETA 13405s
+    360/12389 | valid=356 (98%) | 0.9 ex/s | ETA 13908s
+    380/12389 | valid=376 (98%) | 0.9 ex/s | ETA 13840s
+    400/12389 | valid=396 (99%) | 0.9 ex/s | ETA 13673s
+    420/12389 | valid=416 (99%) | 0.9 ex/s | ETA 13734s
+    440/12389 | valid=436 (99%) | 0.9 ex/s | ETA 13661s
+    460/12389 | valid=456 (99%) | 0.9 ex/s | ETA 14025s
+    480/12389 | valid=476 (99%) | 0.8 ex/s | ETA 14029s
+    500/12389 | valid=496 (99%) | 0.9 ex/s | ETA 13967s
+    520/12389 | valid=516 (99%) | 0.9 ex/s | ETA 13686s
+    540/12389 | valid=536 (99%) | 0.9 ex/s | ETA 13746s
+    560/12389 | valid=556 (99%) | 0.9 ex/s | ETA 13778s
+    580/12389 | valid=576 (99%) | 0.8 ex/s | ETA 13992s
+    600/12389 | valid=596 (99%) | 0.9 ex/s | ETA 13849s
+    620/12389 | valid=616 (99%) | 0.8 ex/s | ETA 13871s
+    640/12389 | valid=636 (99%) | 0.9 ex/s | ETA 13802s
+    660/12389 | valid=656 (99%) | 0.9 ex/s | ETA 13716s
+    680/12389 | valid=675 (99%) | 0.8 ex/s | ETA 13988s
+    700/12389 | valid=695 (99%) | 0.8 ex/s | ETA 14015s
+    720/12389 | valid=715 (99%) | 0.8 ex/s | ETA 14120s
+    740/12389 | valid=735 (99%) | 0.8 ex/s | ETA 14171s
+    760/12389 | valid=754 (99%) | 0.8 ex/s | ETA 14484s
+    780/12389 | valid=774 (99%) | 0.8 ex/s | ETA 14372s
+    800/12389 | valid=794 (99%) | 0.8 ex/s | ETA 14436s
+    820/12389 | valid=813 (99%) | 0.8 ex/s | ETA 14708s
+    840/12389 | valid=833 (99%) | 0.8 ex/s | ETA 14601s
+    860/12389 | valid=853 (99%) | 0.8 ex/s | ETA 14444s
+    880/12389 | valid=873 (99%) | 0.8 ex/s | ETA 14350s
+    900/12389 | valid=893 (99%) | 0.8 ex/s | ETA 14323s
+    920/12389 | valid=913 (99%) | 0.8 ex/s | ETA 14314s
+    940/12389 | valid=933 (99%) | 0.8 ex/s | ETA 14250s
+    960/12389 | valid=953 (99%) | 0.8 ex/s | ETA 14222s
+    980/12389 | valid=973 (99%) | 0.8 ex/s | ETA 14137s
+    1000/12389 | valid=993 (99%) | 0.8 ex/s | ETA 14300s
+    1020/12389 | valid=1013 (99%) | 0.8 ex/s | ETA 14216s
+    1040/12389 | valid=1033 (99%) | 0.8 ex/s | ETA 14097s
+    1060/12389 | valid=1053 (99%) | 0.8 ex/s | ETA 14010s
+    1080/12389 | valid=1073 (99%) | 0.8 ex/s | ETA 14009s
+    1100/12389 | valid=1093 (99%) | 0.8 ex/s | ETA 13936s
+    1120/12389 | valid=1113 (99%) | 0.8 ex/s | ETA 13752s
+    1140/12389 | valid=1133 (99%) | 0.8 ex/s | ETA 13712s
+    1160/12389 | valid=1153 (99%) | 0.8 ex/s | ETA 13813s
+    1180/12389 | valid=1173 (99%) | 0.8 ex/s | ETA 13753s
+    1200/12389 | valid=1193 (99%) | 0.8 ex/s | ETA 13853s
+    1220/12389 | valid=1213 (99%) | 0.8 ex/s | ETA 13823s
+    1240/12389 | valid=1233 (99%) | 0.8 ex/s | ETA 13746s
