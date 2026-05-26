@@ -45,7 +45,7 @@ from .system_prompt import SYSTEM_PROMPT
 # Target counts (PLAN.md §5.2.B.1). Sum ~30K after dedupe.
 TARGETS = {
     "open-r1/OpenR1-Math-220k":     8000,
-    "AI-MO/NuminaMath-1.5":        10000,
+    "AI-MO/NuminaMath-CoT":        10000,
     "GAIR/LIMO":                    817,    # take all
     "simplescaling/s1K-1.1":       1000,    # take all
     "nvidia/OpenMathReasoning":    5000,
@@ -99,6 +99,24 @@ def _is_clean_trace(text: str) -> bool:
     return _length_ok(text)
 
 
+def _wrap_as_think_and_box(solution: str, gold: str) -> str:
+    """Synthesize a `<think>{solution}</think>\\n\\n\\boxed{gold}` trace if
+    the solution doesn't already have <think> markers. Used for datasets
+    whose 'solutions' are reasoning text without R1-style think tags
+    (LIMO, s1K-1.1, NuminaMath-CoT).
+
+    If the wrapped solution already ends with a `\\boxed{}`, we still append
+    `\\boxed{gold}` at the very end so that `extract_boxed_answer` (which
+    picks the LAST boxed) matches the gold reliably.
+    """
+    s = (solution or "").strip()
+    if not s or not gold:
+        return s
+    if "<think>" not in s:
+        s = f"<think>\n{s}\n</think>\n\n\\boxed{{{gold}}}"
+    return s
+
+
 # =============================================================================
 # Problem fingerprinting (for dedupe across sources)
 # =============================================================================
@@ -148,30 +166,43 @@ def load_openr1_math(progress_every: int = 5000) -> List[Dict]:
     return out
 
 
-def load_numina_15(progress_every: int = 10000) -> List[Dict]:
+def load_numina_cot(progress_every: int = 10000) -> List[Dict]:
+    """`AI-MO/NuminaMath-CoT` ships step-by-step solutions without R1 `<think>`
+    markers. We extract the gold answer from the solution (or `answer` field
+    when present), then synthetically wrap the solution as
+    `<think>{solution}</think>\\n\\n\\boxed{gold}` so the model learns to put
+    its reasoning inside a think block during SFT v2."""
     from datasets import load_dataset
-    print("[load] AI-MO/NuminaMath-1.5  split=train")
-    ds = load_dataset("AI-MO/NuminaMath-1.5", split="train")
+    print("[load] AI-MO/NuminaMath-CoT  split=train")
+    ds = load_dataset("AI-MO/NuminaMath-CoT", split="train")
     out: List[Dict] = []
     dropped = Counter()
     for i, row in enumerate(ds):
         if i and i % progress_every == 0:
-            print(f"  [numina] {i}/{len(ds)} kept={len(out)}")
+            print(f"  [numina-cot] {i}/{len(ds)} kept={len(out)}")
         problem = (row.get("problem") or "").strip()
-        solution = row.get("solution") or row.get("reasoning") or ""
-        if not problem or not solution:
+        raw_solution = row.get("solution") or row.get("reasoning") or ""
+        if not problem or not raw_solution:
             dropped["empty"] += 1
             continue
-        # NuminaMath-1.5 solutions don't all have <think> markers — only keep ones that do.
-        if not _is_clean_trace(solution):
+        # Try to find a gold answer: either embedded as \boxed{} in the
+        # solution, or in an `answer` field if present.
+        gold = _extract_boxed(raw_solution) or str(row.get("answer") or "").strip()
+        if not gold:
+            dropped["no_gold"] += 1
+            continue
+        wrapped = _wrap_as_think_and_box(raw_solution, gold)
+        if not _is_clean_trace(wrapped):
             dropped["unclean"] += 1
             continue
-        out.append({"problem": problem, "assistant": solution, "source": "AI-MO/NuminaMath-1.5"})
-    print(f"  [numina] kept={len(out)} dropped={dict(dropped)}")
+        out.append({"problem": problem, "assistant": wrapped, "source": "AI-MO/NuminaMath-CoT"})
+    print(f"  [numina-cot] kept={len(out)} dropped={dict(dropped)}")
     return out
 
 
 def load_limo() -> List[Dict]:
+    """LIMO ships R1-distilled solutions as plain reasoning text (no `<think>`
+    markers). Same fix as NuminaMath-CoT: extract gold + wrap synthetically."""
     from datasets import load_dataset
     print("[load] GAIR/LIMO  split=train")
     ds = load_dataset("GAIR/LIMO", split="train")
@@ -179,14 +210,19 @@ def load_limo() -> List[Dict]:
     dropped = Counter()
     for row in ds:
         problem = (row.get("question") or row.get("problem") or "").strip()
-        solution = row.get("solution") or row.get("response") or ""
-        if not problem or not solution:
+        raw_solution = row.get("solution") or row.get("response") or ""
+        if not problem or not raw_solution:
             dropped["empty"] += 1
             continue
-        if not _is_clean_trace(solution):
+        gold = _extract_boxed(raw_solution) or str(row.get("answer") or "").strip()
+        if not gold:
+            dropped["no_gold"] += 1
+            continue
+        wrapped = _wrap_as_think_and_box(raw_solution, gold)
+        if not _is_clean_trace(wrapped):
             dropped["unclean"] += 1
             continue
-        out.append({"problem": problem, "assistant": solution, "source": "GAIR/LIMO"})
+        out.append({"problem": problem, "assistant": wrapped, "source": "GAIR/LIMO"})
     print(f"  [LIMO] kept={len(out)} dropped={dict(dropped)}")
     return out
 
@@ -222,33 +258,49 @@ def load_s1k() -> List[Dict]:
     return out
 
 
-def load_openmath_reasoning(progress_every: int = 5000) -> List[Dict]:
+def load_openmath_reasoning(progress_every: int = 10000) -> List[Dict]:
+    """`nvidia/OpenMathReasoning` has multiple SPLITS (`cot`, `tir`,
+    `genselect`, `additional_problems`), not configs. We use `cot` — the
+    R1-style chain-of-thought split (~3.2M rows). Solutions may or may not
+    ship with `<think>` markers; wrap with `_wrap_as_think_and_box` when
+    needed (using `expected_answer` for the gold)."""
     from datasets import load_dataset
-    print("[load] nvidia/OpenMathReasoning  split=train")
-    # NVIDIA's repo has several subsets; "cot" / default is the standard CoT one.
-    try:
-        ds = load_dataset("nvidia/OpenMathReasoning", "cot", split="train")
-    except (ValueError, FileNotFoundError):
-        ds = load_dataset("nvidia/OpenMathReasoning", split="train")
+    print("[load] nvidia/OpenMathReasoning  split=cot")
+    ds = load_dataset("nvidia/OpenMathReasoning", split="cot")
     out: List[Dict] = []
     dropped = Counter()
     for i, row in enumerate(ds):
         if i and i % progress_every == 0:
             print(f"  [openmath] {i}/{len(ds)} kept={len(out)}")
         problem = (row.get("problem") or row.get("question") or "").strip()
-        solution = (
+        raw_solution = (
             row.get("generated_solution")
             or row.get("output")
             or row.get("solution")
             or ""
         )
-        if not problem or not solution:
+        if not problem or not raw_solution:
             dropped["empty"] += 1
             continue
-        if not _is_clean_trace(solution):
+        # Try the answer field NVIDIA ships, then fall back to extracting from solution.
+        gold = (
+            str(row.get("expected_answer") or "").strip()
+            or _extract_boxed(raw_solution)
+            or ""
+        )
+        # If the solution already has <think>...</think> + boxed, use as-is;
+        # otherwise wrap with the gold (when we have one).
+        if "<think>" in raw_solution and _extract_boxed(raw_solution) is not None:
+            candidate = raw_solution
+        elif gold:
+            candidate = _wrap_as_think_and_box(raw_solution, gold)
+        else:
+            dropped["no_gold"] += 1
+            continue
+        if not _is_clean_trace(candidate):
             dropped["unclean"] += 1
             continue
-        out.append({"problem": problem, "assistant": solution, "source": "nvidia/OpenMathReasoning"})
+        out.append({"problem": problem, "assistant": candidate, "source": "nvidia/OpenMathReasoning"})
     print(f"  [openmath] kept={len(out)} dropped={dict(dropped)}")
     return out
 
@@ -256,7 +308,7 @@ def load_openmath_reasoning(progress_every: int = 5000) -> List[Dict]:
 # Per-source LOADER table
 LOADERS: Dict[str, Callable[[], List[Dict]]] = {
     "open-r1/OpenR1-Math-220k": load_openr1_math,
-    "AI-MO/NuminaMath-1.5":     load_numina_15,
+    "AI-MO/NuminaMath-CoT":     load_numina_cot,
     "GAIR/LIMO":                load_limo,
     "simplescaling/s1K-1.1":    load_s1k,
     "nvidia/OpenMathReasoning": load_openmath_reasoning,
