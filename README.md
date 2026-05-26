@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/HGMFhRpE)
 # CS-552 MNLP Spring 2026 — Milestone 3
 
 Welcome to the EPFL **CS-552 Modern Natural Language Processing** course project — final milestone. Over the next ~2 weeks, your team of 4 will finalize post-training **Qwen3-1.7B** into 5 reasoning models (math, safety, multilinguality, general knowledge, and the group model) and submit them to the course leaderboard along with a final project report. This milestone is worth **50% of your final grade**.
