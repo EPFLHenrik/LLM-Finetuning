@@ -74,10 +74,12 @@ python -c "import torch, vllm, transformers, trl, peft; print(torch.__version__,
 
 # Upgrade bitsandbytes to a CUDA-12.8-compatible build. peft loads LoRA via
 # `from .bnb import dispatch_bnb_8bit`; the stock course-image bnb is pre-12.8
-# and crashes during the unconditional import. Fixed by 0.45+.
+# and crashes during the unconditional import. Fixed by 0.45+. We skip the
+# version print here because nested shell quoting (laptop -> runai -> pod
+# -> bash -c -> python -c) eats escaped quotes and breaks the line; if the
+# install fails, pip itself exits non-zero and set -e aborts.
 echo "[wrapper] upgrading bitsandbytes for cu128..."
 pip install -U --quiet bitsandbytes
-python -c "import bitsandbytes; print(\"[wrapper] bnb\", bitsandbytes.__version__)"
 
 exec python -m math_task.training.train_sft "$@"'
 
