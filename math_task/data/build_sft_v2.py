@@ -44,15 +44,22 @@ from .system_prompt import SYSTEM_PROMPT
 # Per-source configuration
 # =============================================================================
 # Target counts (PLAN.md §5.2.B.1). Sum ~30K after dedupe.
+# Rebalanced 2026-05-26 after first prep run:
+#   - NuminaMath-CoT only yielded 3,418 (filter too strict for short formal
+#     solutions) — set target to cap available, not the original 10K
+#   - LIMO 557, s1K-1.1 388 — set targets to cap available
+#   - MATH train (`hendrycks/competition_math` / `lighteval/MATH`) failed to
+#     load; College-Math repos don't exist or schema mismatch — drop both
+#   - To still reach ~30K, bump OpenR1-Math 8K→9K and OpenMathReasoning 5K→16K
+#     (both have plenty of headroom: 45K and 20K available respectively)
+#   - distilled:aime_amc bumped to 400 since 100 problems × ~4 keep-top-k traces
 TARGETS = {
-    "open-r1/OpenR1-Math-220k":     8000,
-    "AI-MO/NuminaMath-CoT":        10000,
-    "GAIR/LIMO":                    817,    # take all
-    "simplescaling/s1K-1.1":       1000,    # take all
-    "nvidia/OpenMathReasoning":    5000,
-    "distilled:competition_math":  3000,    # from MATH train, via distill
-    "distilled:aime_amc":           150,    # AIME + AMC, all of them with >=1 trace
-    "distilled:college_math":      2000,
+    "open-r1/OpenR1-Math-220k":     9000,
+    "AI-MO/NuminaMath-CoT":         3418,    # cap = available
+    "GAIR/LIMO":                     557,    # cap = available
+    "simplescaling/s1K-1.1":         388,    # cap = available
+    "nvidia/OpenMathReasoning":    16000,
+    "distilled:aime_amc":            400,    # 100 problems × ~4 traces each
 }
 
 MIN_TOKENS = 1500
