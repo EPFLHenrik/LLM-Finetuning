@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import random
 import re
 from collections import Counter
@@ -258,20 +259,32 @@ def load_s1k() -> List[Dict]:
     return out
 
 
+# OpenMathReasoning is huge (3.2M rows). We only need ~5K (TARGETS) so even
+# this 4× safety cap finishes in ~10-15 min instead of ~6h.
+OPENMATH_MAX_KEPT = int(os.environ.get("OPENMATH_MAX_KEPT", "20000"))
+
+
 def load_openmath_reasoning(progress_every: int = 10000) -> List[Dict]:
     """`nvidia/OpenMathReasoning` has multiple SPLITS (`cot`, `tir`,
     `genselect`, `additional_problems`), not configs. We use `cot` — the
     R1-style chain-of-thought split (~3.2M rows). Solutions may or may not
     ship with `<think>` markers; wrap with `_wrap_as_think_and_box` when
-    needed (using `expected_answer` for the gold)."""
+    needed (using `expected_answer` for the gold).
+
+    Early-stops at OPENMATH_MAX_KEPT (env-overridable, default 20K) so we
+    don't burn 5h iterating the full 3.2M when our target is 5K rows.
+    """
     from datasets import load_dataset
-    print("[load] nvidia/OpenMathReasoning  split=cot")
+    print(f"[load] nvidia/OpenMathReasoning  split=cot  (early-stop at {OPENMATH_MAX_KEPT} kept)")
     ds = load_dataset("nvidia/OpenMathReasoning", split="cot")
     out: List[Dict] = []
     dropped = Counter()
     for i, row in enumerate(ds):
         if i and i % progress_every == 0:
             print(f"  [openmath] {i}/{len(ds)} kept={len(out)}")
+        if len(out) >= OPENMATH_MAX_KEPT:
+            print(f"  [openmath] hit OPENMATH_MAX_KEPT={OPENMATH_MAX_KEPT}, stopping early")
+            break
         problem = (row.get("problem") or row.get("question") or "").strip()
         raw_solution = (
             row.get("generated_solution")
