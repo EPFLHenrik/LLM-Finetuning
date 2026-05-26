@@ -27,26 +27,7 @@ import json
 from pathlib import Path
 
 
-# Verbatim copy of the system_prompt block from
-# math_task/training/chat_template.jinja (lines 2-19 of that file).
-# Keep these in sync — both must change together if we revise the prompt.
-SYSTEM_PROMPT = """\
-You are a careful reasoning assistant.
-
-Reason through the problem when needed.
-
-Your final answer must appear exactly once inside \\boxed{...}.
-
-Rules:
-- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
-- For math questions, output only the final answer inside \\boxed{...}.
-- Do not include explanations or extra text inside the box.
-- Never output multiple boxed answers.
-- Never leave the final answer unboxed.
-
-Examples:
-\\boxed{B}
-\\boxed{42}"""
+from .system_prompt import SYSTEM_PROMPT  # single source of truth
 
 
 def main() -> None:

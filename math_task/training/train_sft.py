@@ -104,13 +104,24 @@ def main() -> None:
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
 
-    # Sanity-render to confirm template + tokenizer agree.
+    # Sanity-render to confirm template + tokenizer agree. The new template
+    # (with embedded system prompt) ends the generation prompt with just
+    # `<|im_start|>assistant\n` and lets the model emit `<think>` itself.
+    # The old short template ended with `<|im_start|>assistant\n<think>\n`.
+    # Accept both shapes so this script works pre- and post-v2.
     sample_msgs = [{"role": "user", "content": "What is 2+2?"}]
     rendered = tok.apply_chat_template(sample_msgs, tokenize=False, add_generation_prompt=True)
     print(f"[tokenizer] template renders to (last 80 chars): ...{rendered[-80:]!r}")
-    assert rendered.endswith("<|im_start|>assistant\n<think>\n"), (
-        "Chat template doesn't end with thinking-ON generation prompt."
+    last = rendered.rstrip()
+    assert last.endswith("<|im_start|>assistant") or last.endswith("<think>"), (
+        "Chat template doesn't end with an open assistant turn (or a <think> prefix). "
+        f"Last 80 chars: {rendered[-80:]!r}"
     )
+    # If the new template is in use, we expect the system prompt's \\boxed{} rule
+    # to appear in the rendered chat. Soft-warn if not (some templates may differ).
+    if "\\boxed{" not in rendered:
+        print("[tokenizer] WARN: system prompt with \\boxed{} rules not detected in render. "
+              "Make sure chat_template.jinja matches math_task/data/system_prompt.py.")
 
     # ------------------------------------------------------------------ model
     print(f"[model] loading {BASE_MODEL} (bf16, flash-attn-2 if available)")
