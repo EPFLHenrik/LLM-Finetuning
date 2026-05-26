@@ -72,6 +72,13 @@ fi
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 python -c "import torch, vllm, transformers, trl, peft; print(torch.__version__, vllm.__version__, transformers.__version__, trl.__version__, peft.__version__)"
 
+# Upgrade bitsandbytes to a CUDA-12.8-compatible build. peft loads LoRA via
+# `from .bnb import dispatch_bnb_8bit`; the stock course-image bnb is pre-12.8
+# and crashes during the unconditional import. Fixed by 0.45+.
+echo "[wrapper] upgrading bitsandbytes for cu128..."
+pip install -U --quiet bitsandbytes
+python -c "import bitsandbytes; print(\"[wrapper] bnb\", bitsandbytes.__version__)"
+
 exec python -m math_task.training.train_sft "$@"'
 
 echo ">>> Submitting ${JOB_NAME}"
