@@ -605,7 +605,7 @@ def build_model_and_tokenizer(
 
     base_model: Any = AutoModelForCausalLM.from_pretrained(
         args.base_model,
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
         device_map={"": device},
         trust_remote_code=True,
     )
