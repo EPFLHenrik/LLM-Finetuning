@@ -124,9 +124,12 @@ if [ -n "$INIT_FROM" ]; then
   ADAPTER_ARG=(--adapters "$INIT_FROM")
 fi
 
-# `--reward_funcs accuracy format` enables ms-swift's built-in math-correctness
-# reward (Math-Verify on \boxed{}) plus a small format reward for think/boxed
-# structure. Weight format low so accuracy dominates.
+# Accuracy-only reward: ms-swift's built-in math-correctness reward
+# (Math-Verify on \boxed{}). We dropped the `format` reward — in the 4K pilot
+# it fired 0.000 on every step (swift's format regex didn't match our model's
+# <think>...</think>\boxed{} output), so it added no signal. LIMR shows
+# accuracy-only RL works fine for math. Override with REWARD_FUNCS if needed.
+REWARD_FUNCS="${REWARD_FUNCS:-accuracy}"
 exec swift rlhf \
   --rlhf_type grpo \
   --loss_type cispo \
@@ -142,8 +145,7 @@ exec swift rlhf \
   --attn_impl flash_attn \
   --gradient_checkpointing true \
   --dataset "$DATASET" \
-  --reward_funcs accuracy format \
-  --reward_weights 1.0 0.1 \
+  --reward_funcs $REWARD_FUNCS \
   --num_generations "$NUM_GEN" \
   --max_length "$MAX_LENGTH" \
   --max_completion_length "$MAX_COMPLETION" \
