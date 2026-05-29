@@ -29,7 +29,7 @@ import argparse
 from pathlib import Path
 
 
-BASE_MODEL = "Qwen/Qwen3-1.7B"
+DEFAULT_BASE_MODEL = "Qwen/Qwen3-1.7B"
 CHAT_TEMPLATE_PATH = Path(__file__).parent / "chat_template.jinja"
 DEFAULT_REPO = "cs-552-2026-mystery-machine/math_model"
 
@@ -40,6 +40,12 @@ def main() -> None:
                     help="LoRA adapter directory (final or checkpoint-N).")
     ap.add_argument("--repo", default=DEFAULT_REPO,
                     help=f"HF repo to push to (default: {DEFAULT_REPO}).")
+    ap.add_argument("--base-model", default=DEFAULT_BASE_MODEL,
+                    help=f"HF repo or local path to merge the LoRA into. "
+                         f"Default {DEFAULT_BASE_MODEL}. For RL-on-top-of-SFT, "
+                         f"pass cs-552-2026-mystery-machine/math_model so the "
+                         f"RL LoRA merges into the already-merged SFT weights "
+                         f"(not bare base, which would lose SFT learnings).")
     ap.add_argument("--local-out", type=Path, default=None,
                     help="Where to save the merged model locally. "
                          "Default: /scratch/<USER>/checkpoints/<ckpt-stem>_merged")
@@ -62,9 +68,9 @@ def main() -> None:
     args.local_out.mkdir(parents=True, exist_ok=True)
 
     # ---------------------------------------------------------------- merge
-    print(f"[load] base {BASE_MODEL}")
+    print(f"[load] base {args.base_model}")
     base = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL, torch_dtype=torch.bfloat16,
+        args.base_model, torch_dtype=torch.bfloat16,
     )
     print(f"[load] adapter {args.checkpoint}")
     peft_model = PeftModel.from_pretrained(base, str(args.checkpoint))
@@ -73,7 +79,7 @@ def main() -> None:
 
     # --------------------------------------------------------------- tokenizer
     print("[tokenizer] loading and applying team chat template")
-    tok = AutoTokenizer.from_pretrained(BASE_MODEL)
+    tok = AutoTokenizer.from_pretrained(args.base_model)
     tok.chat_template = template
 
     # Sanity-render. The new template embeds a system prompt and lets the
