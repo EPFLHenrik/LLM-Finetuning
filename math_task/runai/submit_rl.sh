@@ -58,6 +58,9 @@ SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
 JOB_NAME="cs552-${GASPAR}-${GROUP}-rl-${PHASE}-${SUFFIX}-$(date +%H%M%S)"
+# k8s job names are RFC 1123: lowercase alphanumeric + '-' only. Sanitize any
+# underscores/uppercase from SUFFIX so e.g. "8k_v1" doesn't fail the submit.
+JOB_NAME=$(echo "$JOB_NAME" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
 
 # --- Bootstrap wrapper ------------------------------------------------------
 # Mirrors submit_sft.sh's token-embedded fetch, then ALSO pip-installs ms-swift
@@ -90,7 +93,10 @@ pip install --quiet --no-cache-dir "ms-swift>=3.0" math-verify "bitsandbytes>=0.
   echo "[wrapper] ERROR: pip install failed" >&2
   exit 1
 }
-python -c "import swift; print(\"[wrapper] ms-swift\", swift.__version__)"
+# Verify swift is importable (no print with brackets/quotes — those get
+# mangled through the laptop->runai->bash-c->python-c quoting layers and
+# crash the wrapper under set -e).
+python -c "import swift"
 
 exec bash math_task/training/train_grpo.sh "$@"'
 
@@ -109,21 +115,22 @@ echo "    init_from = ${INIT_FROM:-(none)}"
 [[ -n "${GRAD_ACCUM}" ]] && echo "    grad_accum = ${GRAD_ACCUM}"
 [[ -n "${RL_EXTRA_ARGS}" ]] && echo "    extra:    ${RL_EXTRA_ARGS}"
 
-# Build the trainer-wrapper args. PHASE/PILOT/etc. are passed as env vars so
-# train_grpo.sh sees them.
+# train_grpo.sh only parses --dataset and --output as CLI args; everything
+# else for `swift rlhf` comes from the EXTRA_ARGS *env var* (it does
+# `swift rlhf ... $EXTRA_ARGS`). So RL_EXTRA_ARGS must be forwarded as the
+# EXTRA_ARGS env var, NOT appended to TRAIN_ARGS (which would make
+# train_grpo.sh's parser choke on e.g. --model_type).
 TRAIN_ARGS=(
   --dataset "${RL_DATA}"
   --output  "${RL_OUTPUT}"
 )
-# Append extra args verbatim (word-split intentional).
-# shellcheck disable=SC2206
-[[ -n "${RL_EXTRA_ARGS}" ]] && TRAIN_ARGS+=(${RL_EXTRA_ARGS})
 
 # Env vars we explicitly forward to the pod (in addition to the standard ones).
 ENV_FORWARDS=(
   --environment "PHASE=${PHASE}"
   --environment "PILOT=${PILOT}"
 )
+[[ -n "${RL_EXTRA_ARGS}" ]] && ENV_FORWARDS+=(--environment "EXTRA_ARGS=${RL_EXTRA_ARGS}")
 [[ -n "${RL_MODEL}"   ]] && ENV_FORWARDS+=(--environment "RL_MODEL=${RL_MODEL}")
 [[ -n "${INIT_FROM}"  ]] && ENV_FORWARDS+=(--environment "INIT_FROM=${INIT_FROM}")
 [[ -n "${MAX_STEPS}"  ]] && ENV_FORWARDS+=(--environment "MAX_STEPS=${MAX_STEPS}")
