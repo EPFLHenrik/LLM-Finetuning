@@ -6,19 +6,18 @@ Shows distilled (D) / raw (R) / total (T) counts per dataset and language.
 
 Usage:
     python -m multilingual.train.check_sft_stats
-    python -m multilingual.train.check_sft_stats --sft_dir multilingual/data/sft/v10
+    python -m multilingual.train.check_sft_stats --sft_dir multilingual/data/sft/v12
 """
 
 import argparse
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 DEFAULT_SFT_DIR = Path(__file__).parents[1] / "data" / "sft"
 
 
 def _drt(d: int, r: int) -> str:
-    """Format as e.g. '25D / 30R / 55T'"""
     return f"{d}D / {r}R / {d+r}T"
 
 
@@ -33,8 +32,7 @@ def check_split(split: str, mixed_dir: Path) -> None:
 
     if n == 0:
         print(f"=== {split} (0 total) ===")
-        print("Empty file.")
-        print()
+        print("Empty file.\n")
         return
 
     distilled = [r for r in records if r.get("metadata", {}).get("distilled")]
@@ -49,6 +47,14 @@ def check_split(split: str, mixed_dir: Path) -> None:
     lang_dist = Counter(r["language"] for r in distilled)
     lang_raw  = Counter(r["language"] for r in raw)
 
+    # dataset -> language -> (distilled, raw)
+    lang_ds_dist: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    lang_ds_raw:  dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for r in distilled:
+        lang_ds_dist[r["language"]][r["dataset"]] += 1
+    for r in raw:
+        lang_ds_raw[r["language"]][r["dataset"]] += 1
+
     print(f"=== {split} ({n:,} total | {len(distilled):,}D / {len(raw):,}R) ===")
 
     print("\nLanguages:")
@@ -61,11 +67,25 @@ def check_split(split: str, mixed_dir: Path) -> None:
     for ds, count in sorted(datasets.items(), key=lambda x: -x[1]):
         d = ds_dist.get(ds, 0)
         r = ds_raw.get(ds, 0)
-        print(f"  {ds:<18} {count:>6}  ({100*count/n:.1f}%)   {_drt(d, r)}")
+        print(f"  {ds:<22} {count:>6}  ({100*count/n:.1f}%)   {_drt(d, r)}")
 
     print("\nTasks:")
     for task, count in sorted(tasks.items(), key=lambda x: -x[1]):
         print(f"  {task:<12} {count:>6}  ({100*count/n:.1f}%)")
+
+    print("\nPer language → datasets:")
+    for lang in sorted(langs, key=lambda x: -langs[x]):
+        lang_total = langs[lang]
+        all_ds = set(lang_ds_dist[lang]) | set(lang_ds_raw[lang])
+        print(f"  {lang} ({lang_total}):")
+        ds_totals = {
+            ds: lang_ds_dist[lang].get(ds, 0) + lang_ds_raw[lang].get(ds, 0)
+            for ds in all_ds
+        }
+        for ds, count in sorted(ds_totals.items(), key=lambda x: -x[1]):
+            d = lang_ds_dist[lang].get(ds, 0)
+            r = lang_ds_raw[lang].get(ds, 0)
+            print(f"    {ds:<22} {count:>6}  ({100*count/lang_total:.1f}%)   {_drt(d, r)}")
 
     print()
 
@@ -83,9 +103,8 @@ def main() -> None:
     args = parse_args()
     mixed_dir = args.sft_dir / "mixed"
     print(f"SFT dir:   {args.sft_dir}")
-    print(f"Mixed dir: {mixed_dir}")
-    print()
-    for split in ("train", "val"):
+    print(f"Mixed dir: {mixed_dir}\n")
+    for split in ("train", "val", "test"):
         check_split(split, mixed_dir)
 
 
