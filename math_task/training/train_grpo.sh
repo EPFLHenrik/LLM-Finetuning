@@ -42,6 +42,11 @@ set -euo pipefail
 # cs-552-2026-mystery-machine/math_model repo resolves correctly.
 export USE_HF="${USE_HF:-1}"
 
+# Reduce PyTorch CUDA allocator fragmentation. Recommended by the runtime
+# itself when an OOM has many MiB "reserved but unallocated". Helps the 16K
+# phase fit on a single 40GB A100 alongside vLLM colocate.
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+
 PHASE="${PHASE:-4k}"
 PILOT="${PILOT:-0}"
 
