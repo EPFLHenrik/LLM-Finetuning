@@ -133,6 +133,9 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
         ("global_mmlu/global_mmlu_spanish_shuffled_region_agnostic.jsonl",  "global_mmlu_spanish_region_agnostic"),
         # ("global_mmlu/global_mmlu_hindi_shuffled_region_agnostic.jsonl",    "global_mmlu_hindi_region_agnostic"),
     ],
+    "italian_civil_code": [
+        ("italian_civil_code/italian_civil_code.jsonl", "italian_civil_code"),
+    ]
 }
 
 # ---------------------------------------------------------------------------

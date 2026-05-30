@@ -6,6 +6,7 @@ multilingual/results/*
 # large local data/cache
 multilingual/data/**/*.jsonl
 multilingual/data/**/*.json
+multilingual/data/**/*.log
 multilingual/data/**/*.csv
 
 
@@ -18,6 +19,7 @@ models/
 *.bin
 *.pt
 *.pth
+*.log
 
 # experiment logs
 wandb/

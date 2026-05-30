@@ -1,13 +1,3 @@
-
-2:48 PM
-
-Write generate_italian_civil_code_mcq.py
-Write generate_italian_civil_code_mcq.py
-
-Write generate_italian_civil_code_mcq.py
-bash
-
-cat > /mnt/user-data/outputs/generate_italian_civil_code_mcq.py << 'PYEOF'
 """multilingual/distillation/generate_italian_civil_code_mcq.py
 
 Generates Italian MCQ questions from the Italian Civil Code dataset
@@ -34,7 +24,7 @@ Usage:
 
     python -m multilingual.distillation.generate_italian_civil_code_mcq \\
         --output_dir multilingual/data/processed/italian_civil_code \\
-        --concurrency 8 \\
+        --concurrency 20 \\
         --max_valid 2000 \\
         --dry_run
 """
@@ -50,7 +40,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
+import random
 import httpx
 
 REPO = Path(__file__).resolve().parents[2]
@@ -94,7 +84,7 @@ Regole per la domanda:
    - Oppure combina concetti reali in modo errato.
    - Oppure usa la negazione della risposta corretta.
    - I distrattori devono CONTRADDIRE l'articolo, non fornire informazioni complementari.
-4. Tutte le opzioni devono essere simili in lunghezza e stile.
+4. Tutte le opzioni devono essere simili in lunghezza e stile. Se la risposta corretta è lunga, anche i distrattori devono essere di lunghezza comparabile. Non usare opzioni molto corte accanto a opzioni molto lunghe.
 5. Una sola risposta deve essere corretta.
 6. La domanda deve essere in italiano formale e registro giuridico.
 
@@ -195,6 +185,17 @@ async def _call_api(
 # Parsing helpers
 # ---------------------------------------------------------------------------
 
+def _shuffle_options(mcq: Dict[str, Any], rng: random.Random) -> Dict[str, Any]:
+    """Randomly permute options and remap answer letter."""
+    letters = ["A", "B", "C", "D"]
+    values  = [mcq["options"][l] for l in letters]
+    correct = mcq["options"][mcq["answer"]]
+    rng.shuffle(values)
+    new_options = dict(zip(letters, values))
+    new_answer  = next(l for l, v in new_options.items() if v == correct)
+    return {**mcq, "options": new_options, "answer": new_answer}
+
+
 def _parse_mcq(raw: Optional[str]) -> Optional[Dict[str, Any]]:
     """Parse JSON MCQ from generation output. Returns None on failure."""
     if not raw:
@@ -202,13 +203,11 @@ def _parse_mcq(raw: Optional[str]) -> Optional[Dict[str, Any]]:
     raw_stripped = raw.strip()
     if raw_stripped.upper() == "SKIP":
         return None
-    # Strip markdown fences if present
     clean = re.sub(r"^```(?:json)?\s*", "", raw_stripped, flags=re.IGNORECASE)
     clean = re.sub(r"\s*```$", "", clean)
     try:
         parsed = json.loads(clean.strip())
     except json.JSONDecodeError:
-        # Try to find JSON block in response
         m = re.search(r'\{.*\}', clean, re.DOTALL)
         if not m:
             return None
@@ -217,7 +216,6 @@ def _parse_mcq(raw: Optional[str]) -> Optional[Dict[str, Any]]:
         except json.JSONDecodeError:
             return None
 
-    # Validate structure
     if not isinstance(parsed.get("question"), str):
         return None
     opts = parsed.get("options", {})
@@ -308,6 +306,10 @@ async def _process_article(
     if mcq is None:
         result["generation"]["reason"] = "parse_failed"
         return result
+
+    # shuffle options to avoid positional bias in verification, using a seed for reproducibility
+    rng = random.Random(article_id)
+    mcq = _shuffle_options(mcq, rng)
 
     result["generation"]["parsed"] = mcq
     result["generation"]["valid"]  = True
