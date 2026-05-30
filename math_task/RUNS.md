@@ -37,3 +37,6 @@
 | 2026-05-28 00:00 | checkpoint-400 | math500_stratified | final | on | 0.7788 | 0.9200 | 0.9425 | 0.0663 | 3955.9 |
 | 2026-05-28 00:00 | checkpoint-800 | math500_stratified | final | on | 0.7850 | 0.9200 | 0.9425 | 0.0612 | 3932.3 |
 | 2026-05-28 00:00 | checkpoint-1000 | math500_stratified | final | on | 0.7762 | 0.9000 | 0.9313 | 0.0788 | 4090.8 |
+| 2026-05-29 22:33 | checkpoint-100 | math500_stratified | final | on | 0.7775 | 0.9000 | 0.9425 | 0.0625 | 3692.8 |
+| 2026-05-29 22:33 | checkpoint-250 | math500_stratified | final | on | 0.7875 | 0.9400 | 0.9500 | 0.0537 | 3730.6 |
+| 2026-05-29 22:33 | checkpoint-500 | math500_stratified | final | on | 0.7812 | 0.9200 | 0.9425 | 0.0625 | 3780.2 |
