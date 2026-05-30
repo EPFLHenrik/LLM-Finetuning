@@ -1,0 +1,56 @@
+nohup: ignoring input
+Primary teacher:  meta-llama/Llama-3.3-70B-Instruct
+Fallback teacher: swiss-ai/Apertus-70B-Instruct-2509
+Sampling: first independent attempt temperature=0.0; later attempts temperature=0.35, top_p=0.95
+Jobs (31):
+  ceval_chinese_regional.jsonl → ceval_chinese_regional
+  ceval_chinese_regional_implicit.jsonl → ceval_chinese_regional_implicit
+  milu_hindi_train_regional.jsonl → milu_hindi_regional
+  milu_hindi_train_regional_implicit.jsonl → milu_hindi_regional_implicit
+  global_mmlu_russian_regional.jsonl → global_mmlu_russian_regional
+  global_mmlu_chinese_regional.jsonl → global_mmlu_chinese_regional
+  global_mmlu_italian_regional.jsonl → global_mmlu_italian_regional
+  global_mmlu_spanish_regional.jsonl → global_mmlu_spanish_regional
+  global_mmlu_hindi_regional.jsonl → global_mmlu_hindi_regional
+  include_russian_all.jsonl → include_russian_all
+  include_chinese_all.jsonl → include_chinese_all
+  include_italian_all.jsonl → include_italian_all
+  include_spanish_all.jsonl → include_spanish_all
+  include_hindi_all.jsonl → include_hindi_all
+  cultsportqa_hindi_all.jsonl → cultsportqa_hindi
+  cultsportqa_chinese_all.jsonl → cultsportqa_chinese
+  head_qa_spanish_all.jsonl → head_qa_spanish
+  head_qa_italian_all.jsonl → head_qa_italian
+  mera_clean_mamuramu.jsonl → mera_russian_mamuramu
+  mera_clean_ruopenbookqa.jsonl → mera_russian_ruopenbookqa
+  mera_clean_ruworldtree.jsonl → mera_russian_ruworldtree
+  global_piqa_italian_all.jsonl → global_piqa_italian
+  global_piqa_spanish_all.jsonl → global_piqa_spanish
+  global_piqa_hindi_all.jsonl → global_piqa_hindi
+  global_piqa_chinese_all.jsonl → global_piqa_chinese
+  global_piqa_russian_all.jsonl → global_piqa_russian
+  exams_italian_all.jsonl → exams_italian
+  exams_spanish_all.jsonl → exams_spanish
+  global_mmlu_russian_shuffled_region_agnostic.jsonl → global_mmlu_russian_region_agnostic
+  global_mmlu_italian_shuffled_region_agnostic.jsonl → global_mmlu_italian_region_agnostic
+  global_mmlu_spanish_shuffled_region_agnostic.jsonl → global_mmlu_spanish_region_agnostic
+
+── ceval_chinese_regional.jsonl ──
+  Resuming: 3193 already done
+  Processing: 154 remaining / 3347 total
+    40/154 | valid=40 (100%) | 1.6 ex/s | ETA 73s
+    80/154 | valid=80 (100%) | 2.0 ex/s | ETA 37s
+    120/154 | valid=120 (100%) | 2.1 ex/s | ETA 16s
+    154/154 | valid=154 (100%) | 2.2 ex/s | ETA 0s
+  Valid: 3432/3447 (99%)
+  FAIL cases: 0
+  Teachers used: {'meta-llama/Llama-3.3-70B-Instruct': 3222, 'swiss-ai/Apertus-70B-Instruct-2509': 210, 'none': 15}
+  Modes used: {'independent': 2868, 'gold_fallback': 564, 'none': 13, 'discarded_not_sure': 2}
+  Invalid reasons: {'wrong_answer:None': 7, 'wrong_answer:A': 1, 'wrong_answer:C': 2, 'wrong_answer:D': 1, 'wrong_answer:B': 1, 'not_ending_with_boxed': 1, 'skipped_gold_fallback_uncertainty': 2}
+  Done in 69.8s
+
+── ceval_chinese_regional_implicit.jsonl ──
+  Resuming: 3022 already done
+  Processing: 3088 remaining / 6110 total
+    40/3088 | valid=40 (100%) | 1.3 ex/s | ETA 2398s
+    80/3088 | valid=80 (100%) | 1.3 ex/s | ETA 2349s

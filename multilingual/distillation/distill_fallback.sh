@@ -30,10 +30,10 @@ distill_datetime=$(date +"%Y%m%d_%H%M%S")
 nohup python -m multilingual.distillation.distill_fallback \
   --processed_dir multilingual/data/processed \
   --output_dir multilingual/data/distilled/v2_fallback \
-  --max_valid_per_file 3000 \
-  --concurrency 10 \
-  --log_every 20 \
-  --save_every 20 \
+  --max_valid_per_file 4000 \
+  --concurrency 40 \
+  --log_every 40 \
+  --save_every 40 \
   --sample_temperature 0.35 \
   --top_p 0.95 \
   > multilingual/data/distilled/v2_fallback/distill_${distill_datetime}.log 2>&1 &
