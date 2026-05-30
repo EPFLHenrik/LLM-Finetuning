@@ -53,17 +53,17 @@ PILOT="${PILOT:-0}"
 case "$PHASE" in
   4k)
     MAX_COMPLETION=4096
-    NUM_GEN=8
+    DEFAULT_NUM_GEN=8
     DEFAULT_STEPS_FULL=500
     ;;
   8k)
     MAX_COMPLETION=8192
-    NUM_GEN=8
+    DEFAULT_NUM_GEN=8
     DEFAULT_STEPS_FULL=500
     ;;
   16k)
     MAX_COMPLETION=16384
-    NUM_GEN=4
+    DEFAULT_NUM_GEN=4
     DEFAULT_STEPS_FULL=300
     ;;
   *)
@@ -71,6 +71,11 @@ case "$PHASE" in
     exit 2
     ;;
 esac
+
+# Allow env-override of num_generations for memory-tight runs (e.g. 16K on a
+# 40GB A100 needs NUM_GEN=2 to make the logits tensor fit). Defaults to the
+# phase's standard value above.
+NUM_GEN="${NUM_GEN:-$DEFAULT_NUM_GEN}"
 
 if [ "$PILOT" = "1" ]; then
   DEFAULT_STEPS=100
