@@ -138,6 +138,7 @@ ENV_FORWARDS=(
 [[ -n "${KL_BETA}"    ]] && ENV_FORWARDS+=(--environment "KL_BETA=${KL_BETA}")
 [[ -n "${EPS_HIGH}"   ]] && ENV_FORWARDS+=(--environment "EPS_HIGH=${EPS_HIGH}")
 [[ -n "${GRAD_ACCUM}" ]] && ENV_FORWARDS+=(--environment "GRAD_ACCUM=${GRAD_ACCUM}")
+[[ -n "${NUM_GEN}"    ]] && ENV_FORWARDS+=(--environment "NUM_GEN=${NUM_GEN}")
 
 runai submit \
   --name "${JOB_NAME}" \
