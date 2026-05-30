@@ -16,20 +16,20 @@ TRAIN_FILE="${SFT_DATA_DIR}/mixed/train_mixed.jsonl"
 VAL_FILE="${SFT_DATA_DIR}/mixed/val_mixed.jsonl"
 
 HF_REPO="cs-552-2026-mystery-machine/multilingual_model"
-RUN_NAME="sft_multilingual_v11_distilled_only" # for the shorter run, i used 2 epochs
+RUN_NAME="sft_multilingual_v11_distilled_only_1e-4_warmup0p1" # for the shorter run, i used 2 epochs
 
 LORA_R=16
 LORA_ALPHA=32
 LORA_DROPOUT=0.05
 EPOCHS=4
-LR="2e-5"
+LR="1e-4"
 BATCH_SIZE=2
 GRAD_ACCUM=8
 EVAL_STEPS=100
 SAVE_STEPS=100
 EVAL_BATCH_SIZE=2
 LOG_STEPS=10
-WARMUP_RATIO=0.05
+WARMUP_RATIO=0.1
 # ==============================================
 
 if [[ -z "${GASPAR}" ]]; then
@@ -118,9 +118,7 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
       --adapter_path ${ADAPTER_PATH} \
       --output_dir ${EXPORT_DIR} \
       --run_name ${RUN_NAME} \
-      --hf_repo ${HF_REPO} \
-      --push \
-      --force_push"
+      --hf_repo ${HF_REPO}"
 
 cat <<EOF
 

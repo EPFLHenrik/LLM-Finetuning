@@ -73,6 +73,7 @@ def load_model_and_tokenizer_for_eval(
     model_name: str,
     hf_token: str,
     use_custom_template: bool = True,
+    chat_template_path: Optional[Path] = None,
 ):
     """
     Load model + tokenizer for evaluation.
@@ -123,9 +124,9 @@ def load_model_and_tokenizer_for_eval(
             trust_remote_code=True,
         )
 
-    if use_custom_template and CHAT_TEMPLATE.exists():
-        print(f"[eval] Applying custom chat template: {CHAT_TEMPLATE}")
-        tokenizer.chat_template = CHAT_TEMPLATE.read_text(encoding="utf-8")
+    template = chat_template_path or CHAT_TEMPLATE
+    if use_custom_template and template.exists():
+        tokenizer.chat_template = template.read_text(encoding="utf-8")
     else:
         print("[eval] Using tokenizer's default chat template")
 
@@ -198,6 +199,8 @@ def parse_args():
                         default=REPO / "validation_samples" / "multilingual.jsonl")
     parser.add_argument("--no_custom_template", action="store_true",
                         help="Skip applying assets/chat_template.jinja.")
+    parser.add_argument("--chat_template", type=Path, default=None,
+                    help="Path to custom chat template jinja file. Default: assets/chat_template.jinja.")
     parser.add_argument("--mcq_max_new_tokens",  type=int,
                         default=DEFAULT_MAX_NEW_TOKENS_BY_TASK["mcq"])
     parser.add_argument("--math_max_new_tokens", type=int,
@@ -234,6 +237,7 @@ def main():
         args.model_name,
         hf_token,
         use_custom_template=not args.no_custom_template,
+        chat_template_path=args.chat_template,
     )
 
     generate_kwargs = dict(
