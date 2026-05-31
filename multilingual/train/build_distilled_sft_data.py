@@ -22,7 +22,7 @@ Output layout:
 
 Usage:
     python -m multilingual.train.build_distilled_sft_data \
-        --config configs/sft/v14.json --overwrite
+        --config configs/sft/v15.json --overwrite
 """
 
 import argparse

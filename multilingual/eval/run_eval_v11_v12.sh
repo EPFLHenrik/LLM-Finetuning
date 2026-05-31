@@ -50,9 +50,9 @@ for ADAPTER_NAME in \
     done
 done
 
-ADAPTER=/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/checkpoints/sft_multilingual_v14_distilled_2e-4_warmup0p05_short/individual/checkpoint-400
+ADAPTER=/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/checkpoints/sft_multilingual_v14_distilled_2e-4_warmup0p05_short/individual/best_adapter
 python -m multilingual.eval.run_eval \
     --model_name $ADAPTER \
     --provided_only \
-    --output_dir multilingual/results/eval/v14/checkpoint-400 \
+    --output_dir multilingual/results/eval/v14/best_adapter \
     --chat_template multilingual/assets/chat_template_multilingual-v2.jinja
