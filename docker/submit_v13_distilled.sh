@@ -20,13 +20,13 @@ TRAIN_FILE="${SFT_DATA_DIR}/mixed/train_mixed.jsonl"
 VAL_FILE="${SFT_DATA_DIR}/mixed/val_mixed.jsonl"
 
 HF_REPO="cs-552-2026-mystery-machine/multilingual_model"
-RUN_NAME="sft_multilingual_v13_distilled"
+RUN_NAME="sft_multilingual_v13_distilled_1e-4_warmup0p1"
 
 LORA_R=16
 LORA_ALPHA=32
 LORA_DROPOUT=0.05
-EPOCHS=3
-LR="3e-5"
+EPOCHS=4
+LR="1e-4"
 BATCH_SIZE=2
 GRAD_ACCUM=8
 EVAL_STEPS=100
