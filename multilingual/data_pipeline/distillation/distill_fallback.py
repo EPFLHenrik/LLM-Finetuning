@@ -135,6 +135,9 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
     ],
     "italian_civil_code": [
         ("italian_civil_code/italian_civil_code.jsonl", "italian_civil_code"),
+    ],
+    "spain_boe_legislation": [
+        ("spain_boe_legislation/spain_boe_legislation_generated.jsonl", "spain_boe_legislation"),
     ]
 }
 
