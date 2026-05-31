@@ -58,8 +58,8 @@ EXPORT_DIR="${REPO_DIR}/multilingual/results/exports/${RUN_NAME}"
 # ---------------------------------------------------------------------------
 # Single job: individual first, then group sequentially
 # ---------------------------------------------------------------------------
-JOB_NAME="cs552-${GASPAR}-${GROUP}-${RUN_NAME}-$(date +%H%M%S)"
-
+SUFFIX="${1:-sft-v13-export}"
+JOB_NAME="cs552-${GASPAR}-${GROUP}-${SUFFIX}-$(date +%H%M%S)"
 echo ">>> Submitting job: ${JOB_NAME}"
 echo ">>> Individual → export → Group (sequential)"
 
@@ -136,10 +136,25 @@ cat <<EOF
 
 >>> Job submitted: ${JOB_NAME}
 
-Watch logs:
-  runai workload logs ${JOB_NAME} -p ${PROJECT} -f
+Watch it start:
+  runai workload describe ${JOB_NAME} -p ${PROJECT}
 
 List workloads:
   runai workload list -p ${PROJECT}
+
+Stream logs:
+  runai workload logs ${JOB_NAME} -p ${PROJECT}
+
+If streaming logs with the new command is not supported, use:
+  runai logs -f ${JOB_NAME} -p ${PROJECT}
+
+Shell in pod:
+  runai bash ${JOB_NAME} -p ${PROJECT}
+
+Attach with VS Code:
+  refresh the Kubernetes sidebar and attach to pod ${JOB_NAME}-0-0
+
+Stop the job:
+  runai workload delete ${JOB_NAME} -p ${PROJECT}
 
 EOF

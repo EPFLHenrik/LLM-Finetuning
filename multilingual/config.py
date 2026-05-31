@@ -50,7 +50,7 @@ Rules:
 - Never leave the final answer unboxed.
 
 Example:
-\boxed{B}"""
+\\boxed{B}"""
 
 
 # Local token budgets. 3072 gives MCQ enough headroom for a short think
