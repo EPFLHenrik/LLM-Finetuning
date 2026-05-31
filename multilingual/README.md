@@ -11,34 +11,115 @@ Training and evaluation for the multilingual expert model, targeting multilingua
 
 ```
 multilingual/
-├── config.py
-├── generation.py
-├── utils.py
-├── loaders/
-│   ├── ceval_loader.py
-│   ├── include_loader.py
-│   ├── mgsm_loader.py
-│   ├── milu_loader.py
-│   └── mmmlu_loader.py
-├── eval/
-│   ├── evaluation.py
-│   ├── generate_completions.py
-│   ├── run_eval.py
-│   └── run_eval.sh
-├── train/
-│   ├── build_sft_data.py
-│   ├── build_sft_data.sh
-│   ├── sft.py
-│   └── sft.sh
-├── tests/
-│   └── test_sft_data.py
-├── data/
-│   ├── distilled/
-│   └── sft/
-│       ├── per_dataset/
-│       ├── mixed/
-│       └── build_summary.csv
-└── results/
+├── assets/                                      # Chat template assets used for formatting model inputs.
+│   ├── chat_template.jinja                      # Base chat template.
+│   └── chat_template_multilingual.jinja         # Multilingual chat template.
+│
+├── data/                                        # Raw, processed, distilled, and SFT-ready data.
+│   ├── raw/                                     # Original source files before cleaning/parsing.
+│   │   └── ...                                  # Example: source PDFs, raw benchmark files, raw CSV/XLSX files.
+│   ├── processed/                               # Cleaned datasets in standardized MCQ/source formats.
+│   │   └── ...                                  # Example: processed JSONL/CSV files grouped by dataset.
+│   ├── distilled/                               # Teacher-distilled reasoning traces and logs.
+│   │   └── ...                                  # Example: distilled JSONL files grouped by run/version.
+│   ├── sft/                                     # Final SFT mixtures and per-dataset training files.
+│   │   └── build_summary.csv                    # Example summary file for an SFT build.
+│   └── notes/                                   # Source notes, licensing notes, and dataset decisions.
+│       ├── exams.txt                            # Notes for the Exams dataset.
+│       ├── extra-spanish-data.txt               # Notes for extra Spanish-language sources.
+│       ├── head_qa.txt                          # Notes for HeadQA.
+│       ├── italian_extra_data.txt               # Notes for extra Italian sources.
+│       ├── mera.txt                             # Notes for MERA.
+│       ├── mera_distillation_decisions.txt       # Distillation decisions for MERA subsets.
+│       └── milu.txt                             # Notes for MILU.
+│
+├── data_pipeline/                               # Scripts that create or transform datasets before training.
+│   ├── distillation/                            # Teacher rationale distillation scripts.
+│   │   ├── old/                                 # Deprecated/older distillation versions.
+│   │   │   └── distill_2stage.py                # Old two-stage distillation script.
+│   │   ├── __init__.py                          # Makes distillation scripts importable as modules.
+│   │   ├── distill_1stage.py                    # One-stage teacher distillation with primary/fallback teacher.
+│   │   ├── distill_fallback.py                  # Main fallback distillation pipeline for MCQ reasoning data.
+│   │   └── distill_fallback.sh                  # Example commands for fallback distillation runs.
+│   ├── generation/                              # Teacher-based MCQ generation from source documents.
+│   │   ├── __init__.py                          # Makes generation scripts importable as modules.
+│   │   ├── generate_italian_civil_code_mcq.py   # Generates/verifies MCQs from Italian Civil Code articles.
+│   │   ├── generate_spain_boe_mcq.py            # Generates/verifies MCQs from Spanish BOE legal articles.
+│   │   └── run_mcq_generation.sh                # Example dry-run/full-run commands for MCQ generation.
+│   ├── parsing/                                 # Source parsing scripts.
+│   │   ├── __init__.py                          # Makes parsing scripts importable as modules.
+│   │   ├── parse_polizia_di_stato.py            # Parses Italian Polizia di Stato MCQ PDF into JSONL.
+│   │   ├── parse_quaderno_prefettizia.py        # Parses Italian Quaderno Prefettizia MCQ PDF into JSONL.
+│   │   ├── parse_spain_boe_constitucion_espanola.py  # Parses the Spanish Constitution BOE PDF article by article.
+│   │   ├── parse_spanish_regional_statutes.py   # Parses Spanish regional autonomy statute PDFs article by article.
+│   │   ├── run_boe_parsing.sh                   # Example commands for Spanish BOE PDF parsing.
+│   │   └── run_italian_mcq_parsing.sh           # Example commands for Italian MCQ PDF parsing.
+│   ├── __init__.py                              # Makes the data pipeline package importable.
+│   └── README.md                                # Short documentation for the data pipeline folder.
+│
+├── eval/                                        # Evaluation and completion-generation code.
+│   ├── __init__.py                              # Makes evaluation code importable.
+│   ├── evaluation.py                            # Evaluation utilities and metric computation.
+│   ├── generate_completions.py                  # Generates model completions for evaluation datasets.
+│   ├── run_eval.py                              # Main evaluation entry point.
+│   └── run_eval.sh                              # Example shell script for running evaluation.
+│
+├── loaders/                                     # Dataset loaders that convert processed files into unified examples.
+│   ├── deprecated/                              # Old loaders kept for reference.
+│   │   ├── mmmlu_loader.py                      # Deprecated mMMLU loader.
+│   │   └── xcopa_loader.py                      # Deprecated XCOPA loader.
+│   ├── __init__.py                              # Loader package initialization.
+│   ├── belebele_loader.py                       # Loader for Belebele.
+│   ├── ceval_loader.py                          # Loader for CEval.
+│   ├── cultsportqa_loader.py                    # Loader for CultSportQA.
+│   ├── exams_loader.py                          # Loader for Exams.
+│   ├── global_mmlu_loader.py                    # Loader for Global MMLU.
+│   ├── global_piqa_loader.py                    # Loader for Global PIQA.
+│   ├── head_qa_loader.py                        # Loader for HeadQA.
+│   ├── include_loader.py                        # Loader for INCLUDE.
+│   ├── mera_loader.py                           # Loader for MERA.
+│   ├── mgsm_loader.py                           # Loader for MGSM.
+│   ├── milu_loader.py                           # Loader for MILU.
+│   └── recarve_utils.py                         # Shared utilities for ReCaRVE-style datasets.
+│
+├── notebooks/                                   # Exploratory preprocessing notebooks.
+│   ├── ceval_preprocessing.ipynb                # CEval preprocessing notebook.
+│   ├── CultSportQA_preprocessing.ipynb          # CultSportQA preprocessing notebook.
+│   ├── exams_preprocessing.ipynb                # Exams preprocessing notebook.
+│   ├── global_mmlu_preprocessing.ipynb          # Global MMLU preprocessing notebook.
+│   ├── global_piqa_preprocessing.ipynb          # Global PIQA preprocessing notebook.
+│   ├── headqa_preprocessing.ipynb               # HeadQA preprocessing notebook.
+│   ├── include_preprocessing.ipynb              # INCLUDE preprocessing notebook.
+│   ├── mera_preprocessing.ipynb                 # MERA preprocessing notebook.
+│   ├── milu_preprocessing.ipynb                 # MILU preprocessing notebook.
+│   ├── polizia_di_stato_preprocessing.ipynb     # Exploratory Polizia di Stato preprocessing notebook.
+│   ├── quaderno_prefettizia_preprocessing.ipynb # Exploratory Quaderno Prefettizia preprocessing notebook.
+│   └── spanish_preprocessing.ipynb              # Exploratory Spanish extra-source preprocessing notebook.
+│
+├── results/                                     # Evaluation/training outputs.
+│
+├── tests/                                       # Unit tests and data invariant tests.
+│   └── test_sft_data.py                         # Tests for SFT data construction and formatting invariants.
+│
+├── train/                                       # SFT data construction, training, inspection, and export scripts.
+│   ├── build_distilled_sft_data.py              # Builds SFT data from distilled reasoning examples.
+│   ├── build_sft_data.py                        # Builds SFT mixtures from processed datasets.
+│   ├── build_sft_data.sh                        # Example shell script for SFT data building.
+│   ├── check_sft_stats.py                       # Computes/checks SFT dataset statistics.
+│   ├── check_sft_stats.sh                       # Example shell script for SFT statistics checks.
+│   ├── export.py                                # Exports trained adapters/models.
+│   ├── export.sh                                # Example shell script for export.
+│   ├── inspect_formatted_sft.py                 # Inspects formatted chat-template SFT examples.
+│   ├── inspect_formatted_sft.sh                 # Example shell script for formatted SFT inspection.
+│   ├── push_base_tokenizer.py                   # Pushes or synchronizes the base tokenizer.
+│   ├── sft.py                                   # Main supervised fine-tuning script.
+│   └── sft.sh                                   # Example shell script for SFT runs.
+│
+├── __init__.py                                  # Top-level multilingual package initialization.
+├── config.py                                    # Shared configuration/constants.
+├── generation.py                                # Shared generation/model-call utilities.
+├── README.md                                    # Main README for the multilingual pipeline.
+└── utils.py                                     # Shared helper functions.
 ```
 
 Heavy data (SFT files, distilled traces, checkpoints, eval outputs) lives under `/scratch` and is not committed to Git.
