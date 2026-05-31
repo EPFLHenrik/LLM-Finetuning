@@ -89,6 +89,12 @@ KL_BETA="${KL_BETA:-0.001}"
 EPS_HIGH="${EPS_HIGH:-5.0}"
 GRAD_ACCUM="${GRAD_ACCUM:-8}"
 INIT_FROM="${INIT_FROM:-}"
+
+# Liger Kernel: fused chunked cross-entropy that avoids materializing the
+# full [batch, seq, vocab] logits tensor. Drops LM-head memory by ~80% — the
+# only way to fit num_gen=4 at 16K context on a 40GB A100. Off by default
+# (older swift versions may not support the flag).
+USE_LIGER="${USE_LIGER:-false}"
 RL_MODEL="${RL_MODEL:-Qwen/Qwen3-1.7B}"
 EXTRA_ARGS="${EXTRA_ARGS:-}"
 
@@ -127,11 +133,20 @@ echo "    grad_accum       = $GRAD_ACCUM"
 echo "    dataset          = $DATASET"
 echo "    output           = $OUTPUT"
 echo "    init_from        = ${INIT_FROM:-(none)}"
+echo "    use_liger        = $USE_LIGER"
 
 ADAPTER_ARG=()
 if [ -n "$INIT_FROM" ]; then
   # Continue from a previous LoRA adapter. ms-swift accepts this via --adapters.
   ADAPTER_ARG=(--adapters "$INIT_FROM")
+fi
+
+LIGER_ARG=()
+if [ "$USE_LIGER" = "true" ]; then
+  # Fused chunked CE — fits num_gen=4 at 16K on a 40GB A100. The flag name
+  # may differ between swift versions; if this errors, check
+  # `swift rlhf --help | grep -i liger` and adjust.
+  LIGER_ARG=(--use_liger_kernel true)
 fi
 
 # Accuracy-only reward: ms-swift's built-in math-correctness reward
@@ -179,4 +194,5 @@ exec swift rlhf \
   --report_to "${REPORT_TO:-wandb}" \
   --seed 42 \
   "${ADAPTER_ARG[@]}" \
+  "${LIGER_ARG[@]}" \
   $EXTRA_ARGS

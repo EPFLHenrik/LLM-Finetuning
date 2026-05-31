@@ -88,8 +88,10 @@ fi
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 python -c "import torch, vllm, transformers, trl, peft; print(torch.__version__, vllm.__version__, transformers.__version__, trl.__version__, peft.__version__)"
 
-echo "[wrapper] installing ms-swift (>=3.0)..."
-pip install --quiet --no-cache-dir "ms-swift>=3.0" math-verify "bitsandbytes>=0.43" || {
+echo "[wrapper] installing ms-swift (>=3.0) + liger-kernel..."
+# liger-kernel is harmless to install always; only used when USE_LIGER=true.
+# Pinned floor 0.4 — earlier versions miss the fused chunked CE we need.
+pip install --quiet --no-cache-dir "ms-swift>=3.0" math-verify "bitsandbytes>=0.43" "liger-kernel>=0.4" || {
   echo "[wrapper] ERROR: pip install failed" >&2
   exit 1
 }
@@ -139,6 +141,7 @@ ENV_FORWARDS=(
 [[ -n "${EPS_HIGH}"   ]] && ENV_FORWARDS+=(--environment "EPS_HIGH=${EPS_HIGH}")
 [[ -n "${GRAD_ACCUM}" ]] && ENV_FORWARDS+=(--environment "GRAD_ACCUM=${GRAD_ACCUM}")
 [[ -n "${NUM_GEN}"    ]] && ENV_FORWARDS+=(--environment "NUM_GEN=${NUM_GEN}")
+[[ -n "${USE_LIGER}"  ]] && ENV_FORWARDS+=(--environment "USE_LIGER=${USE_LIGER}")
 
 runai submit \
   --name "${JOB_NAME}" \
