@@ -28,8 +28,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 DEFAULT_MODEL_ID = "Qwen/Qwen3-1.7B"
-DEFAULT_OUTPUT_DIR = Path("checkpoints") / "Qwen3-1.7B-base"
-STATIC_CHAT_TEMPLATE_PATH = Path("constants/chat_template.jinja")
+DEFAULT_OUTPUT_DIR = Path("checkpoints") / "Qwen3-1.7B-baseline"
+STATIC_CHAT_TEMPLATE_PATH = Path("code/safety_model/constants/chat_template.jinja")
 
 
 def parse_args() -> argparse.Namespace:
