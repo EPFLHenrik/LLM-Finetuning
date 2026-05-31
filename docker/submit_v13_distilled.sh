@@ -109,6 +109,7 @@ MSYS_NO_PATHCONV=1 runai training submit "${JOB_NAME}" \
       --output_dir ${EXPORT_DIR} \
       --run_name ${RUN_NAME} \
       --hf_repo ${HF_REPO} \
+      --override_chat_template ${REPO_DIR}/multilingual/assets/chat_template_multilingual-v2.jinja \
       --push \
       --force_push && \
     echo '=== Step 3: Training group model ===' && \
