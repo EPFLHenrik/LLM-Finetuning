@@ -1,11 +1,30 @@
-#!/usr/bin/env python3
-"""
+"""multilingual/data_pipeline/parsing/parse_spain_boe_constitucion_espanola.py
+
 Parse the BOE consolidated PDF of the Spanish Constitution into article-level JSONL.
 
+This script extracts the consolidated Spanish Constitution from the official BOE PDF,
+removes headers, footers, table-of-contents noise, and page-number artifacts, then
+segments the legal text into individual constitutional articles.
+
+Each output record corresponds to one article and includes:
+  - article number and optional article title;
+  - full article text;
+  - legal hierarchy metadata: título, capítulo, sección, subsección;
+  - source URL, license/reuse notice, country, language, and regionality metadata.
+
+The parser intentionally excludes non-article constitutional provisions such as
+additional, transitional, derogatory, and final dispositions, because this dataset is
+designed as an article-level source corpus for downstream MCQ generation.
+
 Usage:
-  python parse_spain_boe_constitucion_espanola.py \
-    --pdf /path/to/spain_boe_constitucion_espanola_consolidada.pdf \
-    --output multilingual/data/raw/spain_boe_constitucion_espanola/spain_boe_constitucion_espanola.jsonl
+    python -m multilingual.data_pipeline.parsing.parse_spain_boe_constitucion_espanola \\
+        --pdf multilingual/data/raw/spain_boe_legislation_pdfs/spain_boe_constitucion_espanola_consolidada.pdf \\
+        --output multilingual/data/raw/spain_boe_legislation/spain_boe_constitucion_espanola.jsonl
+
+Alternative direct-file usage:
+    python multilingual/data_pipeline/parsing/parse_spain_boe_constitucion_espanola.py \\
+        --pdf multilingual/data/raw/spain_boe_legislation_pdfs/spain_boe_constitucion_espanola_consolidada.pdf \\
+        --output multilingual/data/raw/spain_boe_legislation/spain_boe_constitucion_espanola.jsonl
 """
 
 import argparse

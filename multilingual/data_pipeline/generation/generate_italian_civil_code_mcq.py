@@ -1,4 +1,4 @@
-"""multilingual/distillation/generate_italian_civil_code_mcq.py
+"""multilingual/data_pipeline/generation/generate_italian_civil_code_mcq.py
 
 Generates Italian MCQ questions from the Italian Civil Code dataset
 (AndreaSimeri/Italian_Civil_Code) using a two-stage pipeline:
@@ -22,7 +22,7 @@ Saving is append-only and resumable:
 Usage:
     export CSCS_SERVING_API="sk-rc-..."
 
-    python -m multilingual.distillation.generate_italian_civil_code_mcq \\
+    python -m multilingual.data_pipeline.generation.generate_italian_civil_code_mcq \\
         --output_dir multilingual/data/processed/italian_civil_code \\
         --concurrency 20 \\
         --max_valid 2000 \\

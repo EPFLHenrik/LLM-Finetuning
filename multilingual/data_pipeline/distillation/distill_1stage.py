@@ -1,37 +1,42 @@
-"""multilingual/distillation/distill_1stage.py
+"""multilingual/data_pipeline/distillation/distill_1stage.py
 
-One-stage teacher distillation pipeline.
+One-stage teacher distillation pipeline for multilingual MCQ SFT data.
+
+This script reads processed MCQ datasets from `multilingual/data/processed`,
+queries a primary teacher model, optionally falls back to a second teacher model,
+validates the generated rationale, and writes distilled examples for later SFT
+data construction.
 
 Sequential fallback:
-  1. Call TEACHER_PRIMARY (Llama-3.3-70B) — fast, good rationales.
-  2. If wrong/invalid → call TEACHER_FALLBACK (Apertus-70B).
-  3. If both wrong → discard.
+  1. Call TEACHER_PRIMARY, usually Llama-3.3-70B.
+  2. If the answer is wrong or the output is invalid, call TEACHER_FALLBACK,
+     usually Apertus-70B.
+  3. If both teachers fail, discard the example.
 
-To switch to Qwen as primary: set TEACHER_PRIMARY = "Qwen/Qwen3.5-27B"
-and set USE_NO_THINK = True (Qwen3 supports /no_think to skip think block).
+To switch to Qwen as primary:
+  - Set TEACHER_PRIMARY = "Qwen/Qwen3.5-27B".
+  - Set USE_NO_THINK = True if using a Qwen model that supports /no_think.
 
-Saving: appended to disk every SAVE_EVERY examples. Fully resumable.
-
-Output:
-    <output_dir>/<base>_distilled.jsonl  ← valid examples only (for SFT)
-    <output_dir>/<base>_all.jsonl        ← all examples (for analysis/resuming)
+Saving is append-only and resumable:
+    <output_dir>/<base>_distilled.jsonl  ← valid examples only, for SFT
+    <output_dir>/<base>_all.jsonl        ← all examples, for analysis/resuming
 
 Usage:
     export CSCS_SERVING_API="sk-rc-..."
 
     # Dry run
-    python -m multilingual.distillation.distill_1stage \
-        --datasets mera_mamuramu \
-        --processed_dir multilingual/data/processed \
-        --output_dir multilingual/data/distilled/v1stage \
+    python -m multilingual.data_pipeline.distillation.distill_1stage \\
+        --datasets mera_mamuramu \\
+        --processed_dir multilingual/data/processed \\
+        --output_dir multilingual/data/distilled/v1stage \\
         --dry_run
 
     # Full run
-    python -m multilingual.distillation.distill_1stage \
-        --datasets ceval milu mera_mamuramu \
-        --processed_dir multilingual/data/processed \
-        --output_dir multilingual/data/distilled/v1stage \
-        --concurrency 4 \
+    python -m multilingual.data_pipeline.distillation.distill_1stage \\
+        --datasets ceval milu mera_mamuramu \\
+        --processed_dir multilingual/data/processed \\
+        --output_dir multilingual/data/distilled/v1stage \\
+        --concurrency 4 \\
         --save_every 25
 """
 

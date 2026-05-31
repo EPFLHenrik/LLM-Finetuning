@@ -1,4 +1,4 @@
-"""multilingual/distillation/generate_spain_boe_mcq.py
+"""multilingual/data_pipeline/generation/generate_spain_boe_mcq.py
 
 Generates Spanish MCQ questions from BOE legal articles (Constitution +
 Autonomous Community Statutes) using a two-stage pipeline:
@@ -23,13 +23,13 @@ Usage:
     export CSCS_SERVING_API="sk-rc-..."
 
     # Single file
-    python -m multilingual.distillation.generate_spain_boe_mcq \\
+    python -m multilingual.data_pipeline.generation.generate_spain_boe_mcq \\
         --input multilingual/data/raw/spain_boe_legislation/spain_boe_constitucion_espanola.jsonl \\
         --output_dir multilingual/data/processed/spain_boe_constitucion_espanola \\
         --concurrency 20
 
     # All files in directory
-    python -m multilingual.distillation.generate_spain_boe_mcq \\
+    python -m multilingual.data_pipeline.generation.generate_spain_boe_mcq \\
         --input_dir multilingual/data/raw/spain_boe_legislation \\
         --output_base multilingual/data/processed \\
         --concurrency 20 \\

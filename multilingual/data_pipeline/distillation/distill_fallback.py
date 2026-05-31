@@ -1,5 +1,10 @@
-"""multilingual/distillation/distill_fallback.py
+"""multilingual/data_pipeline/distillation/distill_fallback.py
+
 Teacher distillation pipeline for multilingual MCQ SFT data.
+
+This script reads processed MCQ datasets from `multilingual/data/processed`,
+queries one or more teacher models, validates the generated rationale, and
+writes distilled examples that can later be used for supervised fine-tuning.
 
 Per example:
   1. Try Llama independently up to 4 times.
@@ -8,24 +13,31 @@ Per example:
   2. If Llama never gives a valid correct answer, try Apertus independently 2 times.
   3. If both teachers fail independently, give the gold answer to Llama and ask for a rationale.
   4. If Llama's gold-answer rationale is invalid, try the same gold-answer fallback with Apertus.
-  5. Keep only valid rationales ending in the correct \boxed{LETTER}; otherwise discard.
+  5. Keep only valid rationales ending in the correct \\boxed{LETTER}; otherwise discard.
 
 Saving is append-only and resumable:
     <output_dir>/<base>_distilled.jsonl  ← valid examples only, for SFT
     <output_dir>/<base>_all.jsonl        ← all attempts, for analysis/resuming
-    <output_dir>/<base>_fail.jsonl       ← examples where gold fallback outputs FAIL
+    <output_dir>/<base>_fail.jsonl       ← failed examples
 
 Usage:
     export CSCS_SERVING_API="sk-rc-..."
 
-    python -m multilingual.distill_fallback \
-        --datasets ceval milu mera_mamuramu \
-        --processed_dir multilingual/data/processed \
-        --output_dir multilingual/data/distilled/v1stage_gold_fallback \
-        --concurrency 4 \
-        --sample_temperature 0.25 \
-        --top_p 0.95 \
+    python -m multilingual.data_pipeline.distillation.distill_fallback \\
+        --datasets ceval milu mera_mamuramu \\
+        --processed_dir multilingual/data/processed \\
+        --output_dir multilingual/data/distilled/v1stage_gold_fallback \\
+        --concurrency 4 \\
+        --sample_temperature 0.25 \\
+        --top_p 0.95 \\
         --save_every 25
+
+Dry run:
+    python -m multilingual.data_pipeline.distillation.distill_fallback \\
+        --datasets mera_mamuramu \\
+        --processed_dir multilingual/data/processed \\
+        --output_dir multilingual/data/distilled/debug_fallback \\
+        --dry_run
 """
 
 from __future__ import annotations

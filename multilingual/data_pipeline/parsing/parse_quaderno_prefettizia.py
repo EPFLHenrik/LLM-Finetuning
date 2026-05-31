@@ -1,7 +1,20 @@
-"""
-Parse 'quaderno-delle-domande-A' PDF into MCQ JSONL.
-Format: numbered questions, options A-D, A always correct.
-Outputs shuffled options with randomized correct answer position.
+"""multilingual/data_pipeline/parsing/parse_quaderno_prefettizia.py
+
+Parse the Italian `quaderno-delle-domande-A` PDF into processed MCQ JSONL.
+
+The PDF contains numbered questions with options A-D, where option A is always
+the correct answer in the original file. This script extracts the questions,
+shuffles the answer options using a fixed random seed, updates the correct
+answer letter, and writes records in the standard processed MCQ format used by
+the multilingual SFT pipeline.
+
+Usage:
+    python -m multilingual.data_pipeline.parsing.parse_quaderno_prefettizia \\
+        --pdf multilingual/data/raw/italian_mcq_pdfs/1.quaderno-delle-domande-A.pdf \\
+        --output multilingual/data/processed/quaderno_prefettizia/quaderno_prefettizia.jsonl \\
+        --dataset quaderno_prefettizia \\
+        --source quaderno_prefettizia \\
+        --seed 42
 """
 
 import re

@@ -1,8 +1,21 @@
-"""
-Parse 'polizia-di-stato-banca-dati' PDF into MCQ JSONL.
-Format: "N. question text" with options A)-E), A always correct.
-PDF has two-column layout and watermark noise (TI, DA, NC, BA + single letters).
-Uses pdfplumber with column crop for correct extraction.
+"""multilingual/data_pipeline/parsing/parse_polizia_di_stato.py
+
+Parse the Italian `polizia-di-stato-banca-dati` PDF into processed MCQ JSONL.
+
+The PDF contains numbered questions with options A-E, where option A is always
+the correct answer in the original file. Because the PDF uses a two-column
+layout and contains watermark noise, this script extracts text column-wise,
+filters known noise patterns, shuffles the answer options using a fixed random
+seed, updates the correct answer letter, and writes records in the standard
+processed MCQ format used by the multilingual SFT pipeline.
+
+Usage:
+    python -m multilingual.data_pipeline.parsing.parse_polizia_di_stato \\
+        --pdf multilingual/data/raw/italian_mcq_pdfs/2.polizia-di-stato-banca-dati.pdf \\
+        --output multilingual/data/processed/polizia_di_stato/polizia_di_stato.jsonl \\
+        --dataset polizia_di_stato \\
+        --source polizia_di_stato \\
+        --seed 42
 """
 
 import re

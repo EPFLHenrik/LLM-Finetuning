@@ -1,18 +1,36 @@
-#!/usr/bin/env python3
-"""Parse BOE consolidated Spanish regional autonomy statutes into article-level JSONL.
+"""multilingual/data_pipeline/parsing/parse_spanish_regional_statutes.py
 
-Run from the repository root, for example:
+Parse BOE consolidated PDFs of selected Spanish Autonomous Community Statutes
+into article-level JSONL files.
 
-    python multilingual/distillation/parse_spanish_regional_statutes.py \
-        --input-dir multilingual/data/raw/spanish-extra
+The script reads the regional statute PDFs listed in `STATUTES`, removes common
+PDF noise such as headers, footers, page numbers, and index lines, then extracts
+regular `Artículo N.` units with their legal hierarchy metadata.
 
-Outputs are written by default to:
+By default, PDFs are read from:
 
-    multilingual/data/raw/<dataset_name>/<dataset_name>.jsonl
+    multilingual/data/raw/spanish-extra
 
-The parser is intentionally article-level: preambles, additional/transitional/final
-provisions, derogatory provisions, and annexes are skipped unless they contain regular
-`Artículo N.` units, which these BOE statute PDFs generally do not.
+and outputs are written to:
+
+    multilingual/data/raw/spain_boe_legislation/<dataset_name>.jsonl
+
+Usage:
+    python -m multilingual.data_pipeline.parsing.parse_spanish_regional_statutes \\
+        --input-dir multilingual/data/raw/spanish-extra \\
+        --output-root multilingual/data/raw
+
+Dry run:
+    python -m multilingual.data_pipeline.parsing.parse_spanish_regional_statutes \\
+        --input-dir multilingual/data/raw/spanish-extra \\
+        --output-root multilingual/data/raw \\
+        --dry-run
+
+Parse selected statutes only:
+    python -m multilingual.data_pipeline.parsing.parse_spanish_regional_statutes \\
+        --input-dir multilingual/data/raw/spanish-extra \\
+        --output-root multilingual/data/raw \\
+        --only cataluna galicia madrid
 """
 
 from __future__ import annotations
