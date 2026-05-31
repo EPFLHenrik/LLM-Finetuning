@@ -453,7 +453,7 @@ def main() -> int:
     for key in selected_keys:
         cfg = STATUTES[key]
         pdf_path = input_dir / cfg.filename
-        output_path = output_root / cfg.dataset / f"{cfg.dataset}.jsonl"
+        output_path = output_root / "spain_boe_legislation" / f"{cfg.dataset}.jsonl"
 
         if not pdf_path.exists():
             summary = {
@@ -484,7 +484,7 @@ def main() -> int:
         print(json.dumps(summary, ensure_ascii=False, indent=2))
         all_summaries.append(summary)
 
-    summary_path = output_root / "spanish_regional_statutes_parse_summary.json"
+    summary_path = output_root / "spain_boe_legislation" / "regional_statutes_parse_summary.json"
     if not args.dry_run:
         summary_path.parent.mkdir(parents=True, exist_ok=True)
         summary_path.write_text(json.dumps(all_summaries, ensure_ascii=False, indent=2), encoding="utf-8")
