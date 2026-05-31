@@ -1,5 +1,5 @@
 from __future__ import annotations
-from constants.global_variables import DatasetFieldNames, Random
+from code.safety_model.constants.global_variables import DatasetFieldNames, Random
 from datasets import load_from_disk
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import argparse
@@ -8,9 +8,9 @@ import json
 import os
 import torch
 import tqdm
-from utils.evaluate.score import main as evaluate_score, score_generations
+from code.safety_model.utils.evaluate.score import main as evaluate_score, score_generations
 from pathlib import Path
-from constants.system_prompt import SYSTEM_PROMPT_MCQ
+from code.safety_model.constants.system_prompt import SYSTEM_PROMPT_MCQ
 
 try:
     from vllm import LLM, SamplingParams

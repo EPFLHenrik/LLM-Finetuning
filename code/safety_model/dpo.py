@@ -22,12 +22,12 @@ from transformers import (
     get_cosine_schedule_with_warmup,
 )
 
-from constants.global_variables import DatasetFieldNames, Random
-from utils.evaluate.score import main as evaluate_score
-from constants.system_prompt import SYSTEM_PROMPT_MCQ
-from utils.train.sft_data import DatasetBundle, collate_fn, encode_example
-from utils.train.sft_export import export_merged_checkpoint
-from utils.train.training_common import (
+from code.safety_model.constants.global_variables import DatasetFieldNames, Random
+from code.safety_model.utils.evaluate.score import main as evaluate_score
+from code.safety_model.constants.system_prompt import SYSTEM_PROMPT_MCQ
+from code.safety_model.utils.train.sft_data import DatasetBundle, collate_fn, encode_example
+from code.safety_model.utils.train.sft_export import export_merged_checkpoint
+from code.safety_model.utils.train.training_common import (
     HomogeneousBatchSampler,
     build_tokenizer_only,
     resolve_checkpoint_subdirs,

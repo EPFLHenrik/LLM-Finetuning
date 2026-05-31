@@ -4,7 +4,7 @@ from pprint import pprint
 from collections import Counter
 
 from datasets import Dataset
-from constants.global_variables import DatasetFieldNames
+from code.safety_model.constants.global_variables import DatasetFieldNames
 
 RAW_VALIDATION_DIR = Path("data/raw/validation_samples")
 OUTPUT_BASE_PATH = Path("data/processed/benchmark/validation_samples")

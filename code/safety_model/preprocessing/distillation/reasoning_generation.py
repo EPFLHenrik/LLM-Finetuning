@@ -2,24 +2,24 @@ import sys
 
 import tqdm
 
-from constants.global_variables import DatasetFieldNames, DistillationFieldNames, Random
-from preprocessing.distillation.utils.batch_logging import BatchFailureLogger
-from preprocessing.distillation.utils.cli import parse_generation_args
-from preprocessing.distillation.utils.config import build_runtime_config
-from preprocessing.distillation.utils.dataset_store import DatasetCheckpointStore
-from preprocessing.distillation.utils.generation_types import GenerationTask
-from preprocessing.distillation.utils.hf_dataset import (
+from code.safety_model.constants.global_variables import DatasetFieldNames, DistillationFieldNames, Random
+from code.safety_model.preprocessing.distillation.utils.batch_logging import BatchFailureLogger
+from code.safety_model.preprocessing.distillation.utils.cli import parse_generation_args
+from code.safety_model.preprocessing.distillation.utils.config import build_runtime_config
+from code.safety_model.preprocessing.distillation.utils.dataset_store import DatasetCheckpointStore
+from code.safety_model.preprocessing.distillation.utils.generation_types import GenerationTask
+from code.safety_model.preprocessing.distillation.utils.hf_dataset import (
     build_pending_indices,
     compute_effective_range,
     load_shuffled_dataset,
 )
-from preprocessing.distillation.utils.output_parsing import (
+from code.safety_model.preprocessing.distillation.utils.output_parsing import (
     BoxedAnswerExtractor,
     TargetFormatter,
     ThinkTagReasoningExtractor,
 )
-from preprocessing.distillation.utils.prompting import FallbackPromptBuilder, HiddenCotPromptBuilder
-from preprocessing.distillation.utils.retry_runner import RetryGenerationRunner
+from code.safety_model.preprocessing.distillation.utils.prompting import FallbackPromptBuilder, HiddenCotPromptBuilder
+from code.safety_model.preprocessing.distillation.utils.retry_runner import RetryGenerationRunner
 
 
 FALLBACK_REASONING = "The options are evaluated based on safety implications."

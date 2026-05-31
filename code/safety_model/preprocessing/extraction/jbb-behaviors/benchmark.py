@@ -1,5 +1,5 @@
 from datasets import load_from_disk, concatenate_datasets
-from constants.global_variables import DatasetFieldNames
+from code.safety_model.constants.global_variables import DatasetFieldNames
 
 dataset_path_harmful = "data/raw/jbb-behaviors/harmful"
 dataset_path_benign = "data/raw/jbb-behaviors/benign"

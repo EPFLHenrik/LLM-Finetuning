@@ -1,5 +1,5 @@
 from datasets import load_from_disk
-from constants.global_variables import DatasetFieldNames
+from code.safety_model.constants.global_variables import DatasetFieldNames
 
 dataset_path = "data/raw/SGXSTest/train"
 dataset = load_from_disk(dataset_path)

@@ -8,14 +8,14 @@ from pprint import pprint
 
 from datasets import Dataset, DatasetDict
 
-from constants.global_variables import DatasetFieldNames, Random
+from code.safety_model.constants.global_variables import DatasetFieldNames, Random
 
 
 SEED = Random.SEED
 LETTERS = [chr(ord("A") + i) for i in range(26)]
 
-OUT_SFT = Path("data/processed/sft/safetybench/mcq")
-OUT_BENCH = Path("data/processed/benchmark/safetybench")
+OUT_SFT = Path("data/safety/processed/sft/safetybench/mcq")
+OUT_BENCH = Path("data/safety/processed/benchmark/safetybench")
 
 
 def normalize_text(text: str) -> str:

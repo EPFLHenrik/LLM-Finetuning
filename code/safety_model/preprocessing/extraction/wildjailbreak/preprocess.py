@@ -7,7 +7,7 @@ from pprint import pprint
 
 from datasets import Dataset, DatasetDict, load_from_disk
 
-from constants.global_variables import DatasetFieldNames, Random
+from code.safety_model.constants.global_variables import DatasetFieldNames, Random
 
 
 SEED = Random.SEED
