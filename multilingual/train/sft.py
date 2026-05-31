@@ -26,7 +26,7 @@ from trl import SFTConfig, SFTTrainer
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
-from multilingual.config import REPO as MLREPO
+from multilingual.config import REPO as MLREPO, SYSTEM_PROMPT, SYSTEM_PROMPT_GROUP
 
 # ---------------------------------------------------------------------------
 # Defaults
@@ -100,6 +100,9 @@ def parse_args():
     parser.add_argument("--wandb_project", type=str, default=WANDB_PROJECT)
     parser.add_argument("--wandb_entity",  type=str, default=None)
     parser.add_argument("--skip_wandb",    action="store_true")
+    parser.add_argument("--system_prompt", type=str, default="individual",
+                        choices=["individual", "group"],
+                        help="System prompt variant: 'individual' (multilingual v2) or 'group'.")
     return parser.parse_args()
 
 
@@ -159,6 +162,23 @@ def main():
     # Debug: print one formatted example to verify template output
     train_dataset = _load_jsonl(args.train_file)
     val_dataset   = _load_jsonl(args.val_file)
+
+
+    # override system prompt in messages if using group prompt
+    if args.system_prompt == "group":
+        def _override_system(ex):
+            msgs = list(ex.get("messages", []))
+            if msgs and msgs[0]["role"] == "system":
+                msgs[0] = {"role": "system", "content": SYSTEM_PROMPT_GROUP}
+            ex["messages"] = msgs
+            return ex
+        train_dataset = train_dataset.map(_override_system)
+        val_dataset   = val_dataset.map(_override_system)
+        print("[info] System prompt overridden with SYSTEM_PROMPT_GROUP")
+    else:
+        print("[info] Using individual system prompt (SYSTEM_PROMPT)")
+
+    # print debug
     print(f"Train: {len(train_dataset)} | Val: {len(val_dataset)}")
     print("\n--- Sample formatted example ---")
     print(tokenizer.apply_chat_template(

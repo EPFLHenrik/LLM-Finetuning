@@ -150,7 +150,14 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
     ],
     "spain_boe_legislation": [
         ("spain_boe_legislation/spain_boe_legislation_generated.jsonl", "spain_boe_legislation"),
-    ]
+    ],
+    "polizia_di_stato": [
+        ("polizia_di_stato/polizia_di_stato_clean.jsonl", "polizia_di_stato"),
+    ],
+    "quaderno_prefettizia": [
+        ("quaderno_prefettizia/quaderno_prefettizia_clean.jsonl", "quaderno_prefettizia"),
+        ("quaderno_prefettizia/quaderno_prefettizia_economia_politica_clean.jsonl", "quaderno_prefettizia_economia_politica"),
+    ],
 }
 
 # ---------------------------------------------------------------------------

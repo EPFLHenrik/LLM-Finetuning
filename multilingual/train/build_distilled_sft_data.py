@@ -3,24 +3,26 @@
 Builds SFT JSONL files exclusively from distilled examples.
 No raw loaders — 100% distilled data pipeline.
 
-Distilled examples are split into train/val/test per dataset/language group:
-  train: 1 - val_fraction - test_fraction
-  val:   val_fraction  (default 0.15)
-  test:  test_fraction (default 0.05)
+Distilled examples are split into train/val per dataset/language group:
+  train: 1 - val_fraction
+  val:   val_fraction (default 0.15)
+
+Test split is disabled by default. Enable with --enable_test_split.
+
+After building, verifies no benchmark examples (by source_id) appear in
+train or val splits.
 
 Output layout:
     <output_dir>/per_dataset/<dataset>_<language>_distilled_train.jsonl
     <output_dir>/per_dataset/<dataset>_<language>_distilled_val.jsonl
-    <output_dir>/per_dataset/<dataset>_<language>_distilled_test.jsonl
     <output_dir>/mixed/train_mixed.jsonl
     <output_dir>/mixed/val_mixed.jsonl
-    <output_dir>/mixed/test_mixed.jsonl
     <output_dir>/mixed/include_val.jsonl
     <output_dir>/build_summary.csv
 
 Usage:
     python -m multilingual.train.build_distilled_sft_data \
-        --config configs/sft/v12.json --overwrite
+        --config configs/sft/v13.json --overwrite
 """
 
 import argparse
@@ -45,14 +47,14 @@ DEFAULT_MAX_PER_DATASET            = 10000
 DEFAULT_MAX_PER_LANGUAGE_MIXED     = 2500
 DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL = 1000
 DEFAULT_SFT_BASE_DIR = REPO / "multilingual" / "data" / "sft"
+DEFAULT_BENCHMARK_PATH = REPO / "multilingual" / "data" / "benchmarks" / "benchmark_all.jsonl"
 DEBUG_MAX            = 20
-ALL_SPLITS           = ("train", "val", "test")
 
 DISTILLED_VAL_FRACTION  = 0.15
 DISTILLED_TEST_FRACTION = 0.05
 
 # ---------------------------------------------------------------------------
-# Dataset registry — caps reflect distillation pool sizes
+# Dataset registry
 # ---------------------------------------------------------------------------
 
 DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
@@ -261,18 +263,73 @@ def _load_jsonl(path: Path) -> List[Dict]:
         return [json.loads(l) for l in f if l.strip()]
 
 # ---------------------------------------------------------------------------
-# Distillation loading — 3-way train/val/test split
+# Benchmark contamination check
+# ---------------------------------------------------------------------------
+
+def _load_benchmark_ids(benchmark_path: Path) -> Set[str]:
+    if not benchmark_path.exists():
+        print(f"  [WARN] Benchmark file not found: {benchmark_path} — skipping check")
+        return set()
+    ids = set()
+    with open(benchmark_path, encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                try:
+                    r = json.loads(line)
+                    sid = r.get("source_id") or r.get("id", "")
+                    if sid:
+                        ids.add(sid)
+                except json.JSONDecodeError:
+                    pass
+    return ids
+
+
+def _check_benchmark_contamination(
+    output_dir: Path,
+    benchmark_ids: Set[str],
+) -> None:
+    """Check all train/val jsonl files for benchmark source_id contamination."""
+    if not benchmark_ids:
+        return
+
+    print(f"\n── Benchmark contamination check ({len(benchmark_ids)} benchmark IDs) ──")
+    total_contaminated = 0
+
+    for path in sorted(output_dir.rglob("*.jsonl")):
+        if "test" in path.name:
+            continue
+        contaminated = []
+        for r in _load_jsonl(path):
+            sid = r.get("source_id") or r.get("loader_id", "")
+            if sid in benchmark_ids:
+                contaminated.append(sid)
+        if contaminated:
+            print(f"  [CONTAMINATION] {path.name}: {len(contaminated)} benchmark examples found!")
+            for sid in contaminated[:5]:
+                print(f"    - {sid}")
+            if len(contaminated) > 5:
+                print(f"    ... and {len(contaminated) - 5} more")
+            total_contaminated += len(contaminated)
+
+    if total_contaminated == 0:
+        print("  [OK] No benchmark contamination found.")
+    else:
+        print(f"\n  [ERROR] Total contaminated: {total_contaminated} — review before training!")
+
+# ---------------------------------------------------------------------------
+# Distillation loading — train/val split (test optional)
 # ---------------------------------------------------------------------------
 
 def _load_distilled_dirs(
     distilled_dirs: List[Path],
-    val_fraction:  float = DISTILLED_VAL_FRACTION,
-    test_fraction: float = DISTILLED_TEST_FRACTION,
+    val_fraction:   float = DISTILLED_VAL_FRACTION,
+    test_fraction:  float = DISTILLED_TEST_FRACTION,
+    enable_test:    bool  = False,
 ) -> Tuple[List[Dict], List[Dict], List[Dict]]:
     """
     Scan distilled dirs for *_distilled.jsonl files.
     Returns (distilled_train, distilled_val, distilled_test).
-    Split is per dataset+language group with fixed seed.
+    Test split is empty unless enable_test=True.
     """
     raw_records: List[Dict] = []
 
@@ -315,7 +372,7 @@ def _load_distilled_dirs(
     if removed:
         print(f"  Removed {removed} duplicate records")
 
-    # 3-way split per dataset+language
+    # Split per dataset+language
     rng = random.Random(VAL_SEED)
 
     by_group: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
@@ -329,8 +386,13 @@ def _load_distilled_dirs(
 
     for (dataset, language), group in sorted(by_group.items()):
         rng.shuffle(group)
-        n_test = max(1, int(len(group) * test_fraction))
-        n_val  = max(1, int(len(group) * val_fraction))
+
+        if enable_test:
+            n_test = max(1, int(len(group) * test_fraction))
+        else:
+            n_test = 0
+
+        n_val       = max(1, int(len(group) * val_fraction))
         test_group  = group[:n_test]
         val_group   = group[n_test:n_test + n_val]
         train_group = group[n_test + n_val:]
@@ -345,15 +407,16 @@ def _load_distilled_dirs(
             distilled_test.append(_build_distilled_sft_record(r, idx_test, "test"))
             idx_test += 1
 
+        test_str = f", {len(test_group)} test" if enable_test else ""
         print(f"  {dataset}/{language}: {len(train_group)} train, "
-              f"{len(val_group)} val, {len(test_group)} test")
+              f"{len(val_group)} val{test_str}")
 
-    print(f"\n  Total: {len(distilled_train)} train, "
-          f"{len(distilled_val)} val, {len(distilled_test)} test")
+    print(f"\n  Total: {len(distilled_train)} train, {len(distilled_val)} val"
+          + (f", {len(distilled_test)} test" if enable_test else ""))
     return distilled_train, distilled_val, distilled_test
 
 # ---------------------------------------------------------------------------
-# Mixed file builder — distilled only
+# Mixed file builder
 # ---------------------------------------------------------------------------
 
 def _build_mixed(
@@ -370,7 +433,6 @@ def _build_mixed(
     for dataset in DATASET_REGISTRY:
         if not _split_enabled(dataset, split):
             continue
-        cfg          = _dataset_cfg(dataset)
         dataset_pool: List[Dict] = []
 
         for language in _languages(dataset):
@@ -421,11 +483,15 @@ def build(
     distilled_dirs: List[Path],
     distilled_val_fraction:  float = DISTILLED_VAL_FRACTION,
     distilled_test_fraction: float = DISTILLED_TEST_FRACTION,
+    enable_test: bool = False,
+    benchmark_path: Optional[Path] = None,
 ) -> None:
     per_dir   = output_dir / "per_dataset"
     mixed_dir = output_dir / "mixed"
     rng       = random.Random(VAL_SEED)
     summary_rows: List[Dict] = []
+
+    active_splits = ["train", "val"] + (["test"] if enable_test else [])
 
     # ── Step 0: load and split distilled examples ─────────────────────────────
     print("\n── Loading distilled examples ──")
@@ -433,14 +499,15 @@ def build(
         distilled_dirs,
         val_fraction=distilled_val_fraction,
         test_fraction=distilled_test_fraction,
+        enable_test=enable_test,
     )
 
     # ── Step 1: write per-dataset/language distilled files ────────────────────
-    for split_name, distilled_records in [
-        ("train", distilled_train),
-        ("val",   distilled_val),
-        ("test",  distilled_test),
-    ]:
+    split_records = [("train", distilled_train), ("val", distilled_val)]
+    if enable_test:
+        split_records.append(("test", distilled_test))
+
+    for split_name, distilled_records in split_records:
         if not distilled_records:
             continue
         by_group: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
@@ -448,11 +515,9 @@ def build(
             by_group[(r["dataset"], r["language"])].append(r)
 
         for (dataset, language), records in sorted(by_group.items()):
-            # Apply per-language cap to train
             if split_name == "train":
                 cap = _max_per_language(dataset, language, max_per_language)
                 records = records[:cap]
-            # Apply split caps to val/test
             elif split_name in ("val", "test"):
                 cap = _split_cap(dataset, split_name, max_per_dataset)
                 if cap < 10_000_000:
@@ -467,7 +532,7 @@ def build(
                 })
 
     # ── Step 2: mixed files ───────────────────────────────────────────────────
-    for split in ALL_SPLITS:
+    for split in active_splits:
         lang_cap = (max_per_language_mixed      if split == "train"
                     else DEFAULT_MAX_PER_LANGUAGE_MIXED_VAL if split == "val"
                     else None)
@@ -492,7 +557,6 @@ def build(
                 "split": split, "n": len(mixed), "path": str(mixed_path),
             })
 
-        # INCLUDE-only val subset for benchmarking
         if split == "val":
             include_val = [r for r in mixed if r["dataset"] == "include"]
             if include_val:
@@ -512,6 +576,11 @@ def build(
         writer.writerows(summary_rows)
     print(f"\nSummary: {summary_path}")
 
+    # ── Step 4: benchmark contamination check ─────────────────────────────────
+    if benchmark_path is not None:
+        benchmark_ids = _load_benchmark_ids(benchmark_path)
+        _check_benchmark_contamination(output_dir, benchmark_ids)
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -521,12 +590,18 @@ def parse_args():
     parser.add_argument("--max_per_language",       type=int, default=DEFAULT_MAX_PER_LANGUAGE)
     parser.add_argument("--max_per_dataset",        type=int, default=DEFAULT_MAX_PER_DATASET)
     parser.add_argument("--max_per_language_mixed", type=int, default=DEFAULT_MAX_PER_LANGUAGE_MIXED)
-    parser.add_argument("--debug",     action="store_true")
-    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--debug",            action="store_true")
+    parser.add_argument("--overwrite",        action="store_true")
+    parser.add_argument("--enable_test_split", action="store_true",
+                        help="Also generate a test split (disabled by default)")
     parser.add_argument("--config",    type=Path, default=None)
     parser.add_argument("--distilled_dirs", nargs="*", type=Path, default=None)
     parser.add_argument("--distilled_val_fraction",  type=float, default=DISTILLED_VAL_FRACTION)
     parser.add_argument("--distilled_test_fraction", type=float, default=DISTILLED_TEST_FRACTION)
+    parser.add_argument("--benchmark_path", type=Path, default=DEFAULT_BENCHMARK_PATH,
+                        help="Path to benchmark_all.jsonl for contamination check")
+    parser.add_argument("--no_benchmark_check", action="store_true",
+                        help="Skip benchmark contamination check")
     return parser.parse_args()
 
 
@@ -540,6 +615,8 @@ def main():
     distilled_dirs   = args.distilled_dirs or []
     dist_val_frac    = args.distilled_val_fraction
     dist_test_frac   = args.distilled_test_fraction
+    enable_test      = args.enable_test_split
+    benchmark_path   = None if args.no_benchmark_check else args.benchmark_path
 
     if args.config:
         with open(args.config) as f:
@@ -549,6 +626,7 @@ def main():
         max_mixed        = cfg.get("max_per_language_mixed", max_mixed)
         dist_val_frac    = cfg.get("distilled_val_fraction",  dist_val_frac)
         dist_test_frac   = cfg.get("distilled_test_fraction", dist_test_frac)
+        enable_test      = cfg.get("enable_test_split", enable_test)
         if output_name := cfg.get("output_name"):
             output_dir = DEFAULT_SFT_BASE_DIR / output_name
         if "dataset_registry" in cfg:
@@ -556,15 +634,16 @@ def main():
         if "distilled_dirs" in cfg:
             distilled_dirs = [Path(d) for d in cfg["distilled_dirs"]]
 
-    hf_token = os.environ.get("HF_TOKEN", "")  # not used but kept for consistency
-    print(f"Debug:      {args.debug}  Overwrite: {args.overwrite}")
-    print(f"Config:     {args.config or 'default'}")
-    print(f"Output dir: {output_dir}")
-    print(f"Caps:       max_per_language={max_per_language}, "
+    print(f"Debug:        {args.debug}  Overwrite: {args.overwrite}")
+    print(f"Config:       {args.config or 'default'}")
+    print(f"Output dir:   {output_dir}")
+    print(f"Test split:   {'enabled' if enable_test else 'disabled'}")
+    print(f"Benchmark check: {'disabled' if benchmark_path is None else str(benchmark_path)}")
+    print(f"Caps:         max_per_language={max_per_language}, "
           f"max_per_dataset={max_per_dataset}, "
           f"max_per_language_mixed={max_mixed}")
-    print(f"Distilled:  val_frac={dist_val_frac}, test_frac={dist_test_frac}")
-    print(f"Dirs:       {[str(d) for d in distilled_dirs]}")
+    print(f"Distilled:    val_frac={dist_val_frac}, test_frac={dist_test_frac}")
+    print(f"Dirs:         {[str(d) for d in distilled_dirs]}")
     print()
 
     build(
@@ -577,6 +656,8 @@ def main():
         distilled_dirs=distilled_dirs or [],
         distilled_val_fraction=dist_val_frac,
         distilled_test_fraction=dist_test_frac,
+        enable_test=enable_test,
+        benchmark_path=benchmark_path,
     )
 
 
