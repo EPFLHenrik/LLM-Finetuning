@@ -20,9 +20,9 @@ import json
 import sys
 from pathlib import Path
 
-from utils.evaluate.benchmarks import VALID_METHODS, extract_benchmark_answer, is_correct_benchmark_answer
-from utils.evaluate.extract_answer import extract_boxed_answer
-from utils.evaluate.pass_at_k import compute_pass_at_k_for_dataset
+from code.safety_model.utils.evaluate.benchmarks import VALID_METHODS, extract_benchmark_answer, is_correct_benchmark_answer
+from code.safety_model.utils.evaluate.extract_answer import extract_boxed_answer
+from code.safety_model.utils.evaluate.pass_at_k import compute_pass_at_k_for_dataset
 
 
 # Mirrors config/benchmarks.yaml in the CI repo.

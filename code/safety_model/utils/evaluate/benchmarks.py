@@ -12,7 +12,7 @@ import json
 import re
 import string
 
-from utils.evaluate.extract_answer import extract_boxed_answer, is_equiv, normalize_final_answer
+from code.safety_model.utils.evaluate.extract_answer import extract_boxed_answer, is_equiv, normalize_final_answer
 
 
 VALID_METHODS = ("boxed", "knowledge", "exact")
