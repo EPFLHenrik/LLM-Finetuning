@@ -8,6 +8,8 @@
   "max_per_language": 10000,
   "max_per_dataset": 20000,
   "max_per_language_mixed": 3200,
+  "train_block_shuffle": true,
+  "train_block_size": 16,
 
   "dataset_registry": {
     "include": {

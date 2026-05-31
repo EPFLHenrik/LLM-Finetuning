@@ -49,3 +49,10 @@ for ADAPTER_NAME in \
             --chat_template $TMPL_PATH
     done
 done
+
+ADAPTER=/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/checkpoints/sft_multilingual_v13_distilled_1e-4_warmup0p1/individual/checkpoint-1400
+python -m multilingual.eval.run_eval \
+    --model_name $ADAPTER \
+    --provided_only \
+    --output_dir multilingual/results/eval/v13/checkpoint-1400 \
+    --chat_template multilingual/assets/chat_template_multilingual-v2.jinja

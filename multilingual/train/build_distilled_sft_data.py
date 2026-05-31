@@ -22,7 +22,7 @@ Output layout:
 
 Usage:
     python -m multilingual.train.build_distilled_sft_data \
-        --config configs/sft/v13.json --overwrite
+        --config configs/sft/v14.json --overwrite
 """
 
 import argparse
@@ -52,6 +52,9 @@ DEBUG_MAX            = 20
 
 DISTILLED_VAL_FRACTION  = 0.15
 DISTILLED_TEST_FRACTION = 0.05
+
+DEFAULT_TRAIN_BLOCK_SHUFFLE = True
+DEFAULT_TRAIN_BLOCK_SIZE = 16
 
 # ---------------------------------------------------------------------------
 # Dataset registry
@@ -419,6 +422,41 @@ def _load_distilled_dirs(
 # Mixed file builder
 # ---------------------------------------------------------------------------
 
+def _block_shuffle_train_mixed(
+    records: List[Dict],
+    rng: random.Random,
+    block_size: int,
+) -> List[Dict]:
+    """
+    Reorder the already-selected train mixed records into small homogeneous blocks.
+    This does not change which examples are included. It only changes the final
+    order written to mixed/train_mixed.jsonl.
+    Blocks are grouped by (dataset, language), shuffled globally, then flattened.
+    """
+    if block_size <= 1:
+        rng.shuffle(records)
+        return records
+
+    by_group: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
+    for r in records:
+        key = (str(r.get("dataset", "unknown")), str(r.get("language", "unknown")))
+        by_group[key].append(r)
+
+    blocks: List[List[Dict]] = []
+    for group in by_group.values():
+        rng.shuffle(group)
+        for i in range(0, len(group), block_size):
+            blocks.append(group[i:i + block_size])
+
+    rng.shuffle(blocks)
+
+    ordered: List[Dict] = []
+    for block in blocks:
+        ordered.extend(block)
+
+    return ordered
+
+
 def _build_mixed(
     per_dir: Path,
     split: str,
@@ -485,6 +523,8 @@ def build(
     distilled_test_fraction: float = DISTILLED_TEST_FRACTION,
     enable_test: bool = False,
     benchmark_path: Optional[Path] = None,
+    train_block_shuffle: bool = DEFAULT_TRAIN_BLOCK_SHUFFLE,
+    train_block_size: int = DEFAULT_TRAIN_BLOCK_SIZE,
 ) -> None:
     per_dir   = output_dir / "per_dataset"
     mixed_dir = output_dir / "mixed"
@@ -547,6 +587,14 @@ def build(
             debug=debug,
         )
 
+        if split == "train" and train_block_shuffle:
+            mixed = _block_shuffle_train_mixed(
+                records=mixed,
+                rng=rng,
+                block_size=train_block_size,
+            )
+            print(f"  Applied train block shuffle: block_size={train_block_size}")
+
         if not mixed:
             continue
 
@@ -602,6 +650,12 @@ def parse_args():
                         help="Path to benchmark_all.jsonl for contamination check")
     parser.add_argument("--no_benchmark_check", action="store_true",
                         help="Skip benchmark contamination check")
+    parser.add_argument("--train_block_shuffle", action="store_true",
+                    help="Reorder train_mixed.jsonl into dataset/language blocks after sample selection.")
+    parser.add_argument("--no_train_block_shuffle", action="store_true",
+                        help="Disable train block shuffling.")
+    parser.add_argument("--train_block_size", type=int, default=DEFAULT_TRAIN_BLOCK_SIZE,
+                        help="Block size for train_mixed.jsonl block shuffle.")
     return parser.parse_args()
 
 
@@ -617,6 +671,12 @@ def main():
     dist_test_frac   = args.distilled_test_fraction
     enable_test      = args.enable_test_split
     benchmark_path   = None if args.no_benchmark_check else args.benchmark_path
+    train_block_shuffle = DEFAULT_TRAIN_BLOCK_SHUFFLE
+    if args.train_block_shuffle:
+        train_block_shuffle = True
+    if args.no_train_block_shuffle:
+        train_block_shuffle = False
+    train_block_size = args.train_block_size
 
     if args.config:
         with open(args.config) as f:
@@ -627,6 +687,8 @@ def main():
         dist_val_frac    = cfg.get("distilled_val_fraction",  dist_val_frac)
         dist_test_frac   = cfg.get("distilled_test_fraction", dist_test_frac)
         enable_test      = cfg.get("enable_test_split", enable_test)
+        train_block_shuffle = cfg.get("train_block_shuffle", train_block_shuffle)
+        train_block_size    = cfg.get("train_block_size", train_block_size)
         if output_name := cfg.get("output_name"):
             output_dir = DEFAULT_SFT_BASE_DIR / output_name
         if "dataset_registry" in cfg:
@@ -643,6 +705,7 @@ def main():
           f"max_per_dataset={max_per_dataset}, "
           f"max_per_language_mixed={max_mixed}")
     print(f"Distilled:    val_frac={dist_val_frac}, test_frac={dist_test_frac}")
+    print(f"Train ordering: block_shuffle={train_block_shuffle}, block_size={train_block_size}")
     print(f"Dirs:         {[str(d) for d in distilled_dirs]}")
     print()
 
@@ -658,6 +721,8 @@ def main():
         distilled_test_fraction=dist_test_frac,
         enable_test=enable_test,
         benchmark_path=benchmark_path,
+        train_block_shuffle=train_block_shuffle,
+        train_block_size=train_block_size,
     )
 
 
