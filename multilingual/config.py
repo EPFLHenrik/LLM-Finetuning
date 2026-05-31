@@ -56,7 +56,7 @@ Example:
 # Local token budgets. 3072 gives MCQ enough headroom for a short think
 # block without letting the model loop. CI uses 16384.
 DEFAULT_MAX_NEW_TOKENS_BY_TASK = {
-    "mcq":  3072,
+    "mcq":  4096,
     "math": 4096,
 }
 
