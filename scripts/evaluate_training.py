@@ -151,12 +151,25 @@ class VLLMEvaluator:
         self.tokenizer = tokenizer
         self.llm = LLM(model=self.model_path, tokenizer=self.model_path, trust_remote_code=True)
 
-    def generate_batch(self, prompts: list[str], max_new_tokens: int, temperature: float, top_p: float) -> list[str]:
-        sampling_params = SamplingParams(
-            temperature=temperature,
-            top_p=top_p,
-            max_tokens=max_new_tokens,
-        )
+    def generate_batch(
+        self,
+        prompts: list[str],
+        max_new_tokens: int,
+        repetition_penalty: float | None = None,
+        temperature: float | None = None,
+        top_p: float | None = None,
+        top_k: int | None = None,
+    ) -> list[str]:
+        kwargs: dict[str, Any] = {"max_tokens": max_new_tokens}
+        if repetition_penalty is not None:
+            kwargs["repetition_penalty"] = float(repetition_penalty)
+        if temperature is not None:
+            kwargs["temperature"] = float(temperature)
+        if top_p is not None:
+            kwargs["top_p"] = float(top_p)
+        if top_k is not None:
+            kwargs["top_k"] = int(top_k)
+        sampling_params = SamplingParams(**kwargs)
         outputs = self.llm.generate(prompts, sampling_params=sampling_params)
         completions: list[str] = []
         for request_output in outputs:
@@ -173,8 +186,10 @@ def evaluate_rows(
     rows: list[dict[str, Any]],
     *,
     max_new_tokens: int,
-    temperature: float,
-    top_p: float,
+    repetition_penalty: float | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
 ) -> dict[str, Any]:
     correct_count = 0
     penalty_sum = 0.0
@@ -183,10 +198,17 @@ def evaluate_rows(
 
     prompts = [_format_prompt(tokenizer, _get_first(row, PROMPT_KEYS)) for row in rows]
     if hasattr(evaluator, "generate_batch"):
-        predictions = evaluator.generate_batch(prompts, max_new_tokens=max_new_tokens, temperature=temperature, top_p=top_p)
+        predictions = evaluator.generate_batch(
+            prompts,
+            max_new_tokens=max_new_tokens,
+            repetition_penalty=repetition_penalty,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+        )
     else:
         predictions = [
-            evaluator.generate_once(prompt, max_new_tokens=max_new_tokens, temperature=temperature, top_p=top_p)
+            evaluator.generate_once(prompt, max_new_tokens=max_new_tokens)
             for prompt in prompts
         ]
 
@@ -235,8 +257,6 @@ def main() -> None:
     parser.add_argument("--validation-file", required=True, type=Path)
     parser.add_argument("--output-dir", type=Path, default=Path("results/checkpoint_evals"))
     parser.add_argument("--max-new-tokens", type=int, default=16000)
-    parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--skip-wandb", action="store_true")
     parser.add_argument("--wandb-project", type=str, default="cs552-mystery-machine")
     parser.add_argument("--wandb-entity", type=str, default=None)
@@ -279,16 +299,84 @@ def main() -> None:
                 tokenizer.pad_token = tokenizer.eos_token
             tokenizer.padding_side = "right"
 
+            # Load per-checkpoint generation_config.json if present.
+            gen_cfg: dict[str, Any] = {}
+            gen_cfg_path = ckpt_dir / "generation_config.json"
+            if gen_cfg_path.exists():
+                try:
+                    gen_cfg = json.loads(gen_cfg_path.read_text(encoding="utf-8"))
+                except Exception as exc:  # pragma: no cover - best-effort warning
+                    print(f"[warn] Failed to read {gen_cfg_path}: {exc}")
+
+
+            # Helper to detect whether a CLI flag was explicitly provided.
+            def _arg_provided(param_name: str) -> bool:
+                flag = "--" + param_name.replace("_", "-")
+                return flag in sys.argv
+
+            # Choose max_new_tokens: prefer CLI if explicitly provided, else use generation_config.json, else fallback to args default.
+            try:
+                max_new_tokens = int(args.max_new_tokens) if _arg_provided("max_new_tokens") else int(gen_cfg.get("max_new_tokens", args.max_new_tokens))
+            except Exception:
+                max_new_tokens = args.max_new_tokens
+
+            def _float_cfg(key: str, default: float | None) -> float | None:
+                val = gen_cfg.get(key)
+                if val is None:
+                    return default
+                try:
+                    return float(val)
+                except Exception:
+                    print(f"[warn] invalid {key}={val!r} in {gen_cfg_path}, using default {default}")
+                    return default
+
+            def _int_cfg(key: str, default: int | None) -> int | None:
+                val = gen_cfg.get(key)
+                if val is None:
+                    return default
+                try:
+                    return int(val)
+                except Exception:
+                    print(f"[warn] invalid {key}={val!r} in {gen_cfg_path}, using default {default}")
+                    return default
+
+            repetition_penalty = _float_cfg("repetition_penalty", 1.0)
+            temperature = _float_cfg("temperature", None)
+            top_p = _float_cfg("top_p", None)
+            top_k = _int_cfg("top_k", None)
+
             evaluator = VLLMEvaluator(ckpt_dir, tokenizer)
+
+            # Prepare and print the full set of generation parameters (file + effective values).
+            used_gen_params = dict(gen_cfg) if isinstance(gen_cfg, dict) else {}
+            used_gen_params["max_new_tokens"] = max_new_tokens
+            used_gen_params["repetition_penalty"] = repetition_penalty
+            used_gen_params["temperature"] = temperature
+            used_gen_params["top_p"] = top_p
+            used_gen_params["top_k"] = top_k
+            print("[params] checkpoint=", ckpt_dir.name, "source_file=", str(gen_cfg_path) if gen_cfg_path.exists() else None)
+            print("[params full]", json.dumps(used_gen_params, ensure_ascii=False))
 
             eval_report = evaluate_rows(
                 evaluator,
                 tokenizer,
                 rows,
-                max_new_tokens=args.max_new_tokens,
-                temperature=args.temperature,
-                top_p=args.top_p,
+                max_new_tokens=max_new_tokens,
+                repetition_penalty=repetition_penalty,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
             )
+
+            # Record which generation params were used for this checkpoint.
+            eval_report["generation_config_used"] = {
+                "source_file": str(gen_cfg_path) if gen_cfg_path.exists() else None,
+                "max_new_tokens": max_new_tokens,
+                "repetition_penalty": repetition_penalty,
+                "temperature": temperature,
+                "top_p": top_p,
+                "top_k": top_k,
+            }
         except Exception as exc:
             print(f"[warn] Could not evaluate {ckpt_dir}: {exc}")
             traceback.print_exc()

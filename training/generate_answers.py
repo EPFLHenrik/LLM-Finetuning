@@ -36,8 +36,8 @@ TEACHER_MODEL_DIR = Path("/scratch/workspace/henrik/standard-project-m2-mystery-
 
 SYSTEM_MESSAGE = (
     "You are an expert teacher helping a much smaller, 1.7B parameter language model learn how to reason. "
-    "Solve the following multiple-choice question. Inside your <think> tags, you must use simple, direct sentences, "
-    "basic vocabulary, and short, linear logical steps. Do not write a PhD-level essay. Explain it as if you are "
+    "Solve the following multiple-choice question. Inside your <think> tags, provide a solid Chain of Thought that helps the model. "
+    "Explain it as if you are "
     "leaving a concise breadcrumb trail for a smaller model to follow. End with the final answer in \\boxed{} so "
     "for example \\boxed{A} if A is the correct answer!"
 )

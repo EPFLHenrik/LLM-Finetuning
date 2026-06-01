@@ -32,9 +32,9 @@ SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
 # Default paths inside the repo
-CHECKPOINTS_DIR="models/ai2_arc_challenge/merged_checkpoints"
-OUTPUT_DIR="results/ai2_arc_challenge/lora_adapter"
-VALIDATION_FILE="data/preprocessing/ai2_arc_challenge/validation.jsonl"
+CHECKPOINTS_DIR="models/merged"
+OUTPUT_DIR="results/merged_model/MMLUPro"
+VALIDATION_FILE="data/preprocessing/benchmarks/MMLU-pro/test.jsonl"
 
 # Local quick run: execute the evaluator directly.
 if [[ "${1:-}" == "--local" ]]; then
@@ -43,9 +43,7 @@ if [[ "${1:-}" == "--local" ]]; then
     --checkpoints-dir "${CHECKPOINTS_DIR}" \
     --validation-file "${VALIDATION_FILE}" \
     --output-dir "${OUTPUT_DIR}" \
-    --max-new-tokens 512 \
-    --temperature 0.0 \
-    --top-p 0.95 \
+    --max-new-tokens 4096 \
     --max-eval-samples 0 "$@"
 fi
 
@@ -77,8 +75,6 @@ runai submit \
       --validation-file \"${VALIDATION_FILE}\" \
       --output-dir \"${OUTPUT_DIR}\" \
       --max-new-tokens 16000 \
-      --temperature 0.0 \
-      --top-p 0.95 \
       --wandb-key "${WANDB_KEY}" \
       --max-eval-samples 0"
 

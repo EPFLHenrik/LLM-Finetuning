@@ -31,11 +31,11 @@ SHARED_RO_PVC="course-cs-552-shared-ro"
 SHARED_RW_PVC="course-cs-552-shared-rw"
 
 # Inputs / outputs for the ECQA student generation job.
-MODEL_DIR="/scratch/workspace/henrik/standard-project-m2-mystery-machine/models/qwen3_thinking"
-INPUT_FILE="/scratch/workspace/henrik/standard-project-m2-mystery-machine/data/preprocessing/ecqa/train.jsonl"
-OUTPUT_FILE="/scratch/workspace/henrik/standard-project-m2-mystery-machine/data/preprocessing/ecqa/train_student.jsonl"
+MODEL_DIR="/scratch/workspace/henrik/standard-project-m2-mystery-machine/models/teacher"
+INPUT_FILE="/scratch/workspace/henrik/standard-project-m2-mystery-machine/data/preprocessing/science_qa/train.jsonl"
+OUTPUT_FILE="/scratch/workspace/henrik/standard-project-m2-mystery-machine/data/preprocessing/science_qa/train_teacher.jsonl"
 MAX_NEW_TOKENS=4096
-USE_STUDENT_FLAG="true"
+USE_STUDENT_FLAG="false"
 
 if [[ -z "${MODEL_DIR}" || -z "${INPUT_FILE}" || -z "${OUTPUT_FILE}" ]]; then
   echo "Please set MODEL_DIR, INPUT_FILE, and OUTPUT_FILE near the top of this script before submitting."
