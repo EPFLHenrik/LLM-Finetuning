@@ -6,7 +6,7 @@ python training/resample_wrong_answers.py data/preprocessing/mmlu_aux_filtered/t
 
 python training/resample_wrong_answers.py data/preprocessing/mmlu_aux_filtered/train_student.jsonl --model-dir models/merged_science_finance --output data/preprocessing/mmlu_aux_filtered/student_corrected.jsonl --hf-token <HF_TOKEN_REDACTED> --student
 
-python training/merge_reasoning_from_student_teacher.py data/preprocessing/mmlu_aux_filtered/student_corrected.jsonl data/preprocessing/mmlu_aux_filtered/teacher_corrected.jsonl --output data/preprocessing/mmlu_aux_filtered/merged_student_teacher.jsonl
+python training/merge_reasoning_from_student_teacher.py data/preprocessing/science_qa/student_corrected.jsonl data/preprocessing/science_qa/teacher_corrected.jsonl --output data/preprocessing/science_qa/merged_student_teacher.jsonl
 
 python training/lora_post_train.py --dataset-file data/preprocessing/mmlu_aux_filtered/merged_student_teacher.jsonl --model-folder models/merged_science_finance --output-dir models/merged_mmlu_aux --run-name training_mmlu_aux --wandb-key '<WANDB_API_KEY_REDACTED>' --merge-and-save --overwrite-output
 

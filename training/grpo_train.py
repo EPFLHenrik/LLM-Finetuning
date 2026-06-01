@@ -18,16 +18,16 @@ TRL applies the model's chat template internally.
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import random
 import shutil
 import sys
 from pathlib import Path
 from typing import Any
-
 import torch
 from datasets import Dataset
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainerCallback
 
 # Prevent PEFT from importing bitsandbytes when not using quantization.
 # Define this locally so we can call it before importing `peft`.
@@ -40,9 +40,8 @@ def _disable_peft_bnb_dispatch() -> None:
         lora_model.is_bnb_4bit_available = lambda: False
         peft_import_utils.is_bnb_available = lambda: False
         peft_import_utils.is_bnb_4bit_available = lambda: False
-        print("[info] Disabled PEFT bitsandbytes dispatch.")
-    except Exception as exc:
-        print(f"[warn] Could not disable PEFT bitsandbytes dispatch: {exc}")
+    except Exception:
+        pass
 
 # We'll import PEFT symbols after disabling bitsandbytes dispatch to avoid
 # unintended bitsandbytes imports when not using quantization.
@@ -52,7 +51,6 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from evaluate.benchmarks import extract_benchmark_answer, is_correct_benchmark_answer
 from evaluate.extract_answer import extract_boxed_answer_with_fallbacks
 
 DEFAULT_SYSTEM_MESSAGE = (
@@ -70,9 +68,6 @@ DEFAULT_SYSTEM_MESSAGE = (
     "\\boxed{42}"
 )
 
-QUESTION_KEYS = ("question", "prompt", "input", "text")
-ANSWER_KEYS = ("answer", "reference", "label", "target", "answerKey", "gold_answer")
-
 DEFAULT_LORA_TARGET_MODULES = (
     "q_proj",
     "k_proj",
@@ -83,13 +78,8 @@ DEFAULT_LORA_TARGET_MODULES = (
     "down_proj",
 )
 
-# Reward weighting and length normalization
-# Format (boxed answer) is most important because without correct format
-# the answer cannot be evaluated. We weight format highest and reduce
-# accuracy slightly while keeping a small length bonus.
-ACC_WEIGHT = 0.25
-FORMAT_WEIGHT = 0.70
-LENGTH_WEIGHT = 0.05
+ACC_WEIGHT = 0.50
+FORMAT_WEIGHT = 0.40
 # Repetition penalty weight (multiplicative). 0.0 = no penalty, 1.0 = full erase
 REPETITION_WEIGHT = 0.20
 
@@ -123,85 +113,6 @@ def _read_json_rows(path: Path) -> list[dict[str, Any]]:
     raise SystemExit(f"Unsupported dataset format: {path.suffix}. Use .jsonl or .json")
 
 
-def _get_first(row: dict[str, Any], keys: tuple[str, ...]) -> str | None:
-    for key in keys:
-        value = row.get(key)
-        if value is None:
-            continue
-        text = str(value).strip()
-        if text:
-            return text
-    return None
-
-
-def _index_to_label(index: int) -> str:
-    # Supports the 2-20 option range in the project, but also handles larger sets.
-    label = ""
-    index += 1
-    while index:
-        index, remainder = divmod(index - 1, 26)
-        label = chr(ord("A") + remainder) + label
-    return label
-
-
-def _normalize_choices(choices: Any) -> list[str]:
-    if isinstance(choices, list):
-        return [str(choice).strip() for choice in choices if str(choice).strip()]
-    if isinstance(choices, dict):
-        labels = choices.get("label")
-        texts = choices.get("text")
-        if isinstance(labels, list) and isinstance(texts, list) and len(labels) == len(texts):
-            return [f"{str(label).strip()}) {str(text).strip()}" for label, text in zip(labels, texts)]
-    return []
-
-
-def _build_prompt_text(row: dict[str, Any]) -> str:
-    messages = row.get("messages")
-    if isinstance(messages, list):
-        for message in messages:
-            if not isinstance(message, dict):
-                continue
-            if str(message.get("role", "")).strip() == "user":
-                content = str(message.get("content", "")).strip()
-                if content:
-                    return content
-
-    prompt = _get_first(row, QUESTION_KEYS)
-    if prompt is None:
-        raise SystemExit(f"Missing prompt/question in row: {row}")
-
-    choices = _normalize_choices(row.get("choices"))
-    if not choices:
-        return prompt
-
-    lines = [prompt, ""]
-    for i, choice in enumerate(choices):
-        if ") " in choice and choice[0].isalpha():
-            # Preserve pre-labeled choice text if it already looks like "A) ...".
-            lines.append(choice)
-        else:
-            lines.append(f"{_index_to_label(i)}) {choice}")
-    return "\n".join(lines)
-
-
-def _normalize_answer(answer: Any, choices: Any) -> str:
-    text = str(answer).strip() if answer is not None else ""
-    if not text:
-        raise SystemExit("Missing answer in row")
-
-    if len(text) == 1 and text.isalpha():
-        return text.upper()
-
-    normalized_choices = _normalize_choices(choices)
-    for index, choice_text in enumerate(normalized_choices):
-        if text == choice_text:
-            return _index_to_label(index)
-        if text == choice_text.split(") ", 1)[-1].strip():
-            return _index_to_label(index)
-
-    return text
-
-
 def _build_messages(prompt_text: str, system_message: str) -> list[dict[str, str]]:
     return [
         {"role": "system", "content": system_message},
@@ -210,16 +121,19 @@ def _build_messages(prompt_text: str, system_message: str) -> list[dict[str, str
 
 
 def _normalize_row(row: dict[str, Any], system_message: str) -> dict[str, Any]:
-    prompt_text = _build_prompt_text(row)
-    answer_value = _get_first(row, ANSWER_KEYS)
-    if answer_value is None:
-        raise SystemExit(f"Missing answer-like field in row: {row}")
+    prompt_text = str(row.get("prompt", "")).strip()
+    if not prompt_text:
+        raise SystemExit(f"Missing 'prompt' in row: {row}")
+    answer = str(row.get("answer", "")).strip()
+    if not answer:
+        raise SystemExit(f"Missing 'answer' in row: {row}")
 
     normalized = dict(row)
-    normalized["prompt_text"] = prompt_text
-    normalized["answer"] = _normalize_answer(answer_value, row.get("choices"))
+    normalized["answer"] = answer
     if isinstance(row.get("messages"), list):
-        normalized["prompt"] = row["messages"]
+        # Strip assistant turns — GRPO needs only the prompt context, not the answer.
+        prompt_messages = [m for m in row["messages"] if m.get("role") != "assistant"]
+        normalized["prompt"] = prompt_messages if prompt_messages else _build_messages(prompt_text, system_message)
     else:
         normalized["prompt"] = _build_messages(prompt_text, system_message)
     return normalized
@@ -236,107 +150,109 @@ def _extract_answer_column(kwargs: dict[str, Any]) -> list[str] | None:
     return None
 
 
-def _reward_from_completion(completion: str, answer: str) -> float:
-    # Keep existing single-purpose reward for compatibility: use boxed extraction
-    # Normalize completion to text in case TRL passes token lists or other types.
+def _normalize_completion(completion: Any) -> str:
     if not isinstance(completion, str):
         try:
-            completion_text = " ".join(map(str, completion))
+            return " ".join(map(str, completion))
         except Exception:
-            completion_text = str(completion)
-    else:
-        completion_text = completion
+            return str(completion)
+    return completion
 
-    reference = answer.strip()
-    if not reference:
+
+def _repetition_score(completion: str, n: int = 3) -> float:
+    """Return a repetition score in [0,1]: 1 - (unique_ngrams / total_ngrams)."""
+    text = completion.strip()
+    if not text:
         return 0.0
-
-    extracted, _ = extract_boxed_answer_with_fallbacks(completion_text)
-    if extracted is None:
+    tokens = text.split()
+    if len(tokens) < n:
         return 0.0
-    return 1.0 if extracted.upper() == reference.upper() else 0.0
+    ngrams = [" ".join(tokens[i : i + n]) for i in range(len(tokens) - n + 1)]
+    total = len(ngrams)
+    unique = len(set(ngrams))
+    if total <= 0:
+        return 0.0
+    return max(0.0, min(1.0, 1.0 - (unique / total)))
 
 
-def grpo_reward(prompts: list[Any], completions: list[str], **kwargs: Any) -> list[float | None]:
-    answers = _extract_answer_column(kwargs)
-    if answers is None:
-        raise SystemExit("GRPO reward function did not receive an answer column from the dataset")
-
-    if len(answers) != len(completions):
-        # TRL repeats the prompt/answer columns to match completions; if that ever changes,
-        # fail loudly rather than silently misaligning labels.
-        raise SystemExit(f"Reward input mismatch: {len(answers)} answers for {len(completions)} completions")
-
-    def _length_reward(completion: str) -> float:
-        if not isinstance(completion, str):
-            try:
-                completion_text = " ".join(map(str, completion))
-            except Exception:
-                completion_text = str(completion)
-        else:
-            completion_text = completion
-
-        l = len(completion_text.strip())
-        if l <= 0:
-            return 0.0
-        # Reward shorter completions without an arbitrary max; use a
-        # diminishing return so very short outputs get a larger bonus.
-        return 1.0 / (1.0 + float(l))
-
-    def _repetition_score(completion: str, n: int = 3) -> float:
-        """Return a repetition score in [0,1] based on n-gram uniqueness.
-
-        Higher means more repetition. We compute 1 - (unique_ngrams / total_ngrams).
-        """
-        text = completion.strip()
-        if not text:
-            return 0.0
-        tokens = text.split()
-        if len(tokens) < n:
-            return 0.0
-        ngrams = [" ".join(tokens[i : i + n]) for i in range(len(tokens) - n + 1)]
-        total = len(ngrams)
-        unique = len(set(ngrams))
-        if total <= 0:
-            return 0.0
-        score = 1.0 - (unique / total)
-        return max(0.0, min(1.0, score))
-
-    rewards: list[float] = []
-    for completion, answer in zip(completions, answers, strict=True):
-        reference = answer.strip()
-
-        # Normalize completion to text for extraction and length checks
-        if not isinstance(completion, str):
-            try:
-                completion_text = " ".join(map(str, completion))
-            except Exception:
-                completion_text = str(completion)
-        else:
-            completion_text = completion
-
-        # Format reward: is there a boxed answer at all?
-        extracted, _ = extract_boxed_answer_with_fallbacks(completion_text)
-        format_r = 1.0 if extracted is not None else 0.0
-
-        # Accuracy reward: 1 if boxed extraction equals reference, else 0
-        accuracy_r = 0.0
-        if extracted is not None and reference:
-            accuracy_r = 1.0 if extracted.strip().upper() == reference.strip().upper() else 0.0
-
-        # Length reward: shorter is better (normalized), small weight
-        length_r = _length_reward(completion_text)
-
-        base = ACC_WEIGHT * accuracy_r + FORMAT_WEIGHT * format_r + LENGTH_WEIGHT * length_r
-
-        # Apply multiplicative repetition penalty so high repetition reduces reward
-        rep_score = _repetition_score(completion_text)
-        final = base * (1.0 - REPETITION_WEIGHT * rep_score)
-        rewards.append(final)
+def reward_format(prompts: list[Any], completions: list[str], **kwargs: Any) -> list[float]:
+    """Binary reward for presence of a \\boxed{} answer."""
+    rewards = []
+    for completion in completions:
+        text = _normalize_completion(completion)
+        extracted, _ = extract_boxed_answer_with_fallbacks(text)
+        rewards.append(FORMAT_WEIGHT * (1.0 if extracted is not None else 0.0))
     return rewards
 
 
+def reward_accuracy(prompts: list[Any], completions: list[str], **kwargs: Any) -> list[float]:
+    """Binary reward for exact-match between boxed answer and reference."""
+    answers = _extract_answer_column(kwargs)
+    if answers is None:
+        raise SystemExit("reward_accuracy did not receive an answer column from the dataset")
+    if len(answers) != len(completions):
+        raise SystemExit(f"Reward input mismatch: {len(answers)} answers for {len(completions)} completions")
+    rewards = []
+    for completion, answer in zip(completions, answers, strict=True):
+        text = _normalize_completion(completion)
+        reference = answer.strip()
+        extracted, _ = extract_boxed_answer_with_fallbacks(text)
+        if extracted is not None and reference:
+            r = 1.0 if extracted.strip().upper() == reference.strip().upper() else 0.0
+        else:
+            r = 0.0
+        rewards.append(ACC_WEIGHT * r)
+    return rewards
+
+
+def reward_repetition(prompts: list[Any], completions: list[str], **kwargs: Any) -> list[float]:
+    """Additive penalty for 3-gram repetition (returns negative values)."""
+    rewards = []
+    for completion in completions:
+        text = _normalize_completion(completion)
+        rewards.append(-REPETITION_WEIGHT * _repetition_score(text))
+    return rewards
+
+
+def _make_accumulating_reward_func(func: Any, acc: list[float]) -> Any:
+    """Wrap a reward function to accumulate its values for logging at each logging step."""
+
+    @functools.wraps(func)
+    def wrapper(prompts: list[Any], completions: list[str], **kwargs: Any) -> list[float]:
+        rewards = func(prompts, completions, **kwargs)
+        acc.extend(rewards)
+        return rewards
+
+    return wrapper
+
+
+class _WandbRewardCallback(TrainerCallback):
+    """Logs mean per-reward-function values to wandb at each logging step."""
+
+    def __init__(self, accumulators: dict[str, list[float]]) -> None:
+        self._acc = accumulators
+
+    def on_log(self, args: Any, state: Any, control: Any, logs: dict | None = None, **kwargs: Any) -> None:
+        try:
+            import wandb
+
+            if wandb.run is None:
+                return
+            metrics = {
+                f"rewards/{name}": sum(values) / len(values)
+                for name, values in self._acc.items()
+                if values
+            }
+            for values in self._acc.values():
+                values.clear()
+            if metrics:
+                wandb.log(metrics, step=state.global_step, commit=False)
+        except Exception:
+            pass
+
+
 def _save_merged_model(trainer: GRPOTrainer, tokenizer: AutoTokenizer, output_dir: Path) -> None:
+    from peft import PeftModel
     output_dir.mkdir(parents=True, exist_ok=True)
     model = trainer.model
     if isinstance(model, PeftModel) or hasattr(model, "merge_and_unload"):
@@ -357,26 +273,28 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", required=True, type=Path, help="Where to write the final merged checkpoint")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num-train-epochs", type=float, default=1.0)
-    parser.add_argument("--learning-rate", type=float, default=1e-6)
+    parser.add_argument("--learning-rate", type=float, default=3e-6)
     parser.add_argument("--per-device-train-batch-size", type=int, default=1)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=1)
-    parser.add_argument("--logging-steps", type=int, default=10)
+    parser.add_argument("--logging-steps", type=int, default=80)
     parser.add_argument("--save-strategy", choices=("epoch", "steps", "no"), default="epoch")
     parser.add_argument("--save-steps", type=int, default=500)
     parser.add_argument("--num-generations", type=int, default=8)
-    parser.add_argument("--max-completion-length", type=int, default=8192)
+    parser.add_argument("--max-completion-length", type=int, default=4096)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--top-p", type=float, default=1.0)
     parser.add_argument("--top-k", type=int, default=0)
     parser.add_argument("--repetition-penalty", type=float, default=1.0)
-    parser.add_argument("--max-train-samples", type=int, default=1000)
+    parser.add_argument("--max-train-samples", type=int, default=0)
     parser.add_argument("--wandb-project", type=str, default="cs552-mystery-machine")
     parser.add_argument("--wandb-entity", type=str, default=None)
     parser.add_argument("--wandb-key", type=str, default=None)
     parser.add_argument("--skip-wandb", action="store_true")
     parser.add_argument("--overwrite-output", action="store_true")
-    parser.add_argument("--vllm-gpu-memory-utilization", type=float, default=0.5)
+    parser.add_argument("--vllm-gpu-memory-utilization", type=float, default=0.35)
     parser.add_argument("--vllm-tensor-parallel-size", type=int, default=1)
+    parser.add_argument("--gradient-checkpointing", action="store_true", default=True)
+    parser.add_argument("--no-gradient-checkpointing", action="store_false", dest="gradient_checkpointing")
     parser.add_argument("--use-lora", action="store_true", default=True)
     parser.add_argument("--no-lora", action="store_false", dest="use_lora")
     parser.add_argument("--lora-r", type=int, default=16)
@@ -421,7 +339,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # If a PEFT adapter will be loaded on top of a base model, prefer the
     # tokenizer from the base model; otherwise use the provided model folder.
-    tokenizer_source = args.base_model if getattr(args, "peft_adapter", None) else args.model_folder
+    tokenizer_source = args.base_model if args.peft_adapter else args.model_folder
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_source, use_fast=True, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -431,10 +349,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Prevent PEFT from attempting to dispatch bitsandbytes when we're not
     # quantizing; mirrors behavior in lora_post_train.py
-    try:
-        _disable_peft_bnb_dispatch()
-    except Exception:
-        pass
+    _disable_peft_bnb_dispatch()
 
     train_dataset = Dataset.from_list(normalized_rows)
     # Shuffle the training dataset to ensure random ordering each run (seeded)
@@ -469,6 +384,8 @@ def main(argv: list[str] | None = None) -> int:
         bf16=torch.cuda.is_bf16_supported(),
         fp16=not torch.cuda.is_bf16_supported(),
         remove_unused_columns=False,
+        gradient_checkpointing=args.gradient_checkpointing,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
     )
     # Disable PEFT bitsandbytes dispatch before importing PEFT symbols.
     _disable_peft_bnb_dispatch()
@@ -489,26 +406,30 @@ def main(argv: list[str] | None = None) -> int:
 
         try:
             wandb.login(key=args.wandb_key)
-        except Exception as exc:
-            print(f"[warn] wandb.login() failed: {exc}")
-        wandb.init(project=args.wandb_project, entity=args.wandb_entity, config=vars(args), name=args.output_dir.name)
+        except Exception:
+            pass
+        wandb.init(project=args.wandb_project, entity=args.wandb_entity, config=vars(args), name="GRPO test run")
 
     # If a PEFT adapter path is provided, load the base model object and
     # attach the adapter so we pass a fully prepared model object to the trainer.
     model_arg = str(args.model_folder)
-    if getattr(args, "peft_adapter", None):
+    if args.peft_adapter:
         if not args.base_model:
             raise SystemExit("When using --peft-adapter you must pass --base-model pointing to the base model folder")
         base_model = AutoModelForCausalLM.from_pretrained(str(args.base_model), trust_remote_code=True)
         model_arg = PeftModel.from_pretrained(base_model, str(args.peft_adapter))
 
+    _base_reward_funcs = [reward_format, reward_accuracy, reward_repetition]
+    accumulators: dict[str, list[float]] = {f.__name__: [] for f in _base_reward_funcs}
+    reward_funcs = [_make_accumulating_reward_func(f, accumulators[f.__name__]) for f in _base_reward_funcs]
     trainer = GRPOTrainer(
         model=model_arg,
-        reward_funcs=grpo_reward,
+        reward_funcs=reward_funcs,
         args=grpo_config,
         train_dataset=train_dataset,
         processing_class=tokenizer,
         peft_config=lora_config,
+        callbacks=[_WandbRewardCallback(accumulators)],
     )
 
     trainer.train()
@@ -519,7 +440,6 @@ def main(argv: list[str] | None = None) -> int:
 
         wandb.finish()
 
-    print(f"Saved merged GRPO model to {args.output_dir}")
     return 0
 
 

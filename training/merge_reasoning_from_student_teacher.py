@@ -144,6 +144,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("Key mismatch between files: " + ", ".join(problems))
 
     merged_rows: list[dict[str, Any]] = []
+    wrong_rows: list[dict[str, Any]] = []
     dropped_both_wrong = 0
 
     for key, student_row in student_rows.items():
@@ -160,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
         # Drop rows where both sides are explicitly incorrect.
         if student_correct is False and trainer_correct is False:
             dropped_both_wrong += 1
+            wrong_rows.append({"prompt": prompt, "answer": answer or ""})
             continue
 
         student_completion = _pick_field(student_row, "completion")
@@ -180,6 +182,19 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Wrote {output_path}")
     print(f"Rows: {len(merged_rows)}")
     print(f"Dropped both-wrong rows: {dropped_both_wrong}")
+
+    if wrong_rows:
+        wrong_path = Path(__file__).resolve().parents[1] / "data" / "preprocessing" / "wrong_distillations.jsonl"
+        existing: list[dict[str, Any]] = []
+        if wrong_path.exists() and wrong_path.stat().st_size > 0:
+            try:
+                existing = _read_jsonl(wrong_path)
+            except SystemExit:
+                existing = []
+        seen = {(r["prompt"], r["answer"]) for r in existing}
+        new_wrong = [r for r in wrong_rows if (r["prompt"], r["answer"]) not in seen]
+        _write_jsonl(wrong_path, existing + new_wrong)
+        print(f"Appended {len(new_wrong)} new both-wrong rows to {wrong_path}")
     return 0
 
 
