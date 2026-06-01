@@ -128,6 +128,10 @@ SUBSET_REGISTRY: Dict[str, Dict] = {
 
 
 PROFILES = {
+    # ~80 problems total. THE profile for fast checkpoint ranking under
+    # pass@8 at 16K (where wall-clock is dominated by generation length).
+    # Use --n-per-subset to scale further if even this is too slow.
+    "quick": ["math500_hard", "aime_2024", "gsm8k_sample"],
     # ~120 problems, ~3 min/ckpt at budget=ci. Hard-only — useful when the
     # grader is known to emphasize hard problems (we now think it doesn't).
     "fast": ["math500_hard", "aime_2024", "aime_2025", "gsm8k_sample"],
