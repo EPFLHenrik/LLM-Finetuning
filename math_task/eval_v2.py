@@ -54,7 +54,9 @@ from .dataset_loader import (
     load_aime_2024,
     load_aime_2025,
     load_gsm8k,
+    load_math500,
     load_math500_hard,
+    load_math500_stratified,
     load_minerva_math,
     load_olympiad_math,
 )
@@ -75,6 +77,17 @@ from evaluate.score import score_generations
 # a catastrophic-forgetting tripwire — if RL has trashed elementary
 # arithmetic, we want the eval to flag it.
 SUBSET_REGISTRY: Dict[str, Dict] = {
+    "math500_broad": {
+        # MATH-500 stratified across all levels 1..5 (default 20 per level => 100
+        # problems). This is the closest match to what "MATH" evals in the wild
+        # actually score — most evaluators don't filter to level 5.
+        "loader": lambda limit=None: load_math500_stratified(
+            n_per_level=(limit // 5 if limit else 20)
+        ),
+        "default_n": 100,
+        "weight": 1.5,
+        "blurb": "MATH-500 stratified across difficulty levels 1-5.",
+    },
     "math500_hard": {
         "loader": load_math500_hard,
         "default_n": 80,
@@ -115,11 +128,16 @@ SUBSET_REGISTRY: Dict[str, Dict] = {
 
 
 PROFILES = {
-    # ~120 problems, ~3 min/ckpt at budget=ci. Use for rapid checkpoint ranking.
+    # ~120 problems, ~3 min/ckpt at budget=ci. Hard-only — useful when the
+    # grader is known to emphasize hard problems (we now think it doesn't).
     "fast": ["math500_hard", "aime_2024", "aime_2025", "gsm8k_sample"],
+    # ~210 problems. Includes stratified MATH-500 (levels 1-5) — meant to
+    # reproduce the classroom CI's base→RL slope (+33pp). Use this until we
+    # find a profile that calibrates.
+    "broad": ["math500_broad", "math500_hard", "aime_2024", "aime_2025", "gsm8k_sample"],
     # ~250 problems, ~15 min/ckpt at budget=final. Use for final candidate pick.
     "default": ["math500_hard", "aime_2024", "aime_2025", "olympiad_math", "gsm8k_sample"],
-    # Full mixture, ~300 problems. Use for the final 1-2 candidates only.
+    # Full mixture, ~310 problems. Use for the final 1-2 candidates only.
     "full": list(SUBSET_REGISTRY.keys()),
 }
 
