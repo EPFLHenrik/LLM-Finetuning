@@ -3,7 +3,7 @@ import subprocess
 import yaml
 args = parse_merge_args()
 
-DENSITY = 0.5
+DENSITY = 0.8
 NORMALIZE = True
 INT8_MASK = True
 

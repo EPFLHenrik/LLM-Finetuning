@@ -1,6 +1,6 @@
 from __future__ import annotations
 from code.safety_model.constants.global_variables import DatasetFieldNames, Random
-from datasets import load_from_disk
+from datasets import Dataset, DatasetDict, load_from_disk
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import argparse
 from datetime import datetime, timezone
@@ -139,6 +139,21 @@ def build_output_path(
     return output_dir / jsonl_filename
 
 
+def normalize_benchmark_dataset(dataset: Dataset | DatasetDict, dataset_path: Path) -> Dataset:
+    if isinstance(dataset, Dataset):
+        return dataset
+
+    if len(dataset) == 1:
+        split_name = next(iter(dataset.keys()))
+        return dataset[split_name]
+
+    available_splits = ", ".join(dataset.keys())
+    raise ValueError(
+        f"Benchmark dataset at {dataset_path} is a DatasetDict with multiple splits ({available_splits}). "
+        "Pass a single split dataset directory or update the benchmark selection logic."
+    )
+
+
 def load_jsonl_rows(jsonl_path: Path) -> list[dict]:
     rows: list[dict] = []
     with open(jsonl_path, "r", encoding="utf-8") as f:
@@ -241,9 +256,9 @@ def run_single_benchmark(
     print(f"Saving outputs to: {output_path}")
     print("=" * 50)
 
-    dataset = load_from_disk(str(dataset_path))
+    dataset = normalize_benchmark_dataset(load_from_disk(str(dataset_path)), dataset_path)
     if args.limit is not None:
-        dataset = dataset.select(range(args.limit))  # type: ignore
+        dataset = dataset.select(range(args.limit))
         print(f"Running on limited dataset with {len(dataset)} examples (limit={args.limit})")
     else:
         print(f"Running on full dataset with {len(dataset)} examples")
@@ -252,7 +267,7 @@ def run_single_benchmark(
     prompts_list = []
     metadata_list = []
 
-    for row in tqdm.tqdm(dataset, desc="Preparing prompts"):  # type: ignore
+    for row in tqdm.tqdm(dataset, desc="Preparing prompts"):
         row_dict = dict(row)
         prompt_text = row_dict[DatasetFieldNames.BENCHMARK_INPUT]
         answer_text = row_dict[DatasetFieldNames.BENCHMARK_ANSWER]
