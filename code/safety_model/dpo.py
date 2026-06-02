@@ -156,7 +156,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--train-data-root",
         type=Path,
-        default=Path("data/processed/dpo"),
+        default=Path("data/safety/processed/dpo"),
         help="Root directory containing processed DPO/SFT datasets for training and validation.",
     )
     parser.add_argument(
@@ -250,7 +250,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--validation-output-dir",
         type=Path,
-        default=Path("runs/dpo_validation"),
+        default=Path("runs/safety/dpo_validation"),
         help="Where validation generations and metric JSON files are written.",
     )
     parser.add_argument(
