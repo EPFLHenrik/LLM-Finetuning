@@ -84,26 +84,6 @@ def _load_rows(path: Path) -> list[dict[str, Any]]:
     raise SystemExit(f"Unsupported dataset format: {path.suffix}. Use .jsonl or .json")
 
 
-def _get_first(row: dict[str, Any], keys: tuple[str, ...]) -> str:
-    for key in keys:
-        if key in row and row[key] is not None:
-            value = str(row[key]).strip()
-            if value:
-                return value
-    raise SystemExit(f"Missing one of {keys} in row: {row}")
-
-
-def _split_rows(rows: list[dict[str, Any]], validation_split: float, seed: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    if not 0.0 <= validation_split < 1.0:
-        raise SystemExit("--validation-split must be in [0, 1)")
-    shuffled = list(rows)
-    random.Random(seed).shuffle(shuffled)
-    if validation_split == 0.0 or len(shuffled) < 2:
-        return shuffled, []
-    val_count = max(1, int(round(len(shuffled) * validation_split)))
-    val_count = min(val_count, len(shuffled) - 1)
-    return shuffled[val_count:], shuffled[:val_count]
-
 
 def _disable_peft_bnb_dispatch() -> None:
     """Prevent PEFT from importing bitsandbytes when not quantizing."""
@@ -119,9 +99,6 @@ def _disable_peft_bnb_dispatch() -> None:
     except Exception as exc:
         print(f"[warn] Could not disable PEFT bitsandbytes dispatch: {exc}")
 
-
-def _format_example(tokenizer, row: dict[str, Any]) -> str:
-    return tokenizer.apply_chat_template(row["messages"], tokenize=False, add_generation_prompt=False)
 
 
 def _ensure_training_chat_template(tokenizer) -> None:
@@ -200,7 +177,6 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-folder", required=True, type=Path, help="Base model folder to train from")
     parser.add_argument("--dataset-file", required=True, type=Path, help="JSONL/JSON file with prompt/answer rows")
     parser.add_argument("--output-dir", required=True, type=Path, help="Where to write the merged checkpoint")
-    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-seq-length", type=int, default=4096)
     parser.add_argument("--num-train-epochs", type=float, default=1.0)
     parser.add_argument("--learning-rate", type=float, default=2e-4)
@@ -238,9 +214,6 @@ def main() -> None:
 
     if not torch.cuda.is_available():
         raise SystemExit("This script expects a CUDA-capable GPU for LoRA post-training.")
-
-    torch.manual_seed(args.seed)
-    random.seed(args.seed)
 
     dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
     tokenizer = AutoTokenizer.from_pretrained(args.model_folder, use_fast=True, trust_remote_code=True)
@@ -290,6 +263,7 @@ def main() -> None:
     # (use `scripts/preprocess_mcq_chat.py` to convert flat MCQ JSONL into the
     # required `messages` shape). Do not normalize in-trainer.
     train_rows = _load_rows(args.dataset_file)
+    random.shuffle(train_rows)
     if args.max_train_samples > 0:
         train_rows = train_rows[: args.max_train_samples]
 
@@ -329,8 +303,6 @@ def main() -> None:
         "do_train": True,
         "do_eval": False,
         "eval_on_start": False,
-        "seed": args.seed,
-        "data_seed": args.seed,
         "max_length": args.max_seq_length,
         "packing": False,
         "assistant_only_loss": True,

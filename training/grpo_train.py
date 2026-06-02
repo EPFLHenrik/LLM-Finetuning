@@ -255,12 +255,19 @@ def _save_merged_model(trainer: GRPOTrainer, tokenizer: AutoTokenizer, output_di
     from peft import PeftModel
     output_dir.mkdir(parents=True, exist_ok=True)
     model = trainer.model
+    save_dtype = (
+        torch.bfloat16 if trainer.args.bf16 else torch.float16 if trainer.args.fp16 else None
+    )
     if isinstance(model, PeftModel) or hasattr(model, "merge_and_unload"):
         merged_model = model.merge_and_unload()
+        if save_dtype is not None:
+            merged_model = merged_model.to(save_dtype)
         merged_model.save_pretrained(output_dir, safe_serialization=True)
         if getattr(merged_model, "generation_config", None) is not None:
             merged_model.generation_config.save_pretrained(output_dir)
     else:
+        if save_dtype is not None:
+            trainer.model.to(save_dtype)
         trainer.save_model(output_dir)
 
     tokenizer.save_pretrained(output_dir)

@@ -1,5 +1,6 @@
 # Generated data files
 *.csv
+.claude
 
 # Optional local datasets and preprocessing outputs
 data/

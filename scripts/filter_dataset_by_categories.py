@@ -18,14 +18,19 @@ from typing import Iterable, Set
 
 
 DEFAULT_CATEGORIES = [
-    "college_physics",
-    "high_school_physics",
     "professional_law",
+    "professional_accounting",
+    "college_physics",
     "college_chemistry",
+    "college_mathematics",
+    "college_biology",
+    "high_school_physics",
     "high_school_biology",
     "high_school_chemistry",
     "high_school_statistics",
-    "college_mathematics",
+    "high_school_microeconomics",
+    "high_school_macroeconomics",
+    "high_school_mathematics"
 ]
 
 

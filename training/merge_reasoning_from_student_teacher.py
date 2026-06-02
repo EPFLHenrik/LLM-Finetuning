@@ -183,6 +183,13 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Rows: {len(merged_rows)}")
     print(f"Dropped both-wrong rows: {dropped_both_wrong}")
 
+    merged_distillation_path = Path(__file__).resolve().parents[1] / "data" / "preprocessing" / "merged_distillation.jsonl"
+    merged_distillation_path.parent.mkdir(parents=True, exist_ok=True)
+    with merged_distillation_path.open("a", encoding="utf-8") as handle:
+        for row in merged_rows:
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    print(f"Appended {len(merged_rows)} rows to {merged_distillation_path}")
+
     if wrong_rows:
         wrong_path = Path(__file__).resolve().parents[1] / "data" / "preprocessing" / "wrong_distillations.jsonl"
         existing: list[dict[str, Any]] = []

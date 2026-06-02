@@ -97,13 +97,11 @@ def preprocess(input_path: Path, output_path: Path) -> int:
             prompt = build_prompt(question, options)
             normalized_answer = normalize_answer(row.get("answer"), options, row.get("answer_index"))
 
-            updated_row = dict(row)
-            updated_row["prompt"] = prompt
-            updated_row.pop("question", None)
+            out = {"prompt": prompt}
             if normalized_answer is not None:
-                updated_row["answer"] = normalized_answer
+                out["answer"] = normalized_answer
 
-            fout.write(json.dumps(updated_row, ensure_ascii=False) + "\n")
+            fout.write(json.dumps(out, ensure_ascii=False) + "\n")
             written += 1
 
     print(f"Wrote {written} rows to {output_path}")

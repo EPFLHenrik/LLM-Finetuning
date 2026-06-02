@@ -197,7 +197,7 @@ def main(argv: list[str] | None = None) -> int:
         default=TEACHER_MODEL_DIR,
         help="Local model checkpoint directory",
     )
-    parser.add_argument("--max-new-tokens", type=int, default=4096)
+    parser.add_argument("--max-new-tokens", type=int, default=8192)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--top-k", type=int, default=50)
@@ -205,6 +205,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tensor-parallel-size", type=int, default=1, help="vLLM tensor parallel degree")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.9, help="vLLM GPU memory utilization target")
     parser.add_argument("--dtype", default="auto", help="vLLM dtype, for example auto, float16, or bfloat16")
+    parser.add_argument("--load-in-8bit", action="store_true", help="Load model in 8-bit via bitsandbytes (reduces VRAM usage)")
     parser.add_argument("--student", action="store_true", help="Student model")
     args = parser.parse_args(argv)
 
@@ -238,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     prompts = [_format_prompt(tokenizer, str(rows[i]["prompt"]), args) for i in wrong_indices]
 
     print(f"Loading vLLM model from {model_dir}...")
-    llm = LLM(
+    llm_kwargs: dict = dict(
         model=str(model_dir),
         tokenizer=str(model_dir),
         trust_remote_code=True,
@@ -247,6 +248,10 @@ def main(argv: list[str] | None = None) -> int:
         dtype=args.dtype,
         seed=args.seed,
     )
+    if args.load_in_8bit:
+        llm_kwargs["quantization"] = "bitsandbytes"
+        llm_kwargs["load_format"] = "bitsandbytes"
+    llm = LLM(**llm_kwargs)
     sampling_params = _build_sampling_params(
         max_new_tokens=args.max_new_tokens,
         temperature=args.temperature,

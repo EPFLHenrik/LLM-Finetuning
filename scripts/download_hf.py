@@ -19,15 +19,21 @@ def dataset_slug(dataset_path: str, dataset_config: str | None) -> str:
     return slug
 
 
+def _sanitize(value: object) -> object:
+    if isinstance(value, (str, int, float, bool, type(None))):
+        return value
+    if isinstance(value, dict):
+        return {k: _sanitize(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_sanitize(v) for v in value]
+    return {"__type__": type(value).__name__}
+
+
 def serialize_row(row: dict) -> str:
     try:
         return json.dumps(row, ensure_ascii=False)
     except TypeError:
-        simple = {
-            key: (value if isinstance(value, (str, int, float, bool, list, dict, type(None))) else str(value))
-            for key, value in row.items()
-        }
-        return json.dumps(simple, ensure_ascii=False)
+        return json.dumps(_sanitize(row), ensure_ascii=False)
 
 
 def main(argv: list[str]) -> int:
