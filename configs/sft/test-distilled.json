@@ -1,0 +1,160 @@
+{
+  "output_name": "test-distilled",
+  "mode": "thinking",
+
+  "distilled_dirs": [
+    "multilingual/data/distilled/v2_fallback/sft_1"
+  ],
+
+  "thinking_style": "full_thinking",
+
+  "enable_test_split": false,
+  "distilled_val_fraction": 0.15,
+  "distilled_test_fraction": 0.0,
+
+  "max_per_language": 5000,
+  "max_per_dataset": 10000,
+  "max_per_language_mixed": 2000,
+  "max_per_language_mixed_val": 500,
+
+  "benchmark_path": "multilingual/data/benchmarks/benchmark_all.jsonl",
+
+  "dataset_registry": {
+    "include": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"],
+      "split_caps": {
+        "val": 500,
+        "test": 0
+      }
+    },
+
+    "global_piqa": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"],
+      "max_per_dataset": 2000,
+      "split_caps": {
+        "val": 300,
+        "test": 0
+      }
+    },
+
+    "global_mmlu": {
+      "languages": ["russian", "chinese", "hindi", "italian", "spanish"],
+      "language_caps": {
+        "russian": 2000,
+        "chinese": 800,
+        "hindi": 800,
+        "italian": 2000,
+        "spanish": 2000
+      },
+      "max_per_dataset": 5000,
+      "split_caps": {
+        "val": 500,
+        "test": 0
+      }
+    },
+
+    "ceval": {
+      "languages": ["chinese"],
+      "language_caps": {
+        "chinese": 5000
+      },
+      "max_per_dataset": 5000,
+      "split_caps": {
+        "val": 300,
+        "test": 0
+      }
+    },
+
+    "milu": {
+      "languages": ["hindi"],
+      "max_per_language": 5000,
+      "max_per_dataset": 5000,
+      "split_caps": {
+        "val": 300,
+        "test": 0
+      }
+    },
+
+    "mera": {
+      "languages": ["russian"],
+      "max_per_language": 3000,
+      "max_per_dataset": 3000,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "head_qa": {
+      "languages": ["spanish", "italian"],
+      "language_caps": {
+        "spanish": 1500,
+        "italian": 1000
+      },
+      "max_per_dataset": 2500,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "exams": {
+      "languages": ["italian", "spanish"],
+      "max_per_dataset": 2000,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "polizia_di_stato_clean": {
+      "languages": ["italian"],
+      "max_per_language": 2000,
+      "max_per_dataset": 2000,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "quaderno_prefettizia_clean": {
+      "languages": ["italian"],
+      "max_per_language": 2500,
+      "max_per_dataset": 2500,
+      "split_caps": {
+        "val": 250,
+        "test": 0
+      }
+    },
+
+    "quaderno_prefettizia_economia_politica_clean": {
+      "languages": ["italian"],
+      "max_per_language": 1000,
+      "max_per_dataset": 1000,
+      "split_caps": {
+        "val": 150,
+        "test": 0
+      }
+    },
+
+    "italian_civil_code": {
+      "languages": ["italian"],
+      "max_per_language": 1500,
+      "max_per_dataset": 1500,
+      "split_caps": {
+        "val": 150,
+        "test": 0
+      }
+    },
+
+    "spain_boe_legislation": {
+      "languages": ["spanish"],
+      "max_per_language": 2000,
+      "max_per_dataset": 2000,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    }
+  }
+}

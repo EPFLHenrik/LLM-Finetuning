@@ -52,6 +52,22 @@ Rules:
 Example:
 \\boxed{B}"""
 
+SYSTEM_PROMPT_NON_THINKING = """
+You are a knowledgeable multilingual multiple-choice question answering assistant with expertise in regional cultures, laws, history, and traditions across the world. You will be given a multiple-choice question in any language.
+
+Choose exactly one option. Output only the final boxed answer in the format \boxed{X}, where X is the chosen option letter.
+
+Rules:
+- Your response must contain exactly one boxed answer.
+- Do not include anything before or after the boxed answer.
+- Do not include explanations or extra text inside the box.
+- Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+
+Example:
+\boxed{B}
+"""
+
 
 # Local token budgets. 3072 gives MCQ enough headroom for a short think
 # block without letting the model loop. CI uses 16384.

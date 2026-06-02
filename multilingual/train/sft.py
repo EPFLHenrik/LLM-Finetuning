@@ -26,7 +26,7 @@ from trl import SFTConfig, SFTTrainer
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
-from multilingual.config import REPO as MLREPO, SYSTEM_PROMPT, SYSTEM_PROMPT_GROUP
+from multilingual.config import REPO as MLREPO, SYSTEM_PROMPT, SYSTEM_PROMPT_GROUP, SYSTEM_PROMPT_NON_THINKING
 
 # ---------------------------------------------------------------------------
 # Defaults
@@ -71,6 +71,15 @@ def _load_jsonl(path: Path) -> Dataset:
                 records.append(json.loads(line))
     return Dataset.from_list(records)
 
+def _select_system_prompt(name: str) -> str:
+    if name == "individual":
+        return SYSTEM_PROMPT
+    if name == "group":
+        return SYSTEM_PROMPT_GROUP
+    if name == "non_thinking":
+        return SYSTEM_PROMPT_NON_THINKING
+    raise ValueError(f"Unknown system_prompt: {name}")
+
 
 # ---------------------------------------------------------------------------
 # Args
@@ -100,9 +109,11 @@ def parse_args():
     parser.add_argument("--wandb_project", type=str, default=WANDB_PROJECT)
     parser.add_argument("--wandb_entity",  type=str, default=None)
     parser.add_argument("--skip_wandb",    action="store_true")
-    parser.add_argument("--system_prompt", type=str, default="individual",
-                        choices=["individual", "group"],
-                        help="System prompt variant: 'individual' (multilingual v2) or 'group'.")
+    parser.add_argument(
+        "--system_prompt", type=str, default="individual",
+        choices=["individual", "group", "non_thinking"],
+        help=("System prompt variant: 'individual' for the default reasoning prompt, 'group' for the group prompt, 'non_thinking' for boxed-answer-only SFT.")
+    )
     return parser.parse_args()
 
 
@@ -165,18 +176,38 @@ def main():
 
 
     # override system prompt in messages if using group prompt
-    if args.system_prompt == "group":
-        def _override_system(ex):
-            msgs = list(ex.get("messages", []))
-            if msgs and msgs[0]["role"] == "system":
-                msgs[0] = {"role": "system", "content": SYSTEM_PROMPT_GROUP}
-            ex["messages"] = msgs
-            return ex
-        train_dataset = train_dataset.map(_override_system)
-        val_dataset   = val_dataset.map(_override_system)
-        print("[info] System prompt overridden with SYSTEM_PROMPT_GROUP")
-    else:
-        print("[info] Using individual system prompt (SYSTEM_PROMPT)")
+    # if args.system_prompt == "group":
+    #     def _override_system(ex):
+    #         msgs = list(ex.get("messages", []))
+    #         if msgs and msgs[0]["role"] == "system":
+    #             msgs[0] = {"role": "system", "content": SYSTEM_PROMPT_GROUP}
+    #         ex["messages"] = msgs
+    #         return ex
+    #     train_dataset = train_dataset.map(_override_system)
+    #     val_dataset   = val_dataset.map(_override_system)
+    #     print("[info] System prompt overridden with SYSTEM_PROMPT_GROUP")
+    # else:
+    #     print("[info] Using individual system prompt (SYSTEM_PROMPT)")
+
+
+    # new
+    selected_system_prompt = _select_system_prompt(args.system_prompt)
+
+    def _override_system(ex):
+        msgs = list(ex.get("messages", []))
+
+        if msgs and msgs[0].get("role") == "system":
+            msgs[0] = {"role": "system", "content": selected_system_prompt}
+        else:
+            msgs = [{"role": "system", "content": selected_system_prompt}] + msgs
+
+        ex["messages"] = msgs
+        return ex
+
+    train_dataset = train_dataset.map(_override_system)
+    val_dataset = val_dataset.map(_override_system)
+    enable_thinking = args.system_prompt != "non_thinking"
+    print(f"[info] System prompt overridden with: {args.system_prompt}")
 
     # print debug
     print(f"Train: {len(train_dataset)} | Val: {len(val_dataset)}")
@@ -185,7 +216,7 @@ def main():
         train_dataset[0]["messages"],
         tokenize=False,
         add_generation_prompt=False,
-        enable_thinking=True,
+        enable_thinking = enable_thinking,
     ))
     print("--------------------------------\n")
 
