@@ -3,7 +3,6 @@ set -euo pipefail
 
 HF_TOKEN="<HF_TOKEN_REDACTED>"
 TEACHER_MODEL="models/teacher32"
-export VLLM_USE_V1=0
 
 log_stats() {
     local file="$1"
@@ -41,13 +40,17 @@ for train_file in data/preprocessing/*/train.jsonl; do
         --output "$dir/train_teacher32.jsonl" \
         --hf-token "$HF_TOKEN" \
         --max-new-tokens 8192 \
-        --load-in-8bit
+        --load-in-8bit \
+        --max-model-len 14000 \
+        --gpu-memory-utilization 0.90
 
     python training/resample_wrong_answers.py "$dir/train_teacher32.jsonl" \
         --model-dir "$TEACHER_MODEL" \
         --output "$dir/teacher32_corrected.jsonl" \
         --hf-token "$HF_TOKEN" \
-        --load-in-8bit
+        --load-in-8bit \
+        --max-model-len 14000 \
+        --gpu-memory-utilization 0.90
 
     {
         echo "  --- stats: $dir ---"
