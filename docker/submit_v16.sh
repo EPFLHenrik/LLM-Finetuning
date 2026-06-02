@@ -53,7 +53,7 @@ EXPORT_DIR="${REPO_DIR}/multilingual/results/exports/${RUN_NAME}"
 # ---------------------------------------------------------------------------
 # Single job: train individual non-thinking model, then export
 # ---------------------------------------------------------------------------
-SUFFIX="${1:-sft-v16-nonthinking-export}"
+SUFFIX="${1:-sft-v16-export}"
 JOB_NAME="cs552-${GASPAR}-${GROUP}-${SUFFIX}-$(date +%H%M%S)"
 
 echo ">>> Submitting job: ${JOB_NAME}"
