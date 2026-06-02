@@ -1,10 +1,10 @@
+from code.group_model.merging.utils.parse_arguments import parse_merge_args
+from code.group_model.merging.utils.peft_merge import run_mergekit_merge
+
 DENSITY = 0.8
 NORMALIZE = True
 INT8_MASK = True
 MERGE_METHOD = "ties"
-
-from code.group_model.merging.utils.parse_arguments import parse_merge_args
-from code.group_model.merging.utils.peft_merge import run_mergekit_merge
 
 def _model_parameters_builder(_model, weight):
     return {

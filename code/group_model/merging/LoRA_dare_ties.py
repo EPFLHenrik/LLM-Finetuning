@@ -9,15 +9,14 @@ ADAPTER_NAME = "dare_ties_merged"
 
 def main():
 	args = parse_merge_args()
-	adapter_paths = args.models
 
-	if not adapter_paths:
-		raise ValueError("--models must contain at least one LoRA adapter path")
+	if not args.adapters:
+		raise ValueError("--adapters must contain at least one LoRA adapter path")
 
 	print("Merging adapters with DARE-TIES...")
 	run_peft_lora_merge(
 		base_model_path=args.base_model,
-		adapter_paths=adapter_paths,
+		adapter_paths=args.adapters,
 		output_path=args.output_path,
 		weights=args.weights,
 		dtype=args.dtype,
