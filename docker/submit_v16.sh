@@ -37,15 +37,6 @@ LOG_STEPS=10
 WARMUP_RATIO=0.1
 # ==============================================
 
-if [[ -z "${GASPAR}" ]]; then echo "ERROR: set GASPAR." >&2; exit 1; fi
-if [[ -z "${GROUP}" ]]; then echo "ERROR: set GROUP." >&2; exit 1; fi
-if [[ -z "${HF_TOKEN:-}" ]]; then echo "ERROR: HF_TOKEN not set." >&2; exit 1; fi
-if [[ -z "${WANDB_API_KEY:-}" ]]; then echo "ERROR: WANDB_API_KEY not set." >&2; exit 1; fi
-
-if [[ ! -f "${TRAIN_FILE}" ]]; then echo "ERROR: train file not found: ${TRAIN_FILE}" >&2; exit 1; fi
-if [[ ! -f "${VAL_FILE}" ]]; then echo "ERROR: val file not found: ${VAL_FILE}" >&2; exit 1; fi
-if [[ ! -f "${SFT_CONFIG}" ]]; then echo "ERROR: config file not found: ${SFT_CONFIG}" >&2; exit 1; fi
-
 GPUS=1
 NODE="${NODE:-a100-40g}"
 PROJECT="course-cs-552-${GASPAR}"
