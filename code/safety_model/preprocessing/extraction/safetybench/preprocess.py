@@ -14,7 +14,7 @@ from code.safety_model.constants.global_variables import DatasetFieldNames, Rand
 SEED = Random.SEED
 LETTERS = [chr(ord("A") + i) for i in range(26)]
 
-OUT_SFT = Path("data/safety/processed/sft/safetybench/mcq")
+OUT_SFT = Path("data/safety/processed/sft/safetybench")
 OUT_BENCH = Path("data/safety/processed/benchmark/safetybench")
 
 
@@ -148,8 +148,8 @@ def print_stats(name, records):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--questions_path", type=str, default="data/raw/safetybench/en/test_en.json")
-    parser.add_argument("--answers_path", type=str, default="data/raw/safetybench/en/test_answers_en.json")
+    parser.add_argument("--questions_path", type=str, default="data/safety/raw/safetybench/en/test_en.json")
+    parser.add_argument("--answers_path", type=str, default="data/safety/raw/safetybench/en/test_answers_en.json")
     parser.add_argument("--internal_test_ratio", type=float, default=0.05)
     parser.add_argument("--benchmark_ratio", type=float, default=0.05)
     args = parser.parse_args()

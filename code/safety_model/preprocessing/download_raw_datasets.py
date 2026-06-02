@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.request import urlretrieve
 
 from datasets import get_dataset_split_names, load_dataset
 
@@ -54,3 +55,27 @@ for i, (name, (repo, config, *extra_args)) in enumerate(datasets_to_download):
             print(f"Saved {name}:{split} -> {out_dir}")
         except Exception as e:
             print(f"\033[91mSkipping {name}:{split} because of error: {e}\033[0m")
+
+
+# Download safetybench separately since it requires a different parsing logic and we only use the test set for benchmarking, not the training set.
+
+safetybench_en_dir = Path("data/safety/raw/safetybench/en")
+safetybench_en_dir.mkdir(parents=True, exist_ok=True)
+
+safetybench_files = {
+    "test_en.json": "https://raw.githubusercontent.com/thu-coai/SafetyBench/960833692a1ec82b191ff3e902daca7993c35cc1/opensource_data/test_en.json",
+    "test_answers_en.json": "https://raw.githubusercontent.com/thu-coai/SafetyBench/960833692a1ec82b191ff3e902daca7993c35cc1/opensource_data/test_answers_en.json",
+}
+
+for filename, url in safetybench_files.items():
+    target = safetybench_en_dir / filename
+    if target.exists():
+        print(f"Skipping SafetyBench file because it already exists at {target}")
+        continue
+
+    try:
+        urlretrieve(url, target)
+        print(f"Saved SafetyBench file -> {target}")
+    except Exception as e:
+        print(f"\033[91mFailed downloading SafetyBench file {filename}: {e}\033[0m")
+

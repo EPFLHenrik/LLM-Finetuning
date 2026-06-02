@@ -13,13 +13,13 @@ from code.safety_model.constants.global_variables import DatasetFieldNames, Rand
 SEED = Random.SEED
 LETTERS = [chr(ord("A") + i) for i in range(26)]
 
-OUT_BINARY = Path("data/processed/sft/wildguardmix/binary_choice")
-OUT_SUBCATEGORY = Path("data/processed/sft/wildguardmix/subcategory_classification")
-OUT_COMBO = Path("data/processed/sft/wildguardmix/safety_combo")
+OUT_BINARY = Path("data/safety/processed/sft/wildguardmix/binary_choice")
+OUT_SUBCATEGORY = Path("data/safety/processed/sft/wildguardmix/subcategory_classification")
+OUT_COMBO = Path("data/safety/processed/sft/wildguardmix/safety_combo")
 
-BENCH_BINARY = Path("data/processed/benchmark/wildguardmix/binary_choice")
-BENCH_SUBCATEGORY = Path("data/processed/benchmark/wildguardmix/subcategory_classification")
-BENCH_COMBO = Path("data/processed/benchmark/wildguardmix/safety_combo")
+BENCH_BINARY = Path("data/safety/processed/benchmark/wildguardmix/binary_choice")
+BENCH_SUBCATEGORY = Path("data/safety/processed/benchmark/wildguardmix/subcategory_classification")
+BENCH_COMBO = Path("data/safety/processed/benchmark/wildguardmix/safety_combo")
 
 SUBCATEGORY_TEXT = {
     "benign": "Benign or ordinary request",
@@ -358,8 +358,8 @@ def print_stats(name, ds):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_path", type=str, default="data/raw/wildguardmix/train")
-    parser.add_argument("--test_path", type=str, default="data/raw/wildguardmix/test")
+    parser.add_argument("--train_path", type=str, default="data/safety/raw/wildguardmix/train")
+    parser.add_argument("--test_path", type=str, default="data/safety/raw/wildguardmix/test")
     parser.add_argument("--max_subcategory_choices", type=int, default=6)
     parser.add_argument("--binary_ratio", type=float, default=0.8)
     parser.add_argument("--combo_ratio", type=float, default=1.0)
@@ -395,10 +395,13 @@ def main():
 
     print_stats("binary_train", binary_train)
     print_stats("binary_test", binary_test)
+    print_stats("binary_bench", binary_bench)
     print_stats("subcategory_train", subcat_train)
     print_stats("subcategory_test", subcat_test)
+    print_stats("subcategory_bench", subcat_bench)
     print_stats("combo_train", combo_train)
     print_stats("combo_test", combo_test)
+    print_stats("combo_bench", combo_bench)
 
 
 if __name__ == "__main__":
