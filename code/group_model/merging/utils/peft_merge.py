@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
@@ -50,12 +49,37 @@ def build_mergekit_config(
 
 
 def run_mergekit_yaml(args: Any, config: dict[str, Any]) -> None:
-    with open(args.config_path, "w", encoding="utf-8") as handle:
-        yaml.safe_dump(config, handle, sort_keys=False)
+    config_source = yaml.safe_dump(config, sort_keys=False)
 
-    subprocess.run(
-        ["mergekit-yaml", args.config_path, args.output_path, "--cuda"],
-        check=True,
+    with open(args.config_path, "w", encoding="utf-8") as handle:
+        handle.write(config_source)
+
+    from mergekit.architecture import base as mergekit_arch_base
+    from mergekit.config import MergeConfiguration
+    from mergekit.merge import run_merge
+    from mergekit.options import MergeOptions
+
+    types_namespace = {"torch": torch}
+    mergekit_arch_base.ConfiguredModuleArchitecture.model_rebuild(
+        _types_namespace=types_namespace
+    )
+    mergekit_arch_base.ConfiguredModelArchitecture.model_rebuild(
+        _types_namespace=types_namespace
+    )
+
+    merge_config = MergeConfiguration.model_validate(config)
+    use_cuda = torch.cuda.is_available()
+    merge_options = MergeOptions(
+        cuda=use_cuda,
+        device=None if use_cuda else "cpu",
+    )
+    merge_options.apply_global_options()
+
+    run_merge(
+        merge_config,
+        args.output_path,
+        options=merge_options,
+        config_source=config_source,
     )
 
 
