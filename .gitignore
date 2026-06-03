@@ -9,7 +9,6 @@ multilingual/data/**/*.json
 multilingual/data/**/*.log
 multilingual/data/**/*.csv
 
-
 # Model checkpoints/adapters
 checkpoints/
 checkpoint-*/

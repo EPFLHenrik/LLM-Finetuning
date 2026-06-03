@@ -1,0 +1,9 @@
+dataset,n,correct,accuracy
+ceval,30,8,0.2667
+cmmlu,30,16,0.5333
+exams,40,26,0.65
+global_mmlu,180,108,0.6
+head_qa,40,23,0.575
+include,100,43,0.43
+mera,40,26,0.65
+milu,40,19,0.475

@@ -116,10 +116,10 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
         ("cultsportqa/cultsportqa_chinese_all.jsonl", "cultsportqa_chinese"),
     ],
     "head_qa_spanish": [
-        ("head_qa/head_qa_spanish_all.jsonl", "head_qa_spanish"),
+        ("head_qa/head_qa_spanish_train.jsonl", "head_qa_spanish"),
     ],
     "head_qa_italian": [
-        ("head_qa/head_qa_italian_all.jsonl", "head_qa_italian"),
+        ("head_qa/head_qa_italian_train.jsonl", "head_qa_italian"),
     ],
     # new
     "mera": [
@@ -135,8 +135,8 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
         ("global_piqa/global_piqa_russian_all.jsonl",  "global_piqa_russian"),
     ],
     "exams": [
-        ("exams/exams_italian_all.jsonl", "exams_italian"),
-        ("exams/exams_spanish_all.jsonl", "exams_spanish"),
+        ("exams/exams_italian_train.jsonl", "exams_italian"),
+        ("exams/exams_spanish_train.jsonl", "exams_spanish"),
     ],
     "global_mmlu_region_agnostic": [
         ("global_mmlu/global_mmlu_russian_shuffled_region_agnostic.jsonl",  "global_mmlu_russian_region_agnostic"),

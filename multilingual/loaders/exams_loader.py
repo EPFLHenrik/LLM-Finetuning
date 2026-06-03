@@ -1,192 +1,213 @@
-"""multilingual/loaders/exams_loader.py"""
+"""multilingual/loaders/exams_loader.py
+
+Loader for processed EXAMS train JSONL files.
+
+The *_eval.jsonl files are reserved for benchmark construction and are not
+loaded here.
+"""
 
 from __future__ import annotations
+
+import hashlib
 import json
+import random
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from datasets import Dataset
+
 from multilingual.config import REPO
-from multilingual.loaders.recarve_utils import recarve_splits
-from multilingual.utils import VAL_SEED, select_at_most
+from multilingual.utils import VAL_FRACTION, VAL_SEED
 
 EXAMS_DIR = REPO / "multilingual" / "data" / "processed" / "exams"
 SUPPORTED_LANGUAGES = {"italian", "spanish"}
-_SOURCE_SPLIT_MAP = {
-    "train": "train",
-    "validation": "val",
-    "val": "val",
-    "test": "test",
-}
+VALID_ANSWER_LETTERS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 
 def _jsonl_path(language: str) -> Path:
-    return EXAMS_DIR / f"exams_{language}_all.jsonl"
+    return EXAMS_DIR / f"exams_{language}_train.jsonl"
 
 
-def _normalize_source_split(x: Any) -> str:
-    return _SOURCE_SPLIT_MAP.get(str(x).strip(), str(x).strip())
+def _fallback_source_id(record: Dict[str, Any], language: str) -> str:
+    raw = "\n".join([
+        "exams",
+        language,
+        str(record.get("id", "")),
+        str(record.get("prompt", "")).strip(),
+        str(record.get("answer", "")).strip().upper(),
+    ])
+    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+    return f"exams_{language}_{digest}"
 
 
-def _validate_example(ex: Dict[str, Any]) -> bool:
-    required = ["id", "dataset", "language", "task_type", "prompt", "answer", "metadata"]
-    for key in required:
-        if key not in ex:
-            return False
-    if ex["dataset"] != "exams":
+def _validate_record(record: Dict[str, Any], language: str) -> bool:
+    if record.get("dataset") != "exams":
         return False
-    if ex["task_type"] != "mcq":
+    if record.get("language") != language:
         return False
-    if ex["answer"] not in {"A", "B", "C", "D", "E"}:
+    if record.get("task_type") != "mcq":
         return False
-    if not str(ex["prompt"]).strip():
+
+    prompt = str(record.get("prompt", "")).strip()
+    answer = str(record.get("answer", "")).strip().upper()
+
+    if not prompt or not answer:
         return False
-    if "A)" not in ex["prompt"] or "B)" not in ex["prompt"]:
+    if answer not in VALID_ANSWER_LETTERS:
         return False
-    if not isinstance(ex["metadata"], dict):
+    if "A)" not in prompt or "B)" not in prompt:
         return False
+
+    metadata = record.get("metadata", {})
+    if not isinstance(metadata, dict):
+        return False
+
     return True
 
 
-def _load_all_examples(language: str) -> List[Dict[str, Any]]:
+def _normalize_record(record: Dict[str, Any], language: str) -> Optional[Dict[str, Any]]:
+    if not _validate_record(record, language):
+        return None
+
+    prompt = str(record["prompt"]).strip()
+    answer = str(record["answer"]).strip().upper()
+
+    source_id = str(record.get("source_id", "")).strip()
+    metadata = dict(record.get("metadata") or {})
+
+    if not source_id:
+        source_id = str(metadata.get("source_id", "")).strip()
+
+    if not source_id:
+        source_id = _fallback_source_id(record, language)
+
+    record_id = str(record.get("id", source_id)).strip() or source_id
+    metadata.setdefault("original_dataset", record.get("dataset", "exams"))
+    metadata.setdefault("original_id", record.get("id", source_id))
+    metadata.setdefault("source_split", record.get("split", metadata.get("source_split", "train")))
+
+    return {
+        "id": record_id,
+        "source_id": source_id,
+        "dataset": "exams",
+        "language": language,
+        "task_type": "mcq",
+        "prompt": prompt,
+        "answer": answer,
+        "metadata": metadata,
+    }
+
+
+def _load_train_records(language: str) -> List[Dict[str, Any]]:
     if language not in SUPPORTED_LANGUAGES:
         print(f"[EXAMS] No data for {language}; skipping.")
         return []
 
     path = _jsonl_path(language)
     if not path.exists():
-        print(f"[EXAMS] Missing processed JSONL file for {language}: {path}")
+        print(f"[EXAMS] Missing processed train JSONL for {language}: {path}")
         return []
 
-    examples, skipped = [], 0
+    examples: List[Dict[str, Any]] = []
+    skipped = 0
+
     with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            if not line.strip():
+        for line_no, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
                 continue
+
             try:
-                ex = json.loads(line)
+                record = json.loads(line)
             except json.JSONDecodeError:
                 skipped += 1
                 continue
-            if not _validate_example(ex):
+
+            example = _normalize_record(record, language)
+            if example is None:
                 skipped += 1
                 continue
-            ex["language"] = language
-            examples.append(ex)
+
+            examples.append(example)
 
     if skipped:
-        print(f"[EXAMS] Skipped {skipped} invalid JSONL rows for {language}.")
+        print(f"[EXAMS] Skipped {skipped} invalid rows for {language}.")
     if not examples:
-        print(f"[EXAMS] Empty processed JSONL for {language}: {path}")
+        print(f"[EXAMS] Empty processed train JSONL for {language}: {path}")
+
+    return _dedupe_by_source_id(examples)
+
+
+def _dedupe_by_source_id(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    seen = set()
+    out: List[Dict[str, Any]] = []
+
+    for record in records:
+        source_id = str(record.get("source_id", "")).strip()
+        if not source_id or source_id in seen:
+            continue
+        seen.add(source_id)
+        out.append(record)
+
+    return out
+
+
+def _split_records(records: List[Dict[str, Any]], split: str) -> List[Dict[str, Any]]:
+    if split not in {"train", "val", "all", "test"}:
+        raise ValueError(f"Unsupported EXAMS split: {split!r}")
+
+    records = list(records)
+    rng = random.Random(VAL_SEED)
+    rng.shuffle(records)
+
+    if split == "all":
+        return records
+    if split == "test":
         return []
 
-    print(f"[EXAMS] Loaded {len(examples)} processed examples for {language}.")
-    return examples
+    n = len(records)
+    if n == 0:
+        return []
+
+    n_val = max(1, int(n * VAL_FRACTION)) if n >= 10 else 0
+    val_records = records[:n_val]
+    train_records = records[n_val:]
+
+    return train_records if split == "train" else val_records
 
 
-def _examples_to_dataset(examples: List[Dict[str, Any]]) -> Dataset:
-    return Dataset.from_list(examples)
+def _cap(records: List[Dict[str, Any]], n: Optional[int]) -> List[Dict[str, Any]]:
+    if n is None or n <= 0:
+        return records
+    return records[:n]
 
 
-def _dataset_to_examples(data) -> List[Dict[str, Any]]:
-    return [dict(row) for row in data]
-
-
-def _filter_as_is_split(
-    examples: List[Dict[str, Any]],
-    split: str,
-) -> List[Dict[str, Any]]:
-    if split not in {"train", "val", "test"}:
-        raise ValueError(f"split must be 'train', 'val', or 'test', got {split!r}")
-
-    selected = []
-    for ex in examples:
-        meta = ex.get("metadata", {})
-        source_split = _normalize_source_split(meta.get("source_split", ""))
-        if source_split == split:
-            selected.append(ex)
-
-    return selected
-
-
-def load_exams_examples(
-    language: str,
-    n: Optional[int] = None,
-    split: str = "val",
-    mode: str = "as_is",
-) -> List[Dict[str, Any]]:
-    """
-    Load EXAMS examples from processed JSONL.
-    split:
-      - "train"
-      - "val"
-      - "test"
-    mode:
-      - "as_is": use original dataset splits:
-          train -> source_split == train
-          val   -> source_split == validation
-          test  -> source_split == test
-
-      - "recarve": recarve the full language pool into val/test using recarve_splits.
-        For split="train", returns the shuffled full pool capped by n.
-    """
-    if split not in {"train", "val", "test"}:
-        raise ValueError(f"Unsupported EXAMS split: {split!r}")
+def load_exams_examples(language: str, n: Optional[int] = None, split: str = "val", mode: str = "as_is") -> List[Dict[str, Any]]:
     if mode not in {"as_is", "recarve"}:
         raise ValueError(f"Unsupported EXAMS mode: {mode!r}")
+    if mode == "recarve":
+        print("[EXAMS] recarve mode is no longer used; loading train JSONL with local train/val split.")
 
-    examples = _load_all_examples(language)
-    if not examples:
-        return []
-
-    if mode == "as_is":
-        selected = _filter_as_is_split(examples, split)
-        dataset = _examples_to_dataset(selected).shuffle(seed=VAL_SEED)
-        sampled = select_at_most(dataset, n)
-        return _dataset_to_examples(sampled)
-
-    if split == "train":
-        dataset = _examples_to_dataset(examples).shuffle(seed=VAL_SEED)
-        sampled = select_at_most(dataset, n)
-        return _dataset_to_examples(sampled)
-
-    n_val = n if split == "val" else None
-    n_test = n if split == "test" else None
-    val_ex, test_ex = load_exams_recarved(language, n_val=n_val, n_test=n_test)
-    return val_ex if split == "val" else test_ex
+    records = _load_train_records(language)
+    records = _split_records(records, split)
+    return _cap(records, n)
 
 
-def load_exams_recarved(
-    language: str,
-    n_val: Optional[int] = None,
-    n_test: Optional[int] = None,
-) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Recarve full EXAMS language pool into val/test examples."""
-    examples = _load_all_examples(language)
-    if not examples:
-        return [], []
+def load_exams_recarved(language: str, n_val: Optional[int] = None, n_test: Optional[int] = None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    records = _load_train_records(language)
+    rng = random.Random(VAL_SEED)
+    rng.shuffle(records)
 
-    dataset = _examples_to_dataset(examples)
-    val_data, test_data = recarve_splits(
-        [dataset],
-        n_val,
-        n_test,
-        "EXAMS",
-        language,
-    )
-    if val_data is None:
-        return [], []
+    n_val_final = n_val if n_val is not None else max(1, int(len(records) * VAL_FRACTION))
+    val_records = records[:n_val_final]
 
-    return (
-        _dataset_to_examples(val_data),
-        _dataset_to_examples(test_data),
-    )
+    if n_test is None or n_test <= 0:
+        test_records: List[Dict[str, Any]] = []
+    else:
+        test_records = records[n_val_final:n_val_final + n_test]
+
+    return val_records, test_records
 
 
-def load_exams_splits(
-    language: str,
-    mode: str = "as_is",
-) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Return (train_examples, val_examples)."""
+def load_exams_splits(language: str, mode: str = "as_is") -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     train = load_exams_examples(language, n=None, split="train", mode=mode)
     val = load_exams_examples(language, n=None, split="val", mode=mode)
     return train, val

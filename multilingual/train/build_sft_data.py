@@ -49,6 +49,7 @@ from multilingual.loaders.mgsm_loader import load_mgsm_examples
 from multilingual.loaders.milu_loader import load_milu_examples
 from multilingual.loaders.global_mmlu_loader import load_global_mmlu_examples
 from multilingual.loaders.global_piqa_loader import load_global_piqa_recarved, load_global_piqa_examples
+from multilingual.loaders.cmmlu_loader import load_cmmlu_examples
 
 # ---------------------------------------------------------------------------
 # Global defaults
@@ -96,6 +97,11 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
         "split_caps":       {"val": 300},
     },
     "ceval": {
+        "languages":     ["chinese"],
+        "language_caps": {"chinese": 2000},
+        "split_caps":    {"val": 300},
+    },
+    "cmmlu": {
         "languages":     ["chinese"],
         "language_caps": {"chinese": 2000},
         "split_caps":    {"val": 300},
@@ -477,6 +483,8 @@ def _load_examples(
         return load_milu_examples(n=n, split=split, hf_token=hf_token)
     if dataset == "ceval":
         return load_ceval_examples(n=n, split=split)
+    if dataset == "cmmlu":
+        return load_cmmlu_examples(language=language, n=n, split=split)
     if dataset == "cultsportqa":
         return load_cultsportqa_examples(language=language, n=n, split=split)
     if dataset == "belebele":

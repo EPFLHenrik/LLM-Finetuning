@@ -1,0 +1,71 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      Qwen/Qwen3-1.7B
+Output dir: multilingual/eval/results/base/small
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 500,
+  "correct": 269,
+  "accuracy": 0.538
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 100       41      0.41
+   hindi 100       42      0.42
+ italian 100       66      0.66
+ russian 100       61      0.61
+ spanish 100       59      0.59
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+    dataset   n  correct  accuracy
+      ceval  30        8    0.2667
+      cmmlu  30       16    0.5333
+      exams  40       26    0.6500
+global_mmlu 180      108    0.6000
+    head_qa  40       23    0.5750
+    include 100       43    0.4300
+       mera  40       26    0.6500
+       milu  40       19    0.4750
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+    dataset language  n  correct  accuracy
+      ceval  chinese 30        8    0.2667
+      cmmlu  chinese 30       16    0.5333
+      exams  italian 40       26    0.6500
+global_mmlu  chinese 20       10    0.5000
+global_mmlu    hindi 40       16    0.4000
+global_mmlu  italian 40       30    0.7500
+global_mmlu  russian 40       26    0.6500
+global_mmlu  spanish 40       26    0.6500
+    head_qa  spanish 40       23    0.5750
+    include  chinese 20        7    0.3500
+    include    hindi 20        7    0.3500
+    include  italian 20       10    0.5000
+    include  russian 20        9    0.4500
+    include  spanish 20       10    0.5000
+       mera  russian 40       26    0.6500
+       milu    hindi 40       19    0.4750
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

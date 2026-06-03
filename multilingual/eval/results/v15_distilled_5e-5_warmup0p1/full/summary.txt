@@ -1,0 +1,73 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v15_distilled_5e-5_warmup0p1
+Output dir: multilingual/eval/results/v15_distilled_5e-5_warmup0p1/full
+Runtime seconds: 143.64
+Runtime minutes: 2.39
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 2500,
+  "correct": 1174,
+  "accuracy": 0.4696
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 500      239     0.478
+   hindi 500      158     0.316
+ italian 500      267     0.534
+ russian 500      265     0.530
+ spanish 500      245     0.490
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+    dataset   n  correct  accuracy
+      ceval 150       49    0.3267
+      cmmlu 150       84    0.5600
+      exams 200      112    0.5600
+global_mmlu 900      441    0.4900
+    head_qa 200       95    0.4750
+    include 500      192    0.3840
+       mera 200      128    0.6400
+       milu 200       73    0.3650
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+    dataset language   n  correct  accuracy
+      ceval  chinese 150       49    0.3267
+      cmmlu  chinese 150       84    0.5600
+      exams  italian 200      112    0.5600
+global_mmlu  chinese 100       52    0.5200
+global_mmlu    hindi 200       65    0.3250
+global_mmlu  italian 200      112    0.5600
+global_mmlu  russian 200      100    0.5000
+global_mmlu  spanish 200      112    0.5600
+    head_qa  spanish 200       95    0.4750
+    include  chinese 100       54    0.5400
+    include    hindi 100       20    0.2000
+    include  italian 100       43    0.4300
+    include  russian 100       37    0.3700
+    include  spanish 100       38    0.3800
+       mera  russian 200      128    0.6400
+       milu    hindi 200       73    0.3650
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

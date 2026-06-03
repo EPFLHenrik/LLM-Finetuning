@@ -115,10 +115,10 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
         ("cultsportqa/cultsportqa_chinese_all.jsonl", "cultsportqa_chinese"),
     ],
     "head_qa_spanish": [
-        ("head_qa/head_qa_spanish_all.jsonl", "head_qa_spanish"),
+        ("head_qa/head_qa_spanish_train.jsonl", "head_qa_spanish"),
     ],
     "head_qa_italian": [
-        ("head_qa/head_qa_italian_all.jsonl", "head_qa_italian"),
+        ("head_qa/head_qa_italian_train.jsonl", "head_qa_italian"),
     ],
 }
 

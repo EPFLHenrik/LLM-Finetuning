@@ -1,87 +1,185 @@
-"""multilingual/loaders/head_qa_loader.py"""
+"""multilingual/loaders/head_qa_loader.py
 
-from typing import Any, Dict, List, Optional, Tuple
+Loader for processed HEAD-QA train JSONL files.
+
+The *_eval.jsonl files are reserved for benchmark construction and are not
+loaded here.
+"""
+
+from __future__ import annotations
+
+import hashlib
 import json
-import pandas as pd
+import random
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
 from multilingual.config import REPO
 from multilingual.utils import VAL_FRACTION, VAL_SEED
 
-CLEAN_CSV = REPO / "multilingual" / "data" / "processed" / "head_qa" / "head_qa_clean_all.csv"
+HEAD_QA_DIR = REPO / "multilingual" / "data" / "processed" / "head_qa"
 SUPPORTED_LANGUAGES = {"spanish", "italian"}
-LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+VALID_ANSWER_LETTERS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 
-def _load_language(language: str) -> pd.DataFrame:
-    df = pd.read_csv(CLEAN_CSV, encoding="utf-8")
-    df = df[df["language"] == language].copy()
-    return df.sample(frac=1, random_state=VAL_SEED).reset_index(drop=True)
+def _jsonl_path(language: str) -> Path:
+    return HEAD_QA_DIR / f"head_qa_{language}_train.jsonl"
 
 
-def _split(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    n_val = max(1, int(len(df) * VAL_FRACTION))
-    val_df = df.iloc[:n_val].reset_index(drop=True)
-    train_df = df.iloc[n_val:].reset_index(drop=True)
-    return train_df, val_df
+def _fallback_source_id(record: Dict[str, Any], language: str) -> str:
+    raw = "\n".join([
+        "head_qa",
+        language,
+        str(record.get("id", "")),
+        str(record.get("prompt", "")).strip(),
+        str(record.get("answer", "")).strip().upper(),
+    ])
+    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+    return f"head_qa_{language}_{digest}"
 
 
-def _parse_json_list(x: Any) -> list:
-    if isinstance(x, list):
-        return x
-    return json.loads(str(x))
+def _validate_record(record: Dict[str, Any], language: str) -> bool:
+    if record.get("dataset") != "head_qa":
+        return False
+    if record.get("language") != language:
+        return False
+    if record.get("task_type") != "mcq":
+        return False
+
+    prompt = str(record.get("prompt", "")).strip()
+    answer = str(record.get("answer", "")).strip().upper()
+
+    if not prompt or not answer:
+        return False
+    if answer not in VALID_ANSWER_LETTERS:
+        return False
+    if "A)" not in prompt or "B)" not in prompt:
+        return False
+
+    metadata = record.get("metadata", {})
+    if not isinstance(metadata, dict):
+        return False
+
+    return True
 
 
-def _format_example(row: pd.Series, language: str, idx: int) -> Dict[str, Any]:
-    question = str(row["qtext"]).strip()
-    options = [str(x).strip() for x in _parse_json_list(row["atexts"])]
-    answer = str(row["ra_letter"]).strip().upper()
-    if not question:
-        raise ValueError("Empty HEAD-QA question.")
-    if not (2 <= len(options) <= len(LETTERS)):
-        raise ValueError(f"Unexpected number of HEAD-QA options: {len(options)}")
-    if answer not in LETTERS[:len(options)]:
-        raise ValueError(f"Answer {answer!r} incompatible with {len(options)} options.")
+def _normalize_record(record: Dict[str, Any], language: str) -> Optional[Dict[str, Any]]:
+    if not _validate_record(record, language):
+        return None
 
-    options_text = "\n".join(
-        f"{LETTERS[i]}) {option}"
-        for i, option in enumerate(options)
-    )
+    prompt = str(record["prompt"]).strip()
+    answer = str(record["answer"]).strip().upper()
+    source_id = str(record.get("source_id", "")).strip()
 
-    prompt = f"{question}\n\n{options_text}"
+    if not source_id:
+        source_id = _fallback_source_id(record, language)
+
+    record_id = str(record.get("id", source_id)).strip() or source_id
+    metadata = dict(record.get("metadata") or {})
+    metadata.setdefault("original_dataset", record.get("dataset", "head_qa"))
+    metadata.setdefault("original_id", record.get("id", source_id))
+    metadata.setdefault("source_split", record.get("split", "train"))
+
     return {
-        "id": f"head_qa_{language}_{idx}",
+        "id": record_id,
+        "source_id": source_id,
         "dataset": "head_qa",
         "language": language,
         "task_type": "mcq",
         "prompt": prompt,
         "answer": answer,
-        "metadata": {
-            "config": str(row.get("config", "")),
-            "qid": int(row["qid"]) if not pd.isna(row.get("qid")) else None,
-            "name": str(row.get("name", "")),
-            "year": int(row["year"]) if not pd.isna(row.get("year")) else None,
-            "category": str(row.get("category", "")),
-            "n_answers": int(row["n_answers"]) if not pd.isna(row.get("n_answers")) else len(options),
-            "translated": language == "italian",
-        },
+        "metadata": metadata,
     }
 
 
-def load_head_qa_examples(language: str, n: Optional[int] = None, split: str = "val") -> List[Dict[str, Any]]:
-    """Load HEAD-QA examples. split='train' or 'val'."""
+def _load_train_records(language: str) -> List[Dict[str, Any]]:
     if language not in SUPPORTED_LANGUAGES:
         print(f"[HEAD-QA] No data for {language}; skipping.")
         return []
-    if split not in {"train", "val"}:
-        raise ValueError(f"split must be 'train' or 'val', got {split!r}")
-    df = _load_language(language)
-    if df.empty:
-        print(f"[HEAD-QA] Empty after filtering for {language}.")
+
+    path = _jsonl_path(language)
+    if not path.exists():
+        print(f"[HEAD-QA] Missing processed train JSONL for {language}: {path}")
         return []
-    train_df, val_df = _split(df)
-    data = val_df if split == "val" else train_df
-    if n is not None:
-        data = data.iloc[:n]
-    return [_format_example(data.iloc[i], language, i) for i in range(len(data))]
+
+    examples: List[Dict[str, Any]] = []
+    skipped = 0
+
+    with path.open("r", encoding="utf-8") as f:
+        for line_no, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                skipped += 1
+                continue
+
+            example = _normalize_record(record, language)
+            if example is None:
+                skipped += 1
+                continue
+
+            examples.append(example)
+
+    if skipped:
+        print(f"[HEAD-QA] Skipped {skipped} invalid rows for {language}.")
+    if not examples:
+        print(f"[HEAD-QA] Empty processed train JSONL for {language}: {path}")
+
+    return _dedupe_by_source_id(examples)
+
+
+def _dedupe_by_source_id(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    seen = set()
+    out: List[Dict[str, Any]] = []
+
+    for record in records:
+        source_id = str(record.get("source_id", "")).strip()
+        if not source_id or source_id in seen:
+            continue
+        seen.add(source_id)
+        out.append(record)
+
+    return out
+
+
+def _split_records(records: List[Dict[str, Any]], split: str) -> List[Dict[str, Any]]:
+    if split not in {"train", "val", "all", "test"}:
+        raise ValueError(f"Unsupported HEAD-QA split: {split!r}")
+
+    records = list(records)
+    rng = random.Random(VAL_SEED)
+    rng.shuffle(records)
+
+    if split == "all":
+        return records
+    if split == "test":
+        return []
+
+    n = len(records)
+    if n == 0:
+        return []
+
+    n_val = max(1, int(n * VAL_FRACTION)) if n >= 10 else 0
+    val_records = records[:n_val]
+    train_records = records[n_val:]
+
+    return train_records if split == "train" else val_records
+
+
+def _cap(records: List[Dict[str, Any]], n: Optional[int]) -> List[Dict[str, Any]]:
+    if n is None or n <= 0:
+        return records
+    return records[:n]
+
+
+def load_head_qa_examples(language: str, n: Optional[int] = None, split: str = "val") -> List[Dict[str, Any]]:
+    records = _load_train_records(language)
+    records = _split_records(records, split)
+    return _cap(records, n)
 
 
 def load_head_qa_splits(language: str) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:

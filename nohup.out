@@ -1,0 +1,129 @@
+========================================
+Run:        sft_multilingual_v17_10k_nonthinking_1e-4_warmup0p15
+Clean name: v17_10k_nonthinking_1e-4_warmup0p15
+Train file: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/v17_10k/mixed/train_mixed.jsonl
+Val file:   /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/data/sft/v17_10k/mixed/val_mixed.jsonl
+Output:     /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/checkpoints/sft_multilingual_v17_10k_nonthinking_1e-4_warmup0p15/individual
+Export:     /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v17_10k_nonthinking_1e-4_warmup0p15
+========================================
+=== Step 1: Training v17_10k non-thinking model ===
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: nutemmax (taliesinperez) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.26.1
+wandb: Run data is saved locally in /scratch/wandb/wandb/run-20260603_035024-iv9owbtk
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run sft_multilingual_v17_10k_nonthinking_1e-4_warmup0p15
+wandb: ⭐️ View project at https://wandb.ai/nutemmax-epfl/MNLP-Multilingual
+wandb: 🚀 View run at https://wandb.ai/nutemmax-epfl/MNLP-Multilingual/runs/iv9owbtk
+Map:   0%|          | 0/10000 [00:00<?, ? examples/s]Map:  10%|█         | 1000/10000 [00:00<00:01, 6673.15 examples/s]Map:  20%|██        | 2000/10000 [00:00<00:01, 6880.00 examples/s]Map:  30%|███       | 3000/10000 [00:00<00:00, 7061.53 examples/s]Map:  40%|████      | 4000/10000 [00:00<00:00, 7134.45 examples/s]Map:  50%|█████     | 5000/10000 [00:00<00:00, 7073.02 examples/s]Map:  60%|██████    | 6000/10000 [00:00<00:00, 7179.55 examples/s]Map:  70%|███████   | 7000/10000 [00:00<00:00, 7255.71 examples/s]Map:  80%|████████  | 8000/10000 [00:01<00:00, 7299.55 examples/s]Map:  90%|█████████ | 9000/10000 [00:01<00:00, 7280.94 examples/s]Map: 100%|██████████| 10000/10000 [00:01<00:00, 7099.38 examples/s]Map: 100%|██████████| 10000/10000 [00:01<00:00, 7071.49 examples/s]
+Map:   0%|          | 0/1000 [00:00<?, ? examples/s]Map:  59%|█████▉    | 592/1000 [00:00<00:00, 2291.94 examples/s]Map: 100%|██████████| 1000/1000 [00:00<00:00, 2910.97 examples/s]Map: 100%|██████████| 1000/1000 [00:00<00:00, 2709.11 examples/s]
+[info] System prompt overridden with: non_thinking
+Train: 10000 | Val: 1000
+
+--- Sample formatted example ---
+<|im_start|>system
+
+You are a knowledgeable multilingual multiple-choice question answering assistant with expertise in regional cultures, laws, history, and traditions across the world. You will be given a multiple-choice question in any language.
+
+Choose exactly one option. Output only the final boxed answer in the format oxed{X}, where X is the chosen option letter.
+
+Rules:
+- Your response must contain exactly one boxed answer.
+- Do not include anything before or after the boxed answer.
+- Do not include explanations or extra text inside the box.
+- Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+
+Example:
+oxed{B}
+<|im_end|>
+<|im_start|>user
+¿Cuál es la disfunción sexual más frecuente en varones?:
+
+A) Trastorno del deseo hipoactivo.
+B) Trastorno de erección.
+C) Eyaculación precoz.
+D) Trastorno orgásmico.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+\boxed{C}<|im_end|>
+
+--------------------------------
+
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:   1%|          | 2/311 [00:00<00:28, 10.77it/s]Loading weights:  19%|█▉        | 60/311 [00:00<00:00, 257.76it/s]Loading weights:  37%|███▋      | 116/311 [00:00<00:00, 373.13it/s]Loading weights:  58%|█████▊    | 181/311 [00:00<00:00, 464.29it/s]Loading weights:  78%|███████▊  | 242/311 [00:00<00:00, 512.69it/s]Loading weights:  95%|█████████▌| 297/311 [00:00<00:00, 493.76it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 424.59it/s]
+[transformers] warmup_ratio is deprecated and will be removed in v5.2. Use `warmup_steps` instead.
+[info] Disabled PEFT bitsandbytes dispatch.
+Tokenizing train dataset:   0%|          | 0/10000 [00:00<?, ? examples/s]Tokenizing train dataset:   1%|          | 92/10000 [00:00<00:11, 839.93 examples/s]Tokenizing train dataset:   2%|▏         | 204/10000 [00:00<00:09, 995.79 examples/s]Tokenizing train dataset:   3%|▎         | 329/10000 [00:00<00:08, 1103.65 examples/s]Tokenizing train dataset:   5%|▍         | 452/10000 [00:00<00:08, 1148.05 examples/s]Tokenizing train dataset:   6%|▌         | 578/10000 [00:00<00:07, 1184.40 examples/s]Tokenizing train dataset:   7%|▋         | 700/10000 [00:00<00:07, 1194.75 examples/s]Tokenizing train dataset:   8%|▊         | 821/10000 [00:00<00:07, 1196.23 examples/s]Tokenizing train dataset:   9%|▉         | 948/10000 [00:00<00:07, 1216.83 examples/s]Tokenizing train dataset:  11%|█         | 1123/10000 [00:01<00:11, 777.40 examples/s]Tokenizing train dataset:  12%|█▏        | 1230/10000 [00:01<00:10, 834.52 examples/s]Tokenizing train dataset:  13%|█▎        | 1342/10000 [00:01<00:09, 896.38 examples/s]Tokenizing train dataset:  15%|█▍        | 1463/10000 [00:01<00:08, 968.38 examples/s]Tokenizing train dataset:  16%|█▌        | 1582/10000 [00:01<00:08, 1023.19 examples/s]Tokenizing train dataset:  17%|█▋        | 1703/10000 [00:01<00:07, 1071.95 examples/s]Tokenizing train dataset:  19%|█▊        | 1868/10000 [00:01<00:07, 1078.80 examples/s]Tokenizing train dataset:  20%|█▉        | 1986/10000 [00:01<00:07, 1102.55 examples/s]Tokenizing train dataset:  21%|██        | 2107/10000 [00:02<00:09, 811.95 examples/s] Tokenizing train dataset:  22%|██▏       | 2221/10000 [00:02<00:08, 880.91 examples/s]Tokenizing train dataset:  23%|██▎       | 2341/10000 [00:02<00:08, 953.44 examples/s]Tokenizing train dataset:  25%|██▍       | 2456/10000 [00:02<00:07, 998.84 examples/s]Tokenizing train dataset:  26%|██▌       | 2571/10000 [00:02<00:07, 1035.18 examples/s]Tokenizing train dataset:  27%|██▋       | 2693/10000 [00:02<00:06, 1083.37 examples/s]Tokenizing train dataset:  28%|██▊       | 2814/10000 [00:02<00:06, 1116.69 examples/s]Tokenizing train dataset:  29%|██▉       | 2930/10000 [00:02<00:06, 1126.56 examples/s]Tokenizing train dataset:  31%|███       | 3057/10000 [00:03<00:08, 846.66 examples/s] Tokenizing train dataset:  32%|███▏      | 3206/10000 [00:03<00:07, 890.40 examples/s]Tokenizing train dataset:  33%|███▎      | 3320/10000 [00:03<00:07, 944.65 examples/s]Tokenizing train dataset:  34%|███▍      | 3429/10000 [00:03<00:06, 977.40 examples/s]Tokenizing train dataset:  36%|███▌      | 3585/10000 [00:03<00:06, 991.87 examples/s]Tokenizing train dataset:  37%|███▋      | 3704/10000 [00:03<00:06, 1037.65 examples/s]Tokenizing train dataset:  38%|███▊      | 3827/10000 [00:03<00:05, 1085.80 examples/s]Tokenizing train dataset:  39%|███▉      | 3946/10000 [00:03<00:05, 1110.88 examples/s]Tokenizing train dataset:  41%|████      | 4110/10000 [00:04<00:07, 827.99 examples/s] Tokenizing train dataset:  42%|████▏     | 4227/10000 [00:04<00:06, 896.95 examples/s]Tokenizing train dataset:  43%|████▎     | 4346/10000 [00:04<00:05, 955.85 examples/s]Tokenizing train dataset:  45%|████▍     | 4462/10000 [00:04<00:05, 1002.07 examples/s]Tokenizing train dataset:  46%|████▌     | 4579/10000 [00:04<00:05, 1043.98 examples/s]Tokenizing train dataset:  47%|████▋     | 4690/10000 [00:04<00:05, 1059.48 examples/s]Tokenizing train dataset:  48%|████▊     | 4815/10000 [00:04<00:04, 1108.81 examples/s]Tokenizing train dataset:  49%|████▉     | 4935/10000 [00:04<00:04, 1132.63 examples/s]Tokenizing train dataset:  51%|█████     | 5057/10000 [00:05<00:05, 858.11 examples/s] Tokenizing train dataset:  52%|█████▏    | 5170/10000 [00:05<00:05, 920.74 examples/s]Tokenizing train dataset:  53%|█████▎    | 5282/10000 [00:05<00:04, 967.66 examples/s]Tokenizing train dataset:  54%|█████▍    | 5395/10000 [00:05<00:04, 1007.93 examples/s]Tokenizing train dataset:  54%|█████▍    | 5422/10000 [00:05<00:04, 983.82 examples/s] 
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/train/sft.py", line 302, in <module>
+    main()
+  File "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/train/sft.py", line 280, in main
+    trainer = SFTTrainer(
+              ^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/trl/trainer/sft_trainer.py", line 952, in __init__
+    train_dataset = self._prepare_dataset(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/trl/trainer/sft_trainer.py", line 1195, in _prepare_dataset
+    dataset = dataset.map(
+              ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 575, in wrapper
+    out: Union["Dataset", "DatasetDict"] = func(self, *args, **kwargs)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 3633, in map
+    for rank, done, content in Dataset._map_single(**unprocessed_kwargs):
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 3973, in _map_single
+    for i, example in iter_outputs(shard_iterable):
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 3951, in iter_outputs
+    yield i, apply_function(example, i, offset=offset)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 3872, in apply_function
+    processed_inputs = function(*fn_args, *additional_args, **fn_kwargs)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/trl/trainer/sft_trainer.py", line 1173, in tokenize_fn
+    processed = self._tokenize(
+                ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/trl/trainer/sft_trainer.py", line 1046, in _tokenize
+    result = processing_class.apply_chat_template(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/transformers/tokenization_utils_base.py", line 3101, in apply_chat_template
+    out = self(
+          ^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/transformers/tokenization_utils_base.py", line 2513, in __call__
+    encodings = self._encode_plus(
+                ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/transformers/tokenization_utils_tokenizers.py", line 959, in _encode_plus
+    encodings = self._tokenizer.encode_batch(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+Exception ignored in atexit callback: <function _start_and_connect_service.<locals>.teardown_atexit at 0x741f1cce1120>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/wandb/sdk/lib/service/service_connection.py", line 73, in teardown_atexit
+    conn.teardown(hooks.exit_code)
+  File "/usr/local/lib/python3.12/dist-packages/wandb/sdk/lib/service/service_connection.py", line 377, in teardown
+    return self._proc.join()
+           ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/wandb/sdk/lib/service/service_process.py", line 103, in join
+    return self._process.wait()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1264, in wait
+    return self._wait(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2053, in _wait
+    (pid, sts) = self._try_wait(0)
+                 ^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2011, in _try_wait
+    (pid, sts) = os.waitpid(self.pid, wait_flags)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt: 
+usage: generate_rubq_mcq.py [-h] --input INPUT [--output_dir OUTPUT_DIR]
+                            [--concurrency CONCURRENCY]
+                            [--gen_temperature GEN_TEMPERATURE]
+                            [--top_p TOP_P] [--max_valid MAX_VALID]
+                            [--max_samples MAX_SAMPLES] [--dry_run]
+                            [--debug_n DEBUG_N]
+generate_rubq_mcq.py: error: the following arguments are required: --input

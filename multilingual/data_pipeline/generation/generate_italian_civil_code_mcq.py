@@ -61,7 +61,7 @@ MAX_TOKENS_VER    = 400
 DEFAULT_CONCURRENCY     = 8
 DEFAULT_MAX_RETRIES     = 3
 DEFAULT_RETRY_DELAY     = 1.0
-DEFAULT_GEN_TEMPERATURE = 0.7   # diverse question styles
+DEFAULT_GEN_TEMPERATURE = 0.45   # diverse question styles
 VER_TEMPERATURE         = 0.0   # deterministic verification
 DEFAULT_TOP_P           = 0.95
 LOG_EVERY               = 25
@@ -74,49 +74,103 @@ DATASET_NAME = "AndreaSimeri/Italian_Civil_Code"
 # Prompts
 # ---------------------------------------------------------------------------
 
-SYSTEM_GEN = """Sei un esperto di diritto italiano. Il tuo compito è generare una domanda a scelta multipla (MCQ) di alta qualità in italiano a partire da un articolo del Codice Civile italiano.
+SYSTEM_GEN = """Sei un esperto di diritto civile italiano e di costruzione di quesiti giuridici a scelta multipla.
 
-Regole per la domanda:
-1. La domanda deve essere rispondibile direttamente dal testo dell'articolo fornito.
-2. La risposta corretta deve essere letteralmente supportata dall'articolo — nessuna parafrasi che cambia il significato.
-3. Le tre risposte sbagliate (distrattori) devono essere plausibili ma chiaramente errate:
-   - Modifica un dettaglio chiave della risposta corretta (ad es. cambia un soggetto, un termine legale, un limite temporale).
-   - Oppure combina concetti reali in modo errato.
-   - Oppure usa la negazione della risposta corretta.
-   - I distrattori devono CONTRADDIRE l'articolo, non fornire informazioni complementari.
-4. Tutte le opzioni devono essere simili in lunghezza e stile. Se la risposta corretta è lunga, anche i distrattori devono essere di lunghezza comparabile. Non usare opzioni molto corte accanto a opzioni molto lunghe.
-5. Una sola risposta deve essere corretta.
-6. La domanda deve essere in italiano formale e registro giuridico.
+Devi generare UNA sola domanda MCQ in italiano a partire dall'articolo del Codice Civile fornito.
 
-Formato di output (JSON puro, nessun testo aggiuntivo):
+Obiettivo:
+Creare una domanda giuridicamente precisa, non banale, con una sola risposta corretta e tre distrattori plausibili ma chiaramente errati.
+
+Usa l'articolo solo se contiene una regola giuridica sufficientemente chiara. Se il testo è troppo breve, incompleto, corrotto, puramente abrogativo, o contiene solo riferimenti normativi senza una regola sostanziale chiara, rispondi SKIP.
+
+Criteri per una buona domanda:
+1. La domanda deve essere rispondibile direttamente dal testo dell'articolo.
+2. La domanda deve testare una condizione, un soggetto, un effetto giuridico, un termine, una competenza, un'eccezione o una conseguenza prevista dall'articolo.
+3. Evita domande troppo meccaniche se l'articolo permette una domanda più precisa.
+4. Non chiedere semplicemente “che cosa dice l'articolo” o “quale affermazione è corretta”.
+5. Non usare conoscenze esterne al testo.
+6. Non trasformare dettagli abrogati, note redazionali o riferimenti storici confusi nella base della domanda.
+7. La formulazione deve essere giuridicamente naturale, formale e grammaticale.
+
+Criteri per la risposta corretta:
+1. Deve essere direttamente supportata dal testo dell'articolo.
+2. Deve essere completa quanto basta, ma non molto più lunga o più dettagliata dei distrattori.
+3. Non deve contenere indizi stilistici che la rendano ovvia.
+4. Non deve essere una copia troppo lunga dell'articolo se può essere formulata in modo più pulito senza cambiare il significato.
+
+Criteri per i distrattori:
+1. Devono essere plausibili per uno studente di diritto, ma chiaramente errati rispetto all'articolo.
+2. Devono appartenere alla stessa categoria della risposta corretta:
+   - soggetti con soggetti;
+   - termini con termini;
+   - autorità con autorità;
+   - effetti giuridici con effetti giuridici;
+   - condizioni con condizioni.
+3. Devono cambiare un elemento giuridicamente rilevante: soggetto, termine, quorum, condizione, eccezione, autorità competente, effetto o limite.
+4. Non usare distrattori assurdi, generici o palesemente inventati.
+5. Non usare distrattori che siano solo informazioni non menzionate ma non incompatibili con l'articolo.
+6. Non usare opzioni “sempre”, “mai”, “in ogni caso”, “senza alcuna limitazione” se sono troppo facili o artificiose.
+7. Non creare più risposte parzialmente corrette.
+8. Tutte le opzioni devono essere simili per lunghezza, stile e livello di specificità.
+
+Preferisci domande di livello medio o medio-difficile. Se dall'articolo si può ottenere solo una domanda banale, rispondi SKIP.
+
+Formato di output: JSON puro, senza testo aggiuntivo:
 {
   "question": "...",
   "options": {"A": "...", "B": "...", "C": "...", "D": "..."},
   "answer": "A"
 }
 
-Se l'articolo è troppo corto, incompleto o non contiene informazioni sufficienti per generare una buona domanda, rispondi esattamente: SKIP"""
+Se l'articolo non consente una buona domanda, rispondi esattamente:
+SKIP"""
 
+SYSTEM_VER = """Sei un verificatore severo di domande MCQ di diritto civile italiano.
 
-SYSTEM_VER = """Sei un esperto di diritto italiano incaricato di verificare la qualità di domande MCQ generate dal Codice Civile italiano.
+Ti verranno forniti:
+1. Il testo originale dell'articolo del Codice Civile.
+2. Una domanda MCQ con quattro opzioni A, B, C, D.
+3. La risposta corretta indicata.
 
-Ti verrà fornito:
-1. Il testo originale dell'articolo (fonte di verità).
-2. Una domanda MCQ con 4 opzioni (A, B, C, D) e la risposta corretta indicata.
+Rispondi VALID solo se TUTTI i criteri sono soddisfatti:
+1. La domanda è direttamente fondata sull'articolo.
+2. La risposta corretta è chiaramente e direttamente supportata dal testo.
+3. Esiste una sola risposta corretta.
+4. Nessun distrattore è parzialmente corretto.
+5. I distrattori sono plausibili ma giuridicamente errati rispetto all'articolo.
+6. I distrattori modificano elementi giuridicamente rilevanti, non dettagli casuali.
+7. Le opzioni appartengono alla stessa categoria logica e giuridica.
+8. Le opzioni sono comparabili per lunghezza, stile e specificità.
+9. La risposta corretta non è resa ovvia perché è molto più lunga, più precisa o più vicina al testo dell'articolo.
+10. La domanda non è eccessivamente banale se l'articolo consentiva una domanda migliore.
+11. La domanda non si basa su testo abrogato, corrotto, incompleto o su note redazionali confuse.
+12. La lingua italiana è corretta e il registro è giuridico-formale.
 
-Il tuo compito è verificare:
-1. La risposta corretta è direttamente e chiaramente supportata dall'articolo? (non inferita, non parafrasata in modo distorto)
-2. Ciascuna delle tre risposte sbagliate CONTRADDICE l'articolo? (non sono semplicemente informazioni non presenti — devono essere attivamente errate rispetto al testo)
-3. C'è una sola risposta inequivocabilmente corretta?
-4. La domanda è grammaticalmente corretta in italiano?
+Rifiuta subito se:
+- la risposta corretta non è supportata;
+- più opzioni sono corrette o parzialmente corrette;
+- i distrattori sono solo assurdi o inventati;
+- i distrattori sono solo non menzionati, ma non incompatibili con l'articolo;
+- la risposta corretta è l'unica opzione completa;
+- la domanda copia meccanicamente l'articolo senza costruire un vero quesito;
+- l'articolo è troppo breve o rumoroso per una buona domanda;
+- il quesito richiede conoscenza esterna.
 
-Output possibili:
-- Rispondi esattamente VALID se tutti i criteri sono soddisfatti.
-- Rispondi esattamente INVALID:<motivo breve> se uno o più criteri non sono soddisfatti.
-  Esempi: INVALID:risposta_corretta_non_supportata, INVALID:distrattori_non_contraddicono, INVALID:piu_risposte_corrette
-- Rispondi esattamente NOT_SURE se non riesci a determinare la correttezza con certezza.
+Output ammessi, esattamente uno:
+- VALID
+- INVALID:risposta_non_supportata
+- INVALID:piu_risposte_corrette
+- INVALID:distrattori_parzialmente_corretti
+- INVALID:distrattori_deboli
+- INVALID:opzioni_sbilanciate
+- INVALID:troppo_banale
+- INVALID:domanda_troppo_meccanica
+- INVALID:testo_articolo_inadeguato
+- INVALID:richiede_conoscenza_esterna
+- INVALID:italiano_non_naturale
+- NOT_SURE
 
-Non aggiungere nessun altro testo oltre al tuo output."""
+Non aggiungere nessun altro testo."""
 
 
 def _gen_user_message(article_id: str, title: str, text: str) -> str:

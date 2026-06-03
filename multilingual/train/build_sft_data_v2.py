@@ -30,7 +30,7 @@ Output layout:
 
 Example:
     python -m multilingual.train.build_sft_data_v2 \
-      --config configs/sft/test-mixed.json \
+      --config configs/sft/v17_20k.json \
       --overwrite
 """
 
@@ -61,6 +61,7 @@ from multilingual.loaders.include_loader import load_include_examples, load_incl
 from multilingual.loaders.mera_loader import load_mera_examples
 from multilingual.loaders.mgsm_loader import load_mgsm_examples
 from multilingual.loaders.milu_loader import load_milu_examples
+from multilingual.loaders.cmmlu_loader import load_cmmlu_examples
 
 
 # ---------------------------------------------------------------------------
@@ -125,6 +126,13 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     "ceval": {
         "languages": ["chinese"],
         "loader": "ceval",
+        "language_caps": {"chinese": 5000},
+        "max_per_dataset": 5000,
+        "split_caps": {"val": 400, "test": 0},
+    },
+    "cmmlu": {
+        "languages": ["chinese"],
+        "loader": "cmmlu",
         "language_caps": {"chinese": 5000},
         "max_per_dataset": 5000,
         "split_caps": {"val": 400, "test": 0},
@@ -635,6 +643,9 @@ def _load_examples(
 
     if loader == "ceval":
         return load_ceval_examples(n=n, split=split)
+
+    if loader == "cmmlu":
+        return load_cmmlu_examples(language=language, n=n, split=split)
 
     if loader == "cultsportqa":
         return load_cultsportqa_examples(language=language, n=n, split=split)

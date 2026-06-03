@@ -46,26 +46,32 @@ Reason in the language of the question, drawing on your regional and cultural kn
 Rules:
 - Your final answer must appear exactly once inside \boxed{...}.
 - Do not include explanations or extra text inside the box.
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- For math questions, output only the final answer inside \\boxed{...}.
 - Never output multiple boxed answers.
 - Never leave the final answer unboxed.
 
 Example:
-\\boxed{B}"""
+\\boxed{B}
+\\boxed{42}"""
 
 SYSTEM_PROMPT_NON_THINKING = """
 You are a knowledgeable multilingual multiple-choice question answering assistant with expertise in regional cultures, laws, history, and traditions across the world. You will be given a multiple-choice question in any language.
 
-Choose exactly one option. Output only the final boxed answer in the format \boxed{X}, where X is the chosen option letter.
+Choose exactly one option. Output only the final boxed answer in the format \\boxed{X}, where X is the chosen option letter.
 
 Rules:
 - Your response must contain exactly one boxed answer.
 - Do not include anything before or after the boxed answer.
 - Do not include explanations or extra text inside the box.
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- For math questions, output only the final answer inside \\boxed{...}.
 - Never output multiple boxed answers.
 - Never leave the final answer unboxed.
 
 Example:
-\boxed{B}
+\\boxed{B}
+\\boxed{42}
 """
 
 

@@ -68,7 +68,7 @@ MAX_TOKENS_VER    = 400
 DEFAULT_CONCURRENCY     = 8
 DEFAULT_MAX_RETRIES     = 3
 DEFAULT_RETRY_DELAY     = 1.0
-DEFAULT_GEN_TEMPERATURE = 0.7
+DEFAULT_GEN_TEMPERATURE = 0.45
 VER_TEMPERATURE         = 0.0
 DEFAULT_TOP_P           = 0.95
 LOG_EVERY               = 25
@@ -79,53 +79,113 @@ MIN_ARTICLE_CHARS       = 80
 # Prompts
 # ---------------------------------------------------------------------------
 
-SYSTEM_GEN = """Eres un experto en derecho español y constitucional. Tu tarea es generar una pregunta de opción múltiple (MCQ) de alta calidad en español a partir de un artículo legal oficial.
+SYSTEM_GEN = """Eres un experto en derecho constitucional español, Estatutos de Autonomía y elaboración de preguntas jurídicas tipo oposición.
 
-Reglas para la pregunta:
-1. La pregunta debe ser respondible directamente a partir del texto del artículo proporcionado.
-2. La respuesta correcta debe estar literalmente respaldada por el artículo — sin paráfrasis que cambie el significado.
-3. Las tres respuestas incorrectas (distractores) deben ser plausibles pero claramente erróneas:
-   - Modifica un detalle clave de la respuesta correcta (por ejemplo, cambia un sujeto, un término jurídico, un plazo, una mayoría requerida).
-   - O combina conceptos reales de forma incorrecta.
-   - O usa la negación de la respuesta correcta.
-   - Los distractores deben CONTRADECIR el artículo, no simplemente aportar información complementaria.
-4. Todas las opciones deben ser similares en longitud y estilo. Si la respuesta correcta es larga, los distractores también deben ser de longitud comparable. No uses opciones muy cortas junto a opciones muy largas.
-5. Solo una respuesta debe ser correcta.
-6. La pregunta debe ser en español formal y registro jurídico.
-7. Para estatutos de comunidades autónomas: prefiere preguntas donde la respuesta correcta dependa de la comunidad autónoma específica (sus instituciones propias, lengua, territorio, competencias particulares). Evita preguntas cuya respuesta sería la misma para cualquier comunidad.
-8. Evita preguntas del tipo "¿Qué dice el Artículo X?" — pregunta por el contenido sustantivo, no por el número de artículo.
-9. No requieras conocimiento jurídico externo al artículo para responder correctamente.
+Tu tarea es generar UNA sola pregunta MCQ en español a partir de un artículo legal oficial.
 
-Formato de salida (JSON puro, sin texto adicional):
+Objetivo:
+Crear una pregunta jurídicamente precisa, de dificultad media o media-alta, con una sola respuesta correcta y tres distractores plausibles pero claramente erróneos.
+
+Usa el artículo solo si contiene una regla, competencia, institución, procedimiento, derecho, principio, condición, excepción, plazo, mayoría, órgano o efecto jurídico suficientemente claro. Si el artículo es demasiado breve, puramente declarativo, demasiado genérico, corrupto, incompleto o no permite una buena pregunta, responde SKIP.
+
+Criterios para una buena pregunta:
+1. Debe ser respondible directamente a partir del artículo.
+2. Debe evaluar un elemento jurídico sustantivo: órgano competente, alcance de una competencia, condición, límite, procedimiento, mayoría, efecto, derecho, deber o excepción.
+3. No preguntes simplemente “qué dice el artículo” ni hagas una pregunta de copia literal.
+4. Evita preguntas demasiado fáciles si el artículo permite una formulación más precisa.
+5. No uses conocimiento externo al artículo.
+6. Para Estatutos de Autonomía, prioriza preguntas que dependan de la comunidad autónoma concreta: instituciones propias, lengua, territorio, competencias, relaciones con el Estado o la UE, hacienda, organización institucional o régimen especial.
+7. Para la Constitución, prioriza reglas institucionales o procedimentales precisas, no definiciones triviales.
+
+Criterios para la respuesta correcta:
+1. Debe estar directamente respaldada por el texto.
+2. Debe ser jurídicamente exacta.
+3. No debe ser mucho más larga, completa o técnica que los distractores.
+4. No debe ser la única opción con redacción legal natural.
+5. Si el artículo contiene varios elementos, formula la pregunta para que solo uno sea necesario y claramente correcto.
+
+Criterios para los distractores:
+1. Deben ser plausibles para alguien que estudia derecho constitucional o autonómico.
+2. Deben pertenecer a la misma categoría jurídica que la respuesta correcta:
+   - órganos con órganos;
+   - competencias con competencias;
+   - mayorías con mayorías;
+   - procedimientos con procedimientos;
+   - derechos con derechos;
+   - efectos jurídicos con efectos jurídicos.
+3. Deben modificar un elemento jurídicamente relevante: órgano, plazo, mayoría, ámbito territorial, condición, límite, tipo de norma, competencia o efecto.
+4. No uses distractores absurdos, caricaturescos o evidentemente imposibles.
+5. No uses opciones como “crear organismos internacionales”, “dictar normas de derecho internacional” o fórmulas extremas similares salvo que sean realmente plausibles en el contexto.
+6. No uses distractores que sean solo información ausente: deben ser incompatibles con el artículo.
+7. No generes opciones parcialmente correctas.
+8. Todas las opciones deben ser comparables en longitud, estilo y nivel de detalle.
+9. Si la respuesta correcta es larga, los distractores también deben ser largos y jurídicamente estructurados.
+
+Evita especialmente:
+- respuestas correctas que sean la única opción larga;
+- distractores evidentemente ridículos;
+- preguntas triviales sobre capitales, nombres o definiciones si el artículo permite algo más sustantivo;
+- preguntas demasiado amplias que obliguen a copiar medio artículo;
+- opciones con “siempre”, “nunca”, “exclusivamente” o “sin limitación” cuando sean demasiado fáciles.
+
+Formato de salida: JSON puro, sin texto adicional:
 {
   "question": "...",
   "options": {"A": "...", "B": "...", "C": "...", "D": "..."},
   "answer": "A"
 }
 
-Si el artículo es demasiado corto, puramente procedimental o no contiene información suficiente para generar una buena pregunta, responde exactamente: SKIP"""
+Si el artículo no permite una buena pregunta, responde exactamente:
+SKIP"""
 
-
-SYSTEM_VER = """Eres un experto en derecho español encargado de verificar la calidad de preguntas MCQ generadas a partir de textos legales oficiales.
+SYSTEM_VER = """Eres un verificador severo de preguntas MCQ de derecho constitucional español y derecho autonómico.
 
 Se te proporcionará:
-1. El texto original del artículo (fuente de verdad).
-2. Una pregunta MCQ con 4 opciones (A, B, C, D) y la respuesta correcta indicada.
+1. El texto original del artículo legal.
+2. Una pregunta MCQ con cuatro opciones A, B, C, D.
+3. La respuesta correcta indicada.
 
-Tu tarea es verificar:
-1. ¿La respuesta correcta está directa y claramente respaldada por el artículo? (no inferida, no parafraseada de forma distorsionada)
-2. ¿Cada una de las tres respuestas incorrectas CONTRADICE el artículo? (no son simplemente información ausente — deben ser activamente incorrectas respecto al texto)
-3. ¿Existe una sola respuesta inequívocamente correcta?
-4. ¿La pregunta es gramaticalmente correcta en español?
-5. ¿La pregunta evita requerir conocimiento externo al artículo?
+Responde VALID solo si TODOS los criterios se cumplen:
+1. La pregunta está directamente fundada en el artículo.
+2. La respuesta correcta está clara y directamente respaldada por el texto.
+3. Existe una sola respuesta correcta.
+4. Ningún distractor es parcialmente correcto.
+5. Los distractores son plausibles para un estudiante de derecho, pero incompatibles con el artículo.
+6. Los distractores modifican elementos jurídicamente relevantes, no detalles aleatorios.
+7. Todas las opciones pertenecen a la misma categoría jurídica.
+8. Las opciones son comparables en longitud, estilo y especificidad.
+9. La respuesta correcta no es obvia por ser la única opción larga, técnica o completa.
+10. La pregunta no es excesivamente trivial si el artículo permitía una pregunta más sustantiva.
+11. La pregunta no requiere conocimiento externo al artículo.
+12. La redacción es natural, formal y gramaticalmente correcta en español.
 
-Salidas posibles:
-- Responde exactamente VALID si todos los criterios se cumplen.
-- Responde exactamente INVALID:<motivo breve> si uno o más criterios no se cumplen.
-  Ejemplos: INVALID:respuesta_correcta_no_respaldada, INVALID:distractores_no_contradicen, INVALID:varias_respuestas_correctas
-- Responde exactamente NOT_SURE si no puedes determinar la corrección con certeza.
+Rechaza inmediatamente si:
+- la respuesta correcta no está respaldada;
+- hay varias respuestas correctas o parcialmente correctas;
+- los distractores son absurdos, caricaturescos o claramente imposibles;
+- los distractores solo están ausentes del texto pero no contradicen el artículo;
+- la respuesta correcta es la única opción jurídicamente precisa;
+- la pregunta se limita a copiar el artículo de forma mecánica;
+- la pregunta es demasiado fácil, por ejemplo una capital, un nombre obvio o una institución sin ninguna condición jurídica relevante;
+- el artículo es demasiado breve, genérico, corrupto o insuficiente;
+- el texto exige conocimiento externo.
 
-No añadas ningún otro texto más allá de tu salida."""
+Output permitido, exactamente uno:
+- VALID
+- INVALID:respuesta_no_respaldada
+- INVALID:varias_respuestas_correctas
+- INVALID:distractores_parcialmente_correctos
+- INVALID:distractores_debiles
+- INVALID:distractores_absurdos
+- INVALID:opciones_desbalanceadas
+- INVALID:demasiado_trivial
+- INVALID:pregunta_demasiado_mecanica
+- INVALID:articulo_inadecuado
+- INVALID:requiere_conocimiento_externo
+- INVALID:espanol_no_natural
+- NOT_SURE
+
+No añadas ningún otro texto."""
 
 
 def _build_context(article: Dict[str, Any]) -> str:
@@ -575,7 +635,7 @@ async def main_async(args):
         output_base = Path(args.output_base)
         files = sorted(input_dir.glob("*.jsonl"))
         print(f"Found {len(files)} JSONL files in {input_dir}")
-        output_dir = output_base / "spain_boe_legislation"
+        output_dir = output_base / "spain_boe_legislation_strict"
         combined_path = output_dir / "spain_boe_legislation_generated.jsonl"
         for f in files:
             await _process_file(f, output_dir, args, api_key, combined_path=combined_path)
