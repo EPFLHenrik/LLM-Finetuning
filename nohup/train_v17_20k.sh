@@ -24,13 +24,13 @@ EVAL_STEPS=100
 SAVE_STEPS=100
 EVAL_BATCH_SIZE=2
 LOG_STEPS=10
-WARMUP_RATIO=0.15
+WARMUP_RATIO=0.2
 
 OUTPUT_DIR="${REPO_DIR}/multilingual/results/checkpoints/${RUN_NAME}/individual"
 ADAPTER_DIR="${OUTPUT_DIR}/best_adapter"
 EXPORT_DIR="${REPO_DIR}/multilingual/results/exports/${RUN_NAME}"
 
-CHAT_TEMPLATE="${REPO_DIR}/multilingual/assets/chat_template_multilingual-v3.jinja"
+CHAT_TEMPLATE="${REPO_DIR}/multilingual/assets/chat_template_multilingual-v2.jinja"
 BENCHMARK_FILE="${REPO_DIR}/multilingual/data/benchmarks/benchmark_all.jsonl"
 PROVIDED_FILE="${REPO_DIR}/validation_samples/multilingual.jsonl"
 
