@@ -33,7 +33,9 @@ TABLE_COLUMNS = [
     "timestamp_utc",
     "model_name",
     "benchmark",
+    "benchmark_family",
     "benchmark_subcategory",
+    "benchmark_size",
     "think_mode",
     "use_vllm",
     "limit",
@@ -46,6 +48,19 @@ TABLE_COLUMNS = [
 SAFETYBENCH_CATEGORY_FIELD = "category"
 SAFETYBENCH_NUM_OPTIONS_FIELD = "num_options"
 SGXSTEST_CATEGORY_FIELD = "category"
+
+BENCHMARK_ROOT_CANDIDATES = [
+    Path("data/group_model/benchmark"),
+    Path("data/safety/processed/benchmarks"),
+    Path("data/safety/processed/benchmark"),
+]
+
+BENCHMARK_FAMILY_TO_EVAL_NAME = {
+    "general_knowledge": "knowledge",
+    "math": "math",
+    "multilinguality": "multilingual",
+    "safety": "safety",
+}
 
 
 def infer_model_name(checkpoint_path: str, override_name: str | None = None) -> str:
@@ -67,6 +82,16 @@ def split_benchmark_name(benchmark_name: str) -> tuple[str, str]:
         return normalized, ""
     suite, subcategory = normalized.split("/", 1)
     return suite, subcategory
+
+
+def get_eval_benchmark_name(benchmark_family: str) -> str:
+    try:
+        return BENCHMARK_FAMILY_TO_EVAL_NAME[benchmark_family]
+    except KeyError as exc:
+        supported = ", ".join(sorted(BENCHMARK_FAMILY_TO_EVAL_NAME))
+        raise ValueError(
+            f"Unsupported benchmark family '{benchmark_family}'. Supported families: {supported}"
+        ) from exc
 
 
 def load_table_rows(table_path: Path) -> list[dict]:
@@ -96,14 +121,10 @@ def save_table_rows(table_path: Path, rows: list[dict]) -> None:
 
 
 def resolve_benchmark_root() -> Path:
-    candidates = [
-        Path("data/safety/processed/benchmarks"),
-        Path("data/safety/processed/benchmark"),
-    ]
-    for candidate in candidates:
+    for candidate in BENCHMARK_ROOT_CANDIDATES:
         if candidate.is_dir():
             return candidate
-    searched = ", ".join(str(p) for p in candidates)
+    searched = ", ".join(str(p) for p in BENCHMARK_ROOT_CANDIDATES)
     raise FileNotFoundError(f"Could not find benchmark root directory. Searched: {searched}")
 
 
@@ -242,6 +263,9 @@ def run_single_benchmark(
     if not dataset_path.is_dir():
         raise FileNotFoundError(f"Benchmark dataset directory does not exist: {dataset_path}")
 
+    benchmark_family, benchmark_subcategory = split_benchmark_name(benchmark_name)
+    eval_benchmark_name = get_eval_benchmark_name(benchmark_family)
+
     output_path = build_output_path(
         benchmark_name=benchmark_name,
         checkpoint_path=checkpoint_path,
@@ -257,6 +281,7 @@ def run_single_benchmark(
     print("=" * 50)
 
     dataset = normalize_benchmark_dataset(load_from_disk(str(dataset_path)), dataset_path)
+    benchmark_size = len(dataset)
     if args.limit is not None:
         dataset = dataset.select(range(args.limit))
         print(f"Running on limited dataset with {len(dataset)} examples (limit={args.limit})")
@@ -334,15 +359,14 @@ def run_single_benchmark(
     print("Generation complete. Evaluating the outputs...")
     eval_argv = [
         "--generations", str(output_path),
-        "--benchmark", "safety",
+        "--benchmark", eval_benchmark_name,
         "--output", str(output_path).replace("outputs", "results").replace(".jsonl", "_results.json"),
     ]
     evaluate_score(eval_argv)
 
     results_path = Path(eval_argv[-1])
-    benchmark_suite, benchmark_subcategory = split_benchmark_name(benchmark_name)
 
-    if benchmark_suite == "safetybench":
+    if benchmark_name == "safety/safetybench":
         grouped_metrics = compute_safetybench_grouped_metrics(output_path)
         with open(results_path, "r", encoding="utf-8") as f:
             results_payload = json.load(f)
@@ -351,7 +375,7 @@ def run_single_benchmark(
             json.dump(results_payload, f, ensure_ascii=False, indent=2)
         print(f"Added safetybench grouped metrics to: {results_path}")
 
-    if benchmark_suite == "sgxstest":
+    if benchmark_name == "safety/sgxstest":
         grouped_metrics = compute_sgxstest_grouped_metrics(output_path)
         with open(results_path, "r", encoding="utf-8") as f:
             results_payload = json.load(f)
@@ -373,8 +397,10 @@ def run_single_benchmark(
         row = {
             "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "model_name": model_name,
-            "benchmark": benchmark_suite,
+            "benchmark": benchmark_name,
+            "benchmark_family": benchmark_family,
             "benchmark_subcategory": benchmark_subcategory,
+            "benchmark_size": benchmark_size,
             "think_mode": think_mode,
             "use_vllm": args.use_vllm,
             "limit": args.limit,
@@ -391,6 +417,7 @@ def run_single_benchmark(
             rows,
             key=lambda r: (
                 str(r.get("model_name", "")),
+                str(r.get("benchmark_family", "")),
                 str(r.get("benchmark", "")),
                 str(r.get("benchmark_subcategory", "")),
                 str(r.get("timestamp_utc", "")),
@@ -408,11 +435,13 @@ def run_single_benchmark(
             reinit=True,
             config={
                 "benchmark": benchmark_name,
+                "benchmark_family": benchmark_family,
                 "model_name": model_name,
                 "checkpoint": checkpoint_path,
                 "think_mode": think_mode,
                 "use_vllm": args.use_vllm,
                 "limit": args.limit,
+                "benchmark_size": benchmark_size,
                 "results_path": str(results_path),
             },
         )
@@ -425,6 +454,8 @@ def run_single_benchmark(
         wb_run.summary["pass@1"] = row["pass@1"]
         wb_run.summary["box_compliance_rate"] = row["box_compliance_rate"]
         wb_run.summary["pass@1_among_extracted"] = row["pass@1_among_extracted"]
+        wb_run.summary["benchmark_family"] = benchmark_family
+        wb_run.summary["benchmark_size"] = benchmark_size
         wb_run.finish()
 
         print(f"W&B table updated with {len(rows)} rows: {table_path}")
@@ -440,7 +471,7 @@ def main() -> None:
         description="Evaluate a model on one or more benchmarks by generating outputs and then scoring them."
     )
     parser.add_argument("--benchmark", type=str, nargs="+", default=None, help="One or more benchmark names to run. Ignored when --run_all is set.")
-    parser.add_argument("--run_all", action="store_true", help="Run all benchmark dataset folders containing .arrow files under data/processed/benchmarks/ (with fallback to data/processed/benchmark/).")
+    parser.add_argument("--run_all", action="store_true", help="Run all benchmark dataset folders containing .arrow files under data/group_model/benchmark/ recursively.")
     parser.add_argument("--limit", type=int, default=None, help="Limit the number of examples to run (for testing)")
     parser.set_defaults(think=True)
     parser.add_argument("--no_think", action="store_false", dest="think", help="Disable think mode for the model. (default: think mode enabled)")
