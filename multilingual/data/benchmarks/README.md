@@ -7,12 +7,15 @@ Custom-made evaluation benchmark for multilingual regional knowledge MCQA across
 ## Structure
 
 ```
-benchmark_all.jsonl          # canonical benchmark (2500 examples)
+benchmark_all.jsonl          # v1 benchmark (2500 examples)
 by_language/                 # partitioned by language
 by_dataset/                  # partitioned by dataset × language
 small/                       # 500-example subset for fast eval
   benchmark_all_small.jsonl
   by_language/
+mmlu_prox/                   # separate MMLU-ProX hard benchmark
+  mmlu_prox_hard_1000.jsonl  # combined hard benchmark (1000 examples)
+  by_language/               # 200 examples per language
 ```
 
 ## Composition
@@ -89,3 +92,25 @@ Each record is a JSON object with fields:
 | Hindi    | 20 | 40 | 40 MILU | 100 |
 | Italian  | 20 | 40 | 40 EXAMS | 100 |
 | Spanish  | 20 | 40 | 40 HEAD-QA | 100 |
+
+
+## MMLU-ProX hard benchmark
+
+In addition to the v1 benchmark, we provide a separate hard benchmark based on MMLU-ProX.
+
+MMLU-ProX is kept separate from `benchmark_all.jsonl` so that v1 scores remain comparable across model runs. The hard benchmark contains 1000 examples total: 200 examples per language across the same five languages.
+
+The examples are sampled only from the held-out MMLU-ProX eval split and are never used for training. MMLU-ProX is a multilingual translation/adaptation of the English MMLU-Pro benchmark, so many examples are parallel across languages. To make cross-language comparison fair, we sample 200 shared underlying `base_question_id` values and include their versions in all five languages. This ensures that differences in score across languages are less affected by differences in question difficulty.
+
+Sampling is mildly weighted toward regional, cultural, society-oriented, health, and biology-related subjects, using the same subject weights as the MMLU-ProX 5k training subset.
+
+| File | Description | Total |
+|------|-------------|-------|
+| `mmlu_prox/mmlu_prox_hard_1000.jsonl` | Combined MMLU-ProX hard benchmark | 1000 |
+| `mmlu_prox/by_language/mmlu_prox_russian_hard_200.jsonl` | Russian MMLU-ProX hard split | 200 |
+| `mmlu_prox/by_language/mmlu_prox_chinese_hard_200.jsonl` | Chinese MMLU-ProX hard split | 200 |
+| `mmlu_prox/by_language/mmlu_prox_hindi_hard_200.jsonl` | Hindi MMLU-ProX hard split | 200 |
+| `mmlu_prox/by_language/mmlu_prox_italian_hard_200.jsonl` | Italian MMLU-ProX hard split | 200 |
+| `mmlu_prox/by_language/mmlu_prox_spanish_hard_200.jsonl` | Spanish MMLU-ProX hard split | 200 |
+
+MMLU-ProX may contain variable numbers of answer options, up to A-J.

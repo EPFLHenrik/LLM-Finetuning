@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 
 from multilingual.config import REPO, VAL_SEED
 
-DATA_PATH = REPO / "multilingual/data/processed/spain_boe_legislation/all_spain_boe_legislation_generated.jsonl"
+DATA_PATH = REPO / "multilingual/data/processed/spain_boe_legislation/all_spain_boe_legislation.jsonl"
 DATASET_NAME = "spain_boe_legislation"
 LANGUAGE = "spanish"
 FALLBACK_PREFIX = "spain_boe_legislation"

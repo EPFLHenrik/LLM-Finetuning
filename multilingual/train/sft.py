@@ -26,7 +26,7 @@ from trl import SFTConfig, SFTTrainer
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
-from multilingual.config import REPO as MLREPO, SYSTEM_PROMPT, SYSTEM_PROMPT_GROUP, SYSTEM_PROMPT_NON_THINKING
+from multilingual.config import REPO as MLREPO, SYSTEM_PROMPT, SYSTEM_PROMPT_GROUP, SYSTEM_PROMPT_NON_THINKING, SYSTEM_PROMPT_NON_THINKING_AUGMENTED
 
 # ---------------------------------------------------------------------------
 # Defaults
@@ -78,6 +78,8 @@ def _select_system_prompt(name: str) -> str:
         return SYSTEM_PROMPT_GROUP
     if name == "non_thinking":
         return SYSTEM_PROMPT_NON_THINKING
+    if name == "non_thinking_augmented":
+        return SYSTEM_PROMPT_NON_THINKING_AUGMENTED
     raise ValueError(f"Unknown system_prompt: {name}")
 
 
@@ -110,9 +112,17 @@ def parse_args():
     parser.add_argument("--wandb_entity",  type=str, default=None)
     parser.add_argument("--skip_wandb",    action="store_true")
     parser.add_argument(
-        "--system_prompt", type=str, default="individual",
-        choices=["individual", "group", "non_thinking"],
-        help=("System prompt variant: 'individual' for the default reasoning prompt, 'group' for the group prompt, 'non_thinking' for boxed-answer-only SFT.")
+        "--system_prompt",
+        type=str,
+        default="individual",
+        choices=["individual", "group", "non_thinking", "non_thinking_augmented"],
+        help=(
+            "System prompt variant: "
+            "'individual' for the default reasoning prompt, "
+            "'group' for the group prompt, "
+            "'non_thinking' for boxed-answer-only SFT, "
+            "'non_thinking_augmented' for boxed-answer-only SFT with variable A-T options."
+        ),
     )
     return parser.parse_args()
 
@@ -206,7 +216,7 @@ def main():
 
     train_dataset = train_dataset.map(_override_system)
     val_dataset = val_dataset.map(_override_system)
-    enable_thinking = args.system_prompt != "non_thinking"
+    enable_thinking = args.system_prompt not in {"non_thinking", "non_thinking_augmented"}
     print(f"[info] System prompt overridden with: {args.system_prompt}")
 
     # print debug

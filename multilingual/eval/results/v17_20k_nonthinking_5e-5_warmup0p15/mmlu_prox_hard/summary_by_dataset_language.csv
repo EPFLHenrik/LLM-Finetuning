@@ -1,0 +1,6 @@
+dataset,language,n,correct,accuracy
+mmlu_prox,chinese,200,56,0.28
+mmlu_prox,hindi,200,57,0.285
+mmlu_prox,italian,200,52,0.26
+mmlu_prox,russian,200,50,0.25
+mmlu_prox,spanish,200,59,0.295

@@ -2,8 +2,8 @@
 
 Loads MGSM examples for local evaluation and training.
 
-MGSM only has a 'test' split (250 examples per language), so we apply
-the same train/val carve-out logic as the INCLUDE loader.
+MGSM has a tiny HF train split and a larger HF test split. For this project,
+we merge all labeled examples and create a deterministic local train/val split.
 """
 
 from typing import Any, Dict, List, Optional, Tuple

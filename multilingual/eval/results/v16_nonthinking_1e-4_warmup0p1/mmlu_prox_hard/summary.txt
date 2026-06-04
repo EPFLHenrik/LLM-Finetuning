@@ -1,0 +1,56 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v16_nonthinking_1e-4_warmup0p1
+Output dir: multilingual/eval/results/v16_nonthinking_1e-4_warmup0p1/mmlu_prox_hard
+Runtime seconds: 24.37
+Runtime minutes: 0.41
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 1000,
+  "correct": 324,
+  "accuracy": 0.324
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 200       69     0.345
+   hindi 200       59     0.295
+ italian 200       62     0.310
+ russian 200       65     0.325
+ spanish 200       69     0.345
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+  dataset    n  correct  accuracy
+mmlu_prox 1000      324     0.324
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+  dataset language   n  correct  accuracy
+mmlu_prox  chinese 200       69     0.345
+mmlu_prox    hindi 200       59     0.295
+mmlu_prox  italian 200       62     0.310
+mmlu_prox  russian 200       65     0.325
+mmlu_prox  spanish 200       69     0.345
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary.txt
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

@@ -1,6 +1,9 @@
-"""Loader for the processed Polizia di Stato MCQ dataset.
-
+"""Loader for the filtered Polizia di Stato MCQ dataset.
 Returns normalized MCQ examples for the SFT builder.
+Uses the teacher-filtered training file:
+
+    multilingual/data/processed/polizia_di_stato/polizia_di_stato_train.jsonl
+
 The source file has no official train/val split, so this loader creates a
 fixed deterministic train/val carve using VAL_SEED. No test split is produced;
 benchmark_all.jsonl is treated as the test set by the SFT builder.
@@ -14,8 +17,8 @@ from typing import Any, Dict, List, Optional
 
 from multilingual.config import REPO, VAL_SEED
 
-DATA_PATH = REPO / "multilingual/data/processed/polizia_di_stato/polizia_di_stato_clean.jsonl"
-DATASET_NAME = "polizia_di_stato_clean"
+DATA_PATH = REPO / "multilingual/data/processed/polizia_di_stato/polizia_di_stato.jsonl"
+DATASET_NAME = "polizia_di_stato"
 LANGUAGE = "italian"
 FALLBACK_PREFIX = "polizia_di_stato"
 DEFAULT_VAL_FRACTION = 0.1
@@ -76,6 +79,7 @@ def _normalize_record(record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     metadata.setdefault("original_dataset", record.get("dataset", DATASET_NAME))
     metadata.setdefault("original_id", record.get("id", source_id))
+    metadata.setdefault("loader_source_file", str(DATA_PATH.relative_to(REPO)))
 
     return {
         "id": str(record.get("id", source_id)),

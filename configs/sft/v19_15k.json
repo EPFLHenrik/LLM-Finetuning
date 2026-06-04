@@ -1,0 +1,248 @@
+{
+  "output_name": "v19_15k",
+  "notes": "Non-thinking SFT. Broad regional-focused run. 1000 MMLU-ProX examples per language. No EXAMS. More RuBQ for Russian. Chinese keeps CEval+CMMLU setup. Italian uses filtered Polizia/Quaderno/Civil Code train.jsonl sources. Spanish uses BOE + CCSE + DEMRE + capped HeadQA. Global MMLU and Global PIQA retained as general anchors. Benchmark filtering enabled.",
+  "mode": "non_thinking",
+  "non_thinking_style": "boxed_only",
+  "enable_test_split": false,
+
+  "max_per_language": 7000,
+  "max_per_dataset": 30000,
+  "max_per_language_mixed": 3000,
+  "max_per_language_mixed_val": 400,
+
+  "benchmark_path": "multilingual/data/benchmarks/benchmark_all.jsonl",
+
+  "dataset_registry": {
+    "include": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"],
+      "loader": "include",
+      "mode": "as_is",
+      "max_per_language": 3000,
+      "max_per_dataset": 15000,
+      "split_caps": {
+        "val": 500,
+        "test": 0
+      }
+    },
+
+    "global_piqa": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"],
+      "loader": "global_piqa",
+      "mode": "as_is",
+      "max_per_language": 1500,
+      "max_per_dataset": 7500,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "global_mmlu": {
+      "languages": ["russian", "chinese", "hindi", "italian", "spanish"],
+      "loader": "global_mmlu",
+      "language_caps": {
+        "russian": 400,
+        "chinese": 400,
+        "hindi": 400,
+        "italian": 400,
+        "spanish": 400
+      },
+      "max_per_dataset": 2000,
+      "split_caps": {
+        "val": 300,
+        "test": 0
+      }
+    },
+
+    "mmlu_prox": {
+      "languages": ["russian", "chinese", "hindi", "italian", "spanish"],
+      "loader": "mmlu_prox",
+      "language_caps": {
+        "russian": 1200,
+        "chinese": 1200,
+        "hindi": 1200,
+        "italian": 1200,
+        "spanish": 1200
+      },
+      "max_per_dataset": 5000,
+      "split_caps": { "val": 500, "test": 0 }
+    },
+
+    "mgsm": {
+      "languages": ["russian", "chinese", "hindi", "italian", "spanish"],
+      "loader": "mgsm",
+      "language_caps": {
+        "russian": 200,
+        "chinese": 200,
+        "hindi": 200,
+        "italian": 200,
+        "spanish": 200
+      },
+      "max_per_dataset": 1000,
+      "split_caps": { "val": 50, "test": 0 }
+    },
+
+
+    "ceval": {
+      "languages": ["chinese"],
+      "loader": "ceval",
+      "language_caps": {
+        "chinese": 800
+      },
+      "max_per_dataset": 800,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "cmmlu": {
+      "languages": ["chinese"],
+      "loader": "cmmlu",
+      "language_caps": {
+        "chinese": 800
+      },
+      "max_per_dataset": 800,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "milu": {
+      "languages": ["hindi"],
+      "loader": "milu",
+      "max_per_language": 1500,
+      "max_per_dataset": 1500,
+      "split_caps": {
+        "val": 400,
+        "test": 0
+      }
+    },
+
+    "mera": {
+      "languages": ["russian"],
+      "loader": "mera",
+      "max_per_language": 1000,
+      "max_per_dataset": 1000,
+      "stratify_by": "subset",
+      "subject_caps": {
+        "mamuramu": 300,
+        "ruopenbookqa": 200,
+        "ruworldtree": 100,
+        "mathlogicqa": 100,
+        "parus": 200,
+        "use": 0,
+        "rcb": 0,
+        "rwsd": 0
+      },
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "rubq": {
+      "languages": ["russian"],
+      "loader": "rubq",
+      "max_per_language": 700,
+      "max_per_dataset": 700,
+      "split_caps": {
+        "val": 200,
+        "test": 0
+      }
+    },
+
+    "head_qa": {
+      "languages": ["spanish"],
+      "loader": "head_qa",
+      "language_caps": {
+        "spanish": 700
+      },
+      "max_per_dataset": 700,
+      "split_caps": {
+        "val": 100,
+        "test": 0
+      }
+    },
+
+    "spain_boe_legislation": {
+      "languages": ["spanish"],
+      "loader": "spain_boe_legislation",
+      "max_per_language": 700,
+      "max_per_dataset": 700,
+      "split_caps": {
+        "val": 80,
+        "test": 0
+      }
+    },
+
+    "ccse": {
+      "languages": ["spanish"],
+      "loader": "ccse",
+      "max_per_language": 299,
+      "max_per_dataset": 299,
+      "split_caps": {
+        "train": 299,
+        "val": 30,
+        "test": 0
+      }
+    },
+
+    "demre": {
+      "languages": ["spanish"],
+      "loader": "demre",
+      "max_per_language": 45,
+      "max_per_dataset": 45,
+      "split_caps": {
+        "train": 45,
+        "val": 5,
+        "test": 0
+      }
+    },
+
+    "polizia_di_stato": {
+      "languages": ["italian"],
+      "loader": "polizia_di_stato",
+      "max_per_language": 400,
+      "max_per_dataset": 400,
+      "split_caps": {
+        "val": 50,
+        "test": 0
+      }
+    },
+
+    "quaderno_prefettizia": {
+      "languages": ["italian"],
+      "loader": "quaderno_prefettizia",
+      "max_per_language": 1000,
+      "max_per_dataset": 1000,
+      "split_caps": {
+        "val": 100,
+        "test": 0
+      }
+    },
+
+    "quaderno_prefettizia_economia_politica": {
+      "languages": ["italian"],
+      "loader": "quaderno_prefettizia_economia_politica",
+      "max_per_language": 400,
+      "max_per_dataset": 400,
+      "split_caps": {
+        "val": 60,
+        "test": 0
+      }
+    },
+
+    "italian_civil_code": {
+      "languages": ["italian"],
+      "loader": "italian_civil_code",
+      "max_per_language": 500,
+      "max_per_dataset": 500,
+      "split_caps": {
+        "val": 100,
+        "test": 0
+      }
+    }
+  }
+}

@@ -40,8 +40,8 @@ Examples:
 
 
 SYSTEM_PROMPT = """\
-You are a knowledgeable multilingual assistant with deep expertise in regional cultures, laws, history, and traditions across the world. You will be given a multiple-choice question in any language.
-Reason in the language of the question, drawing on your regional and cultural knowledge to identify the correct answer.
+You are a knowledgeable multilingual assistant with expertise across all domains including regional knowledge, science, math, history, law, and culture. You will be given a multiple-choice question in any language.
+Think briefly, in the language of the question, drawing on your regional and cultural knowledge to identify the correct answer.
 
 Rules:
 - Your final answer must appear exactly once inside \boxed{...}.
@@ -55,21 +55,36 @@ Example:
 \\boxed{B}
 \\boxed{42}"""
 
-SYSTEM_PROMPT_NON_THINKING = """
-You are a knowledgeable multilingual multiple-choice question answering assistant with expertise in regional cultures, laws, history, and traditions across the world. You will be given a multiple-choice question in any language.
 
-Choose exactly one option. Output only the final boxed answer in the format \\boxed{X}, where X is the chosen option letter.
+
+SYSTEM_PROMPT_NON_THINKING = """\
+You are a knowledgeable multilingual multiple-choice question answering assistant with expertise across all domains including regional knowledge, science, math, history, law, and culture. You will be given a question in any language.
+Most questions are MCQ. Choose exactly one option. Output only the final boxed answer in the format \\boxed{X}, where X is the chosen option letter.
 
 Rules:
-- Your response must contain exactly one boxed answer.
-- Do not include anything before or after the boxed answer.
-- Do not include explanations or extra text inside the box.
-- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
-- For math questions, output only the final answer inside \\boxed{...}.
-- Never output multiple boxed answers.
+- For multiple-choice questions (MCQ), output only the correct capital letter inside \\boxed{...}. Do not include explanations. Do not include anything before or after the boxed answer.
+- For math questions, you may reason briefly before giving the final answer inside \\boxed{...}.
+- Your response must contain exactly one boxed answer. Never output multiple boxed answers.
 - Never leave the final answer unboxed.
 
 Example:
+\\boxed{B}
+\\boxed{42}"""
+
+
+SYSTEM_PROMPT_NON_THINKING_AUGMENTED = """\
+You are a knowledgeable multilingual multiple-choice question answering assistant with expertise across all domains, including regional knowledge, science, math, history, law, and culture. You will be given a question in any language.
+
+Most questions are MCQ. Questions may have a variable number of labeled options, up to 20 options, with labels from A through T. Choose exactly one option. Output only the final boxed answer in the format \\boxed{X}, where X is the chosen option letter.
+
+Rules:
+- For multiple-choice questions (MCQ), output only the correct capital letter inside \\boxed{...}. Do not include explanations. Do not include anything before or after the boxed answer.
+- The chosen MCQ letter must be one of the option labels shown in the question, from A through T.
+- For non-MCQ math questions, you may reason briefly before giving the final answer inside \\boxed{...}.
+- Your response must contain exactly one boxed answer. Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+
+Examples:
 \\boxed{B}
 \\boxed{42}
 """

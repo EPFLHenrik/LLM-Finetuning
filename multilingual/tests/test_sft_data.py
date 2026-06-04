@@ -19,7 +19,7 @@ import pytest
 
 MULTILINGUAL_DIR = Path(__file__).parents[1]
 # SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft"
-SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft" / "v16"
+SFT_DATA_DIR     = MULTILINGUAL_DIR / "data" / "sft" / "v19_20k" 
 REPO_DIR         = MULTILINGUAL_DIR.parent
 
 sys.path.insert(0, str(REPO_DIR))

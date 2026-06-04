@@ -1,0 +1,55 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v10_distilled
+Output dir: multilingual/eval/results/v10_distilled/mmlu_prox_hard
+Runtime seconds: 43.21
+Runtime minutes: 0.72
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 1000,
+  "correct": 287,
+  "accuracy": 0.287
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 200       57     0.285
+   hindi 200       52     0.260
+ italian 200       64     0.320
+ russian 200       56     0.280
+ spanish 200       58     0.290
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+  dataset    n  correct  accuracy
+mmlu_prox 1000      287     0.287
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+  dataset language   n  correct  accuracy
+mmlu_prox  chinese 200       57     0.285
+mmlu_prox    hindi 200       52     0.260
+mmlu_prox  italian 200       64     0.320
+mmlu_prox  russian 200       56     0.280
+mmlu_prox  spanish 200       58     0.290
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================
