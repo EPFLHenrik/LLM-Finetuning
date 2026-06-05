@@ -13,7 +13,7 @@ Rules:
 Example:
 \\boxed{B}
 {%- endset %}
-{%- set user_instruction_suffix = 'Choose the correct option. Reply with exactly one boxed letter and nothing else. Valid format: \boxed{A}.' %}
+{%- set user_instruction_suffix = 'Choose the correct option. Output the letter of the correct answer inside \\boxed{}.' %}
 {%- if tools %}
     {{- '<|im_start|>system\n' + system_prompt + '\n\n' }}
     {{- "# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>" }}
@@ -40,6 +40,15 @@ Example:
         {%- set content = '' %}
     {%- endif %}
     {%- if (message.role == "user") or (message.role == "system" and not loop.first) %}
+        {%- if message.role == "user" %}
+            {%- if user_instruction_suffix not in content %}
+                {%- if content %}
+                    {%- set content = content.rstrip('\n') + '\n\n' + user_instruction_suffix %}
+                {%- else %}
+                    {%- set content = user_instruction_suffix %}
+                {%- endif %}
+            {%- endif %}
+        {%- endif %}
         {{- '<|im_start|>' + message.role + '\n' + content + '<|im_end|>' + '\n' }}
     {%- elif message.role == "assistant" %}
         {%- set reasoning_content = '' %}

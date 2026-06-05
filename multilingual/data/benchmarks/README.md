@@ -27,10 +27,10 @@ Each language combines INCLUDE (regional knowledge baseline) with Global MMLU (t
 | Russian  | 100     | 200         | 200 MERA | 500 |
 | Chinese  | 100     | 100         | 150 C-Eval + 150 CMMLU | 500 |
 | Hindi    | 100     | 200         | 200 MILU | 500 |
-| Italian  | 100     | 200         | 200 EXAMS | 500 |
+| Italian  | 100     | 200         | - | 500 |
 | Spanish  | 100     | 200         | 200 HEAD-QA | 500 |
 
-Dataset totals: INCLUDE 500 · Global MMLU 900 · MERA 200 · C-Eval 150 · CMMLU 150 · MILU 200 · EXAMS 200 · HEAD-QA 200.
+Dataset totals: INCLUDE 500 · Global MMLU 900 · MERA 200 · C-Eval 150 · CMMLU 150 · MILU 200 · HEAD-QA 200.
 
 ## Subject coverage
 
@@ -43,7 +43,6 @@ Dataset totals: INCLUDE 500 · Global MMLU 900 · MERA 200 · C-Eval 150 · CMML
 | Hindi | Global MMLU | 57 |
 | Hindi | INCLUDE | 15 |
 | Hindi | MILU | 41 |
-| Italian | EXAMS | 12 |
 | Italian | Global MMLU | 57 |
 | Italian | INCLUDE | 17 |
 | Russian | Global MMLU | 57 |
@@ -90,7 +89,7 @@ Each record is a JSON object with fields:
 | Russian  | 20 | 40 | 40 MERA | 100 |
 | Chinese  | 20 | 20 | 30 C-Eval + 30 CMMLU | 100 |
 | Hindi    | 20 | 40 | 40 MILU | 100 |
-| Italian  | 20 | 40 | 40 EXAMS | 100 |
+| Italian  | 20 | 40 | - | 100 |
 | Spanish  | 20 | 40 | 40 HEAD-QA | 100 |
 
 
