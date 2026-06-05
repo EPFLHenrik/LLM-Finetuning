@@ -1,0 +1,55 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      cs-552-2026-flab/multilingual_model
+Output dir: multilingual/eval/results/flab/mmlu_prox_hard
+Runtime seconds: 397.29
+Runtime minutes: 6.62
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 1000,
+  "correct": 303,
+  "accuracy": 0.303
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 200       57     0.285
+   hindi 200       45     0.225
+ italian 200       72     0.360
+ russian 200       63     0.315
+ spanish 200       66     0.330
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+  dataset    n  correct  accuracy
+mmlu_prox 1000      303     0.303
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+  dataset language   n  correct  accuracy
+mmlu_prox  chinese 200       57     0.285
+mmlu_prox    hindi 200       45     0.225
+mmlu_prox  italian 200       72     0.360
+mmlu_prox  russian 200       63     0.315
+mmlu_prox  spanish 200       66     0.330
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

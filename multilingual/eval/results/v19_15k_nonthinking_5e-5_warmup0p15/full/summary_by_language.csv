@@ -1,0 +1,6 @@
+language,n,correct,accuracy
+chinese,500,243,0.486
+hindi,500,197,0.394
+italian,500,221,0.442
+russian,500,242,0.484
+spanish,500,228,0.456

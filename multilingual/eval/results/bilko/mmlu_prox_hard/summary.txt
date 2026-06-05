@@ -1,0 +1,55 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      cs-552-2026-bilko/multilingual_model
+Output dir: multilingual/eval/results/bilko/mmlu_prox_hard
+Runtime seconds: 145.13
+Runtime minutes: 2.42
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 1000,
+  "correct": 69,
+  "accuracy": 0.069
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 200       10     0.050
+   hindi 200       16     0.080
+ italian 200       18     0.090
+ russian 200       12     0.060
+ spanish 200       13     0.065
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+  dataset    n  correct  accuracy
+mmlu_prox 1000       69     0.069
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+  dataset language   n  correct  accuracy
+mmlu_prox  chinese 200       10     0.050
+mmlu_prox    hindi 200       16     0.080
+mmlu_prox  italian 200       18     0.090
+mmlu_prox  russian 200       12     0.060
+mmlu_prox  spanish 200       13     0.065
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

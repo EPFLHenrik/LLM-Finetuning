@@ -1,0 +1,73 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      cs-552-2026-qwenlifegivesyoulemons/multilingual_model
+Output dir: multilingual/eval/results/qwenlifegivesyoulemons/full
+Runtime seconds: 911.33
+Runtime minutes: 15.19
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 2500,
+  "correct": 1213,
+  "accuracy": 0.4852
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 500      236     0.472
+   hindi 500      164     0.328
+ italian 500      303     0.606
+ russian 500      259     0.518
+ spanish 500      251     0.502
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+    dataset   n  correct  accuracy
+      ceval 150       58    0.3867
+      cmmlu 150       65    0.4333
+      exams 200      144    0.7200
+global_mmlu 900      427    0.4744
+    head_qa 200       90    0.4500
+    include 500      261    0.5220
+       mera 200      109    0.5450
+       milu 200       59    0.2950
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+    dataset language   n  correct  accuracy
+      ceval  chinese 150       58    0.3867
+      cmmlu  chinese 150       65    0.4333
+      exams  italian 200      144    0.7200
+global_mmlu  chinese 100       56    0.5600
+global_mmlu    hindi 200       71    0.3550
+global_mmlu  italian 200       97    0.4850
+global_mmlu  russian 200       97    0.4850
+global_mmlu  spanish 200      106    0.5300
+    head_qa  spanish 200       90    0.4500
+    include  chinese 100       57    0.5700
+    include    hindi 100       34    0.3400
+    include  italian 100       62    0.6200
+    include  russian 100       53    0.5300
+    include  spanish 100       55    0.5500
+       mera  russian 200      109    0.5450
+       milu    hindi 200       59    0.2950
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

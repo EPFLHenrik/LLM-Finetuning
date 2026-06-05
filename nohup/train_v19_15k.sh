@@ -32,7 +32,7 @@ EXPORT_DIR="${REPO_DIR}/multilingual/results/exports/${RUN_NAME}"
 
 CHAT_TEMPLATE="${REPO_DIR}/multilingual/assets/chat_template_multilingual-v2.jinja"
 BENCHMARK_FILE="${REPO_DIR}/multilingual/data/benchmarks/benchmark_all.jsonl"
-MMLU_PROX_FILE="${REPO_DIR}/multilingual/data/benchmarks/mmlu_prox_hard.jsonl"
+MMLU_PROX_FILE="${REPO_DIR}/multilingual/data/benchmarks/mmlu_prox/mmlu_prox_hard_1000.jsonl"
 PROVIDED_FILE="${REPO_DIR}/validation_samples/multilingual.jsonl"
 
 FULL_EVAL_DIR="${REPO_DIR}/multilingual/eval/results/${CLEAN_NAME}/full"

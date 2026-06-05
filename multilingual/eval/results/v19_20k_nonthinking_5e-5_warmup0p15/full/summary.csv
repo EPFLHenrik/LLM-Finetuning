@@ -1,0 +1,17 @@
+dataset,language,n,correct,accuracy
+ceval,chinese,150,64,0.4267
+cmmlu,chinese,150,94,0.6267
+exams,italian,200,118,0.59
+global_mmlu,chinese,100,57,0.57
+global_mmlu,hindi,200,85,0.425
+global_mmlu,italian,200,110,0.55
+global_mmlu,russian,200,101,0.505
+global_mmlu,spanish,200,112,0.56
+head_qa,spanish,200,100,0.5
+include,chinese,100,57,0.57
+include,hindi,100,25,0.25
+include,italian,100,47,0.47
+include,russian,100,38,0.38
+include,spanish,100,43,0.43
+mera,russian,200,129,0.645
+milu,hindi,200,75,0.375

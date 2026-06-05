@@ -6,5 +6,5 @@ python -m multilingual.train.inspect_formatted_sft \
 
 # non-distilled
 python -m multilingual.train.inspect_formatted_sft \
-  --train_file multilingual/data/sft/v8/mixed/train_mixed.jsonl \
+  --train_file multilingual/data/sft/v19_20k/mixed/train_mixed.jsonl \
   --idx 0

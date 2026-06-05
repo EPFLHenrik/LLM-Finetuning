@@ -21,6 +21,9 @@ RESULTS_ROOT="multilingual/eval/results"
 #   .../debug_v0           -> debug_v0
 MODEL_SPECS=(
   # "base|Qwen/Qwen3-1.7B"
+  "bilko|cs-552-2026-bilko/multilingual_model"
+  "flab|cs-552-2026-flab/multilingual_model"
+  "qwenlifegivesyoulemons|cs-552-2026-qwenlifegivesyoulemons/multilingual_model"
 
   # "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/debug_v0"
   # "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1"
@@ -40,7 +43,8 @@ MODEL_SPECS=(
   # "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v16_nonthinking_1e-4_warmup0p1"
   # "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v17_10k_nonthinking_1e-4_warmup0p15"
   # "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v17_20k_nonthinking_5e-5_warmup0p15"
-"/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v18_nonthinking_5e-5_warmup0p15"
+  # "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v18_nonthinking_5e-5_warmup0p15"
+  # "/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v19_15k_nonthinking_5e-5_warmup0p15"
 )
 
 parse_spec() {

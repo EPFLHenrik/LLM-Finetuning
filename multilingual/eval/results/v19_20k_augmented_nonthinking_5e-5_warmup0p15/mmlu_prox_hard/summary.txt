@@ -1,0 +1,55 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v19_20k_augmented_nonthinking_5e-5_warmup0p15
+Output dir: /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/eval/results/v19_20k_augmented_nonthinking_5e-5_warmup0p15/mmlu_prox_hard
+Runtime seconds: 29.91
+Runtime minutes: 0.50
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 1000,
+  "correct": 397,
+  "accuracy": 0.397
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 200       78     0.390
+   hindi 200       72     0.360
+ italian 200       78     0.390
+ russian 200       81     0.405
+ spanish 200       88     0.440
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+  dataset    n  correct  accuracy
+mmlu_prox 1000      397     0.397
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+  dataset language   n  correct  accuracy
+mmlu_prox  chinese 200       78     0.390
+mmlu_prox    hindi 200       72     0.360
+mmlu_prox  italian 200       78     0.390
+mmlu_prox  russian 200       81     0.405
+mmlu_prox  spanish 200       88     0.440
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

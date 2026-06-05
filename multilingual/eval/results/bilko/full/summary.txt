@@ -1,0 +1,73 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      cs-552-2026-bilko/multilingual_model
+Output dir: multilingual/eval/results/bilko/full
+Runtime seconds: 220.58
+Runtime minutes: 3.68
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 2500,
+  "correct": 662,
+  "accuracy": 0.2648
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy
+ chinese 500      150     0.300
+   hindi 500      116     0.232
+ italian 500      135     0.270
+ russian 500      156     0.312
+ spanish 500      105     0.210
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+    dataset   n  correct  accuracy
+      ceval 150       17    0.1133
+      cmmlu 150       55    0.3667
+      exams 200       47    0.2350
+global_mmlu 900      225    0.2500
+    head_qa 200       26    0.1300
+    include 500      204    0.4080
+       mera 200       51    0.2550
+       milu 200       37    0.1850
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+    dataset language   n  correct  accuracy
+      ceval  chinese 150       17    0.1133
+      cmmlu  chinese 150       55    0.3667
+      exams  italian 200       47    0.2350
+global_mmlu  chinese 100       27    0.2700
+global_mmlu    hindi 200       43    0.2150
+global_mmlu  italian 200       51    0.2550
+global_mmlu  russian 200       58    0.2900
+global_mmlu  spanish 200       46    0.2300
+    head_qa  spanish 200       26    0.1300
+    include  chinese 100       51    0.5100
+    include    hindi 100       36    0.3600
+    include  italian 100       37    0.3700
+    include  russian 100       47    0.4700
+    include  spanish 100       33    0.3300
+       mera  russian 200       51    0.2550
+       milu    hindi 200       37    0.1850
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

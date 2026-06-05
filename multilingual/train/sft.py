@@ -170,37 +170,8 @@ def main():
         tokenizer.pad_token_id = tokenizer.eos_token_id
     tokenizer.padding_side = "right"
 
-    # REMOVED, trl should hanfle this anyways!
-    # formatting_func defined here to capture tokenizer without a global
-    # def formatting_func(example: dict) -> str:
-    #     return tokenizer.apply_chat_template(
-    #         example["messages"],
-    #         tokenize=False,
-    #         add_generation_prompt=False,
-    #         enable_thinking=True,
-    #     )
-
-    # Debug: print one formatted example to verify template output
     train_dataset = _load_jsonl(args.train_file)
     val_dataset   = _load_jsonl(args.val_file)
-
-
-    # override system prompt in messages if using group prompt
-    # if args.system_prompt == "group":
-    #     def _override_system(ex):
-    #         msgs = list(ex.get("messages", []))
-    #         if msgs and msgs[0]["role"] == "system":
-    #             msgs[0] = {"role": "system", "content": SYSTEM_PROMPT_GROUP}
-    #         ex["messages"] = msgs
-    #         return ex
-    #     train_dataset = train_dataset.map(_override_system)
-    #     val_dataset   = val_dataset.map(_override_system)
-    #     print("[info] System prompt overridden with SYSTEM_PROMPT_GROUP")
-    # else:
-    #     print("[info] Using individual system prompt (SYSTEM_PROMPT)")
-
-
-    # new
     selected_system_prompt = _select_system_prompt(args.system_prompt)
 
     def _override_system(ex):

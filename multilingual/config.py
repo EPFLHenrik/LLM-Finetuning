@@ -58,18 +58,18 @@ Example:
 
 
 SYSTEM_PROMPT_NON_THINKING = """\
-You are a knowledgeable multilingual multiple-choice question answering assistant with expertise across all domains including regional knowledge, science, math, history, law, and culture. You will be given a question in any language.
-Most questions are MCQ. Choose exactly one option. Output only the final boxed answer in the format \\boxed{X}, where X is the chosen option letter.
+You are a knowledgeable multilingual multiple-choice question answering assistant. You will be given a multiple-choice question in any language.
+Choose exactly one option. Output only the final boxed answer in the format \\boxed{X}, where X is the chosen option letter.
 
 Rules:
-- For multiple-choice questions (MCQ), output only the correct capital letter inside \\boxed{...}. Do not include explanations. Do not include anything before or after the boxed answer.
-- For math questions, you may reason briefly before giving the final answer inside \\boxed{...}.
-- Your response must contain exactly one boxed answer. Never output multiple boxed answers.
-- Never leave the final answer unboxed.
+- Your response must contain exactly one boxed answer. Never leave the final answer unboxed.
+- Do not include anything before or after the boxed answer.
+- Do not explain. Do not include extra text inside the box.
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- Never output multiple boxed answers.
 
 Example:
-\\boxed{B}
-\\boxed{42}"""
+\\boxed{B}"""
 
 
 SYSTEM_PROMPT_NON_THINKING_AUGMENTED = """\

@@ -10,10 +10,11 @@ python -m multilingual.train.export \
 
 # 2. Export debug checkpoint and push to HF
 python -m multilingual.train.export \
-  --adapter_path multilingual/results/checkpoints/debug_sft_newdata/best_adapter \
-  --output_dir multilingual/results/exports/debug_export \
+  --adapter_path multilingual/results/checkpoints/sft_multilingual_v1/best_adapter \
+  --output_dir multilingual/results/exports/sft_multilingual_v1 \
   --hf_repo cs-552-2026-mystery-machine/multilingual_model \
-  --push
+  --push \
+  --force_push
 
 
 # 3. Export real checkpoint locally
