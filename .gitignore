@@ -9,6 +9,9 @@ multilingual/data/**/*.json
 multilingual/data/**/*.log
 multilingual/data/**/*.csv
 
+#HF repo
+multilingual_model/
+
 # Model checkpoints/adapters
 checkpoints/
 checkpoint-*/

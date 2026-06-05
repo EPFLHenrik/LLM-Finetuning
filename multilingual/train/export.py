@@ -50,9 +50,18 @@ DEFAULT_GENERATION_CONFIG = {
     "do_sample": False,
     "eos_token_id": [151645, 151643],
     "pad_token_id": 151643,
-    "temperature": 1.0,
-    "top_k": 1,
-    "top_p": 1.0,
+    "max_new_tokens": 32,
+    "transformers_version": "4.51.0",
+}
+
+THINKING_GENERATION_CONFIG = {
+    "bos_token_id": 151643,
+    "do_sample": True,
+    "eos_token_id": [151645, 151643],
+    "pad_token_id": 151643,
+    "temperature": 0.6,
+    "top_k": 20,
+    "top_p": 0.95,
     "transformers_version": "4.51.0",
 }
 
@@ -250,6 +259,12 @@ def parse_args():
     parser.add_argument("--push",        action="store_true")
     parser.add_argument("--force_push",  action="store_true")
     parser.add_argument("--skip_verify", action="store_true")
+    parser.add_argument(
+        "--thinking",
+        action="store_true",
+        help="Use thinking-mode generation config (do_sample=True, temp=0.6). "
+            "Default: greedy non-thinking config (do_sample=False, max_new_tokens=32).",
+    )
     return parser.parse_args()
 
 # ---------------------------------------------------------------------------
@@ -307,17 +322,10 @@ def main():
     tokenizer.save_pretrained(args.output_dir)
 
     # Generation config
-    if args.do_sample:
-        gen_config = DEFAULT_GENERATION_CONFIG.copy()
-        gen_config.update({
-            "do_sample":   True,
-            "temperature": args.temperature,
-            "top_p":       args.top_p,
-            "top_k":       args.top_k,
-        })
-        with open(args.output_dir / "generation_config.json", "w") as f:
-            json.dump(gen_config, f, indent=2)
-        print("Saved updated generation_config.json")
+    gen_config = THINKING_GENERATION_CONFIG.copy() if args.thinking else DEFAULT_GENERATION_CONFIG.copy()
+    with open(args.output_dir / "generation_config.json", "w") as f:
+        json.dump(gen_config, f, indent=2)
+    print(f"Saved generation_config.json ({'thinking' if args.thinking else 'non-thinking'})")
 
     # Manifest
     current_loss = _get_best_eval_loss(adapter_path)
@@ -328,7 +336,7 @@ def main():
         "best_eval_loss": current_loss,
         "format":         "safetensors",
         "merged_lora":    True,
-        "thinking_mode":  True,
+        "thinking_mode": args.thinking,
     }
     with open(args.output_dir / "checkpoint_manifest.json", "w") as f:
         json.dump(manifest, f, indent=2)

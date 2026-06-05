@@ -15,6 +15,7 @@ Examples:
 \\boxed{B}
 \\boxed{42}
 {%- endset %}
+{%- set user_instruction_suffix = 'Choose the correct option. Reply with exactly one boxed letter and nothing else. Valid format: \boxed{A}.' %}
 {%- if tools %}
     {{- '<|im_start|>system\n' + system_prompt + '\n\n' }}
     {{- "# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>" }}
