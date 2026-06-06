@@ -8,6 +8,7 @@ multilingual/data/**/*.jsonl
 multilingual/data/**/*.json
 multilingual/data/**/*.log
 multilingual/data/**/*.csv
+multilingual/data/**/*.txt
 
 #HF repo
 multilingual_model/
