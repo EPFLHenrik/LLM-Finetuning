@@ -1,44 +1,67 @@
-"""multilingual/loaders/mera_loader.py"""
+"""Load MERA examples from processed JSONL files with deterministic recarving."""
 
 from __future__ import annotations
+
 import json
 from typing import Any, Dict, List, Optional, Tuple
-import pandas as pd
-from multilingual.config import REPO
-from multilingual.utils import VAL_SEED
 
-CLEAN_CSV = REPO / "multilingual" / "data" / "processed" / "mera" / "mera_clean_all.csv"
+import pandas as pd
+
+from multilingual.config import REPO
+from multilingual.utils import VAL_FRACTION, VAL_SEED
+
+
+CLEAN_JSONL = REPO / "multilingual" / "data" / "processed" / "mera" / "mera.jsonl"
+
 SUPPORTED_LANGUAGES = {"russian"}
 SUPPORTED_SUBSETS = {
     "mamuramu",
     "mathlogicqa",
     "parus",
-    "rcb",
     "ruopenbookqa",
     "ruworldtree",
-    "rwsd",
-    "use",
 }
 
 
-def _parse_metadata(x: Any) -> Dict[str, Any]:
-    if isinstance(x, dict):
-        return x
-    if x is None or pd.isna(x):
-        return {}
-    return json.loads(str(x))
+def _read_jsonl(path) -> List[Dict[str, Any]]:
+    records = []
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+    return records
 
 
-def _load_split(split: str) -> pd.DataFrame:
+def _load_all_records() -> List[Dict[str, Any]]:
+    records = _read_jsonl(CLEAN_JSONL)
+    records = [
+        record
+        for record in records
+        if str(record.get("subset", "")).strip().lower() in SUPPORTED_SUBSETS
+        and record.get("language") == "russian"
+        and str(record.get("task_type", "")).strip().lower() == "mcq"
+    ]
+    return records
+
+
+def _recarve_split(split: str) -> List[Dict[str, Any]]:
     if split not in {"train", "val"}:
         raise ValueError(f"split must be 'train' or 'val', got {split!r}")
-    df = pd.read_csv(CLEAN_CSV, encoding="utf-8")
-    df = df[df["split"] == split].copy()
-    df = df[df["subset"].isin(SUPPORTED_SUBSETS)].copy()
-    if "language" in df.columns:
-        df = df[df["language"] == "russian"].copy()
 
-    return df.sample(frac=1, random_state=VAL_SEED).reset_index(drop=True)
+    records = _load_all_records()
+    if not records:
+        return []
+
+    df = pd.DataFrame({"record": records})
+    df = df.sample(frac=1, random_state=VAL_SEED).reset_index(drop=True)
+
+    n_val = max(1, int(len(df) * VAL_FRACTION))
+    val_df = df.iloc[:n_val].reset_index(drop=True)
+    train_df = df.iloc[n_val:].reset_index(drop=True)
+
+    selected = val_df if split == "val" else train_df
+    return selected["record"].tolist()
 
 
 def _builder_task_type(task_type: str) -> str:
@@ -46,31 +69,38 @@ def _builder_task_type(task_type: str) -> str:
     if task_type == "mcq":
         return "mcq"
     if task_type == "numeric":
-        # USE answers are often strings like "1,4" or "8,1,9,7".
-        # In the SFT builder, use math-style boxed answers for these.
         return "math"
-
     raise ValueError(f"Unexpected MERA task_type: {task_type!r}")
 
 
-def _format_example(row: pd.Series, idx: int) -> Dict[str, Any]:
-    subset = str(row["subset"]).strip().lower()
-    raw_task_type = str(row["task_type"]).strip().lower()
+def _format_example(record: Dict[str, Any], idx: int) -> Dict[str, Any]:
+    subset = str(record.get("subset", "")).strip().lower()
+    raw_task_type = str(record.get("task_type", "")).strip().lower()
     task_type = _builder_task_type(raw_task_type)
-    prompt = str(row["prompt"]).strip()
-    answer = str(row["answer"]).strip()
+    prompt = str(record.get("prompt", "")).strip()
+    answer = str(record.get("answer", "")).strip()
+
     if subset not in SUPPORTED_SUBSETS:
         raise ValueError(f"Unsupported MERA subset: {subset!r}")
     if not prompt:
         raise ValueError("Empty MERA prompt.")
     if not answer:
         raise ValueError("Empty MERA answer.")
-    metadata = _parse_metadata(row.get("metadata", "{}"))
-    metadata.update({
-        "subset": subset,
-        "source_id": str(row.get("source_id", "")),
-        "raw_task_type": raw_task_type,
-    })
+
+    metadata = record.get("metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+
+    metadata = dict(metadata)
+    metadata.update(
+        {
+            "subset": subset,
+            "source_id": str(record.get("source_id", "")),
+            "raw_task_type": raw_task_type,
+            "original_split": str(record.get("split", "")),
+        }
+    )
+
     return {
         "id": f"mera_{subset}_{idx}",
         "dataset": "mera",
@@ -82,22 +112,29 @@ def _format_example(row: pd.Series, idx: int) -> Dict[str, Any]:
     }
 
 
-def load_mera_examples(language: str, n: Optional[int] = None, split: str = "val") -> List[Dict[str, Any]]:
-    """Load cleaned MERA examples. split='train' or 'val'."""
+def load_mera_examples(
+    language: str,
+    n: Optional[int] = None,
+    split: str = "val",
+) -> List[Dict[str, Any]]:
+    """Load cleaned MERA examples using a deterministic train/val recarve."""
     if language not in SUPPORTED_LANGUAGES:
         print(f"[MERA] No data for {language}; skipping.")
         return []
-    df = _load_split(split)
-    if df.empty:
+
+    records = _recarve_split(split)
+    if not records:
         print(f"[MERA] Empty split: {split}.")
         return []
+
     if n is not None:
-        df = df.iloc[:n].copy()
-    return [_format_example(df.iloc[i], i) for i in range(len(df))]
+        records = records[:n]
+
+    return [_format_example(records[i], i) for i in range(len(records))]
 
 
 def load_mera_splits(language: str) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Convenience: return (train_examples, val_examples)."""
+    """Return (train_examples, val_examples)."""
     train = load_mera_examples(language, n=None, split="train")
     val = load_mera_examples(language, n=None, split="val")
     return train, val
