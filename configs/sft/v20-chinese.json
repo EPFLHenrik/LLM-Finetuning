@@ -1,0 +1,74 @@
+{
+  "output_name": "v20-chinese",
+  "notes": "Chinese-only non-thinking SFT for language-specialist adapter merge experiment. Target 10k train examples. Uses CEval and CMMLU heavily, with CultSportQA, Global MMLU, MMLU-ProX, INCLUDE, and Global PIQA. Benchmark filtering uses the full benchmarks/ directory.",
+  "mode": "non_thinking",
+  "non_thinking_style": "boxed_only",
+  "enable_test_split": false,
+
+  "max_per_language": 10000,
+  "max_per_dataset": 30000,
+  "max_per_language_mixed": 10500,
+  "max_per_language_mixed_val": 800,
+
+  "benchmark_path": "multilingual/data/benchmarks",
+
+  "dataset_registry": {
+    "include": {
+      "languages": ["chinese"],
+      "loader": "include",
+      "mode": "as_is",
+      "max_per_language": 800,
+      "max_per_dataset": 800,
+      "split_caps": { "val": 100, "test": 0 }
+    },
+
+    "global_piqa": {
+      "languages": ["chinese"],
+      "loader": "global_piqa",
+      "mode": "as_is",
+      "max_per_language": 200,
+      "max_per_dataset": 200,
+      "split_caps": { "val": 40, "test": 0 }
+    },
+
+    "global_mmlu": {
+      "languages": ["chinese"],
+      "loader": "global_mmlu",
+      "max_per_language": 1500,
+      "max_per_dataset": 1500,
+      "split_caps": { "val": 150, "test": 0 }
+    },
+
+    "mmlu_prox": {
+      "languages": ["chinese"],
+      "loader": "mmlu_prox",
+      "max_per_language": 1500,
+      "max_per_dataset": 1500,
+      "split_caps": { "val": 150, "test": 0 }
+    },
+
+    "ceval": {
+      "languages": ["chinese"],
+      "loader": "ceval",
+      "max_per_language": 2750,
+      "max_per_dataset": 2750,
+      "split_caps": { "val": 200, "test": 0 }
+    },
+
+    "cmmlu": {
+      "languages": ["chinese"],
+      "loader": "cmmlu",
+      "max_per_language": 2750,
+      "max_per_dataset": 2750,
+      "split_caps": { "val": 200, "test": 0 }
+    },
+
+    "cultsportqa": {
+      "languages": ["chinese"],
+      "loader": "cultsportqa",
+      "max_per_language": 1000,
+      "max_per_dataset": 1000,
+      "split_caps": { "val": 100, "test": 0 }
+    }
+  }
+}
