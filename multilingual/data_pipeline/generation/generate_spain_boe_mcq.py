@@ -543,7 +543,6 @@ async def _process_file(
     output_dir: Path,
     args,
     api_key: str,
-    combined_path: Path | None = None,
 ) -> None:
     dataset = input_path.stem  # e.g. "spain_boe_constitucion_espanola"
     all_path   = output_dir / f"{dataset}_all.jsonl"
@@ -608,8 +607,6 @@ async def _process_file(
             _append_jsonl(results,     all_path)
             _append_jsonl(valid_batch, valid_path)
             _append_jsonl(fail_batch,  fail_path)
-            if combined_path is not None:
-                _append_jsonl(valid_batch, combined_path)
 
     total = len(done_ids) + len(todo)
     pct   = 100 * valid_so_far // max(1, total)
@@ -633,12 +630,11 @@ async def main_async(args):
         # Directory mode — process all .jsonl files
         input_dir  = Path(args.input_dir)
         output_base = Path(args.output_base)
-        files = sorted(input_dir.glob("*.jsonl"))
+        files = sorted(p for p in input_dir.glob("*.jsonl") if not p.name.startswith("all_"))
         print(f"Found {len(files)} JSONL files in {input_dir}")
-        output_dir = output_base / "spain_boe_legislation_strict"
-        combined_path = output_dir / "spain_boe_legislation_generated.jsonl"
+        output_dir = output_base / "spain_boe_legislation"
         for f in files:
-            await _process_file(f, output_dir, args, api_key, combined_path=combined_path)
+            await _process_file(f, output_dir, args, api_key)
 
 
 def parse_args():

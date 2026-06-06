@@ -3,41 +3,58 @@
 Teacher distillation pipeline for multilingual MCQ SFT data.
 
 This script reads processed MCQ datasets from `multilingual/data/processed`,
-queries one or more teacher models, validates the generated rationale, and
-writes distilled examples that can later be used for supervised fine-tuning.
+queries teacher models, validates generated rationales, and writes optional
+distilled examples for supervised fine-tuning.
 
 Per example:
   1. Try Llama independently up to 4 times.
      - Attempt 1 uses temperature 0.0.
      - Attempts 2-4 use the CLI sampling temperature and top_p.
-  2. If Llama never gives a valid correct answer, try Apertus independently 2 times.
-  3. If both teachers fail independently, give the gold answer to Llama and ask for a rationale.
-  4. If Llama's gold-answer rationale is invalid, try the same gold-answer fallback with Apertus.
-  5. Keep only valid rationales ending in the correct \\boxed{LETTER}; otherwise discard.
+  2. If Llama never gives a valid correct answer, try Apertus independently once.
+  3. If no independent teacher succeeds, optionally use gold-answer fallback
+     with Llama only.
+     - If Llama previously returned NOT_SURE and no independent teacher
+       succeeded, gold fallback is skipped.
+  4. Keep only valid rationales ending in the correct \\boxed{LETTER}.
+  5. Write FAIL, NOT_SURE, and skipped-uncertainty cases to the fail file.
 
-Saving is append-only and resumable:
-    <output_dir>/<base>_distilled.jsonl  ← valid examples only, for SFT
-    <output_dir>/<base>_all.jsonl        ← all attempts, for analysis/resuming
-    <output_dir>/<base>_fail.jsonl       ← failed examples
+Output layout is append-only and resumable:
+
+    <output_dir>/<base>/
+    ├── <base>_all.jsonl              # all processed attempts
+    ├── <base>_fail.jsonl             # FAIL / NOT_SURE / skipped uncertainty cases
+    ├── <base>_all_shuffle_meta.json  # shuffle and run metadata
+    └── distilled/
+        └── <base>_distilled.jsonl    # valid examples only
 
 Usage:
     export CSCS_SERVING_API="sk-rc-..."
 
-    python -m multilingual.data_pipeline.distillation.distill_fallback \\
-        --datasets ceval milu mera_mamuramu \\
-        --processed_dir multilingual/data/processed \\
-        --output_dir multilingual/data/distilled/v1stage_gold_fallback \\
-        --concurrency 4 \\
-        --sample_temperature 0.25 \\
-        --top_p 0.95 \\
-        --save_every 25
-
 Dry run:
     python -m multilingual.data_pipeline.distillation.distill_fallback \\
-        --datasets mera_mamuramu \\
+        --datasets mera_all \\
         --processed_dir multilingual/data/processed \\
         --output_dir multilingual/data/distilled/debug_fallback \\
-        --dry_run
+        --dry_run \\
+        --debug_n 100 \\
+        --concurrency 20
+
+Full run with nohup:
+    mkdir -p multilingual/data/distilled/fallback/v1_4k_per_file
+    distill_datetime=$(date +"%Y%m%d_%H%M%S")
+    nohup python -m multilingual.data_pipeline.distillation.distill_fallback \\
+        --processed_dir multilingual/data/processed \\
+        --output_dir multilingual/data/distilled/fallback/v1_4k_per_file \\
+        --max_valid_per_file 4000 \\
+        --concurrency 20 \\
+        --log_every 50 \\
+        --save_every 50 \\
+        --sample_temperature 0.35 \\
+        --top_p 0.95 \\
+        > multilingual/data/distilled/fallback/v1_4k_per_file/distill_${distill_datetime}.log 2>&1 &
+
+Watch latest log:
+    tail -f "$(ls -t multilingual/data/distilled/fallback/v1_4k_per_file/distill_*.log | head -n 1)"
 """
 
 from __future__ import annotations
@@ -124,8 +141,11 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
     # new
     "mera": [
         ("mera/mera_clean_mamuramu.jsonl", "mera_russian_mamuramu"),
-        ("mera/mera_clean_ruopenbookqa.jsonl", "mera_russian_ruopenbookqa"), # new
-        ("mera/mera_clean_ruworldtree.jsonl", "mera_russian_ruworldtree"), # this too
+        ("mera/mera_clean_ruopenbookqa.jsonl", "mera_russian_ruopenbookqa"),
+        ("mera/mera_clean_ruworldtree.jsonl", "mera_russian_ruworldtree"),
+    ],
+    "mera_all": [
+        ("mera/mera.jsonl", "mera_russian_all"),
     ],
     "global_piqa": [
         ("global_piqa/global_piqa_italian_all.jsonl",  "global_piqa_italian"),
@@ -152,11 +172,11 @@ PROCESSED_INPUTS: Dict[str, List[tuple]] = {
         ("spain_boe_legislation/spain_boe_legislation_generated.jsonl", "spain_boe_legislation"),
     ],
     "polizia_di_stato": [
-        ("polizia_di_stato/polizia_di_stato_clean.jsonl", "polizia_di_stato"),
+        ("polizia_di_stato/polizia_di_stato.jsonl", "polizia_di_stato"),
     ],
     "quaderno_prefettizia": [
-        ("quaderno_prefettizia/quaderno_prefettizia_clean.jsonl", "quaderno_prefettizia"),
-        ("quaderno_prefettizia/quaderno_prefettizia_economia_politica_clean.jsonl", "quaderno_prefettizia_economia_politica"),
+        ("quaderno_prefettizia/quaderno_prefettizia.jsonl", "quaderno_prefettizia"),
+        ("quaderno_prefettizia/quaderno_prefettizia_economia_politica.jsonl", "quaderno_prefettizia_economia_politica"),
     ],
 }
 
@@ -552,32 +572,24 @@ async def _distill_example(
     #             used_teacher = model
     #             mode = "gold_fallback"
     #             break
-    # 3) Gold-answer fallback with Llama — skip if there was genuine uncertainty.
+    # 3) Gold-answer fallback with Llama. Skip it if any independent attempt was NOT_SURE.
     if not valid:
-        last_apertus_attempt = next(
-            (a for a in reversed(attempts) if a.get("model") == TEACHER_FALLBACK),
-            None,
-        )
         any_llama_not_sure = any(
-            a.get("model") == TEACHER_PRIMARY and a.get("invalid_reason") == "not_sure"
+            a.get("stage") == "independent"
+            and a.get("model") == TEACHER_PRIMARY
+            and a.get("invalid_reason") == "not_sure"
             for a in attempts
         )
-        apertus_was_wrong_not_sure = (
-            last_apertus_attempt is not None and
-            last_apertus_attempt.get("invalid_reason") != "not_sure"
-        )
-        skip_gold_fallback = (
-            # Case 1: Apertus itself said NOT_SURE
-            (last_apertus_attempt is not None and
-             last_apertus_attempt.get("invalid_reason") == "not_sure")
-            or
-            # Case 2: Llama was NOT_SURE at some point AND Apertus just got wrong answer
-            (any_llama_not_sure and apertus_was_wrong_not_sure)
+        apertus_valid = any(
+            a.get("stage") == "independent"
+            and a.get("model") == TEACHER_FALLBACK
+            and a.get("valid") is True
+            for a in attempts
         )
 
-        if skip_gold_fallback:
-            invalid_reason = "skipped_gold_fallback_uncertainty"
-            mode           = "discarded_not_sure"
+        if any_llama_not_sure and not apertus_valid:
+            invalid_reason = "skipped_gold_fallback_after_llama_not_sure"
+            mode = "discarded_not_sure"
         else:
             fallback_teachers = [
                 (TEACHER_PRIMARY, MAX_TOKENS_PRIMARY),
@@ -688,6 +700,23 @@ def _load_done_ids(path: Path) -> tuple[set, List[Dict]]:
                     records.append(r)
                     done_ids.add(r["source_id"])
     return done_ids, records
+
+
+def _is_fail_record(record: Dict[str, Any]) -> bool:
+    distill = record.get("distill", {})
+    attempts = distill.get("attempts", [])
+    return (
+        distill.get("invalid_reason") == "fail_corrupted_example"
+        or distill.get("invalid_reason") == "not_sure"
+        or distill.get("invalid_reason") == "skipped_gold_fallback_after_llama_not_sure"
+        or distill.get("mode") == "discarded_not_sure"
+        or distill.get("mode") == "gold_fallback_not_sure"
+        or distill.get("mode") == "gold_fallback_fail"
+        or any(
+            a.get("invalid_reason") in {"fail_corrupted_example", "not_sure"}
+            for a in attempts
+        )
+    )
 
 # ---------------------------------------------------------------------------
 # Record normalization  (unchanged)
@@ -840,15 +869,7 @@ async def _distill_file(
             valid_batch = [r for r in results if r["distill"]["valid"]]
             valid_so_far += len(valid_batch)
 
-        fail_batch = [
-            r for r in results
-            if r["distill"].get("invalid_reason") == "fail_corrupted_example"
-            or r["distill"].get("mode") == "discarded_not_sure"
-            or any(
-                a.get("invalid_reason") == "fail_corrupted_example"
-                for a in r["distill"].get("attempts", [])
-            )
-        ]
+        fail_batch = [r for r in results if _is_fail_record(r)]
 
         _append_jsonl(results, all_path)
         if valid_batch:
@@ -861,10 +882,7 @@ async def _distill_file(
 
     _, all_results = _load_done_ids(all_path)
     valid_total    = sum(1 for r in all_results if r["distill"]["valid"])
-    fail_total     = sum(
-        1 for r in all_results
-        if r["distill"].get("invalid_reason") == "fail_corrupted_example"
-    )
+    fail_total = sum(1 for r in all_results if _is_fail_record(r))
     invalid_reasons: Dict[str, int] = {}
     for r in all_results:
         reason = r["distill"].get("invalid_reason")
@@ -956,9 +974,12 @@ async def main_async(args):
 
     async with httpx.AsyncClient() as client:
         for src_path, base in jobs:
-            all_path   = args.output_dir / f"{base}_all.jsonl"
-            valid_path = args.output_dir / f"{base}_distilled.jsonl"
-            fail_path  = args.output_dir / f"{base}_fail.jsonl"
+            file_dir = args.output_dir / base
+            distilled_dir = file_dir / "distilled"
+
+            all_path = file_dir / f"{base}_all.jsonl"
+            valid_path = distilled_dir / f"{base}_distilled.jsonl"
+            fail_path = file_dir / f"{base}_fail.jsonl"
 
             print(f"\n── {src_path.name} ──")
             t0    = time.time()

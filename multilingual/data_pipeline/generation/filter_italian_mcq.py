@@ -1,31 +1,54 @@
 """multilingual/data_pipeline/generation/filter_italian_mcq.py
 
-Filters Italian MCQs using a two-stage teacher pipeline.
+Filters generated Italian MCQ candidate pools using a two-stage teacher pipeline.
+
+This script is used after parsing/generation for Italian source datasets such as:
+  - Polizia di Stato
+  - Quaderno Prefettizia
+  - Quaderno Prefettizia Economia Politica
+
+It reads an initial candidate JSONL file, asks a primary teacher to decide whether
+each MCQ should be kept or rejected, and uses a secondary teacher only when the
+primary decision is unclear.
 
 Keeps only questions that are:
-- About Italian culture, history, literature, language, institutions, law,
-  geography, public figures, art, music, or Italian civic/regional knowledge.
+  - written in correct, understandable Italian;
+  - about Italian culture, history, literature, language, institutions, law,
+    geography, civic knowledge, or Italian/regional knowledge;
+  - structurally valid MCQs with one clearly identifiable correct answer.
 
-Rejects:
-- General science (biology, physics, chemistry, astronomy) — covered by MMLU-ProX
-- Non-Italian content (Hungarian geography, Croatian history, etc.)
-- Corrupted or invalid questions due to OCR errors, incomplete text, etc.
-- Trivially easy questions with obvious answers
-- Questions about non-Italian celebrities or global trivia
+Rejects questions that are:
+  - general science or general global trivia;
+  - not specifically Italian;
+  - corrupted by OCR/parsing errors;
+  - incomplete, malformed, or ambiguous;
+  - too trivial or obvious.
+
+Output files:
+    <output_dir>/<prefix>.jsonl             # kept examples
+    <output_dir>/<prefix>_rejected.jsonl    # rejected examples
+    <output_dir>/<prefix>_filter_all.jsonl  # all examples with filter decisions
 
 Usage:
     export CSCS_SERVING_API="sk-..."
 
-    python -m multilingual.data_pipeline.generation.filter_italian_mcq \\
-        --input multilingual/data/processed/italian_mcq/italian_mcq.jsonl \\
-        --output_dir multilingual/data/processed/italian_mcq/filtered \\
+    python -m multilingual.data_pipeline.generation.filter_italian_mcq \
+        --input multilingual/data/processed/polizia_di_stato/polizia_di_stato_initial_parsed.jsonl \
+        --output_dir multilingual/data/processed/polizia_di_stato \
+        --output_prefix polizia_di_stato \
         --concurrency 20
 
-    # Dry run
-    python -m multilingual.data_pipeline.generation.filter_italian_mcq \\
-        --input multilingual/data/processed/italian_mcq/italian_mcq.jsonl \\
-        --output_dir multilingual/data/processed/italian_mcq/filtered \\
-        --dry_run --debug_n 20
+    python -m multilingual.data_pipeline.generation.filter_italian_mcq \
+        --input multilingual/data/processed/quaderno_prefettizia/quaderno_prefettizia_initial_parsed.jsonl \
+        --output_dir multilingual/data/processed/quaderno_prefettizia \
+        --output_prefix quaderno_prefettizia \
+        --concurrency 20
+
+Dry run:
+    python -m multilingual.data_pipeline.generation.filter_italian_mcq \
+        --input multilingual/data/processed/polizia_di_stato/polizia_di_stato_initial_parsed.jsonl \
+        --output_dir multilingual/data/processed/polizia_di_stato \
+        --output_prefix polizia_di_stato         --dry_run         --debug_n 20
 """
 
 from __future__ import annotations
@@ -311,7 +334,7 @@ async def main_async(args):
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     prefix        = args.output_prefix or args.input.stem.replace("_parsed", "")
-    kept_path     = args.output_dir / f"{prefix}_train.jsonl"
+    kept_path     = args.output_dir / f"{prefix}.jsonl"
     rejected_path = args.output_dir / f"{prefix}_rejected.jsonl"
     all_path      = args.output_dir / f"{prefix}_filter_all.jsonl"
 

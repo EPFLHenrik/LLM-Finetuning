@@ -12,7 +12,7 @@ processed MCQ format used by the multilingual SFT pipeline.
 Usage:
     python -m multilingual.data_pipeline.parsing.parse_polizia_di_stato \\
         --pdf multilingual/data/raw/italian_mcq_pdfs/2.polizia-di-stato-banca-dati.pdf \\
-        --output multilingual/data/processed/polizia_di_stato/polizia_di_stato.jsonl \\
+        --output multilingual/data/processed/polizia_di_stato/polizia_di_stato_initial_parsed.jsonl \\
         --dataset polizia_di_stato \\
         --source polizia_di_stato \\
         --seed 42
@@ -154,10 +154,13 @@ def shuffle_options(q: dict, rng: random.Random) -> dict:
 def to_sft_format(q: dict, source: str, dataset: str, idx: int) -> dict:
     """Convert to standard processed JSONL format matching existing pipeline."""
     opts_str = "\n".join(f"{l}) {t}" for l, t in sorted(q["options"].items()))
+    record_id = f"{dataset}_italian_{idx}"
     return {
-        "id": f"{dataset}_italian_{idx}",
+        "id": record_id,
+        "source_id": record_id,
         "dataset": dataset,
         "language": "italian",
+        "split": "raw",
         "task_type": "mcq",
         "prompt": f"{q['question']}\n\n{opts_str}",
         "answer": q["correct"],
