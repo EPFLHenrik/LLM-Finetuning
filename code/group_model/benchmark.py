@@ -149,7 +149,7 @@ def build_output_path(
     limit: int | None,
     run_name_override: str | None,
 ) -> Path:
-    output_dir = Path("code") / "safety_model" / "runs" / "benchmark" / "outputs" / benchmark_name
+    output_dir = Path("code") / "group_model" / "runs" / "benchmark" / "outputs" / benchmark_name
     output_dir.mkdir(parents=True, exist_ok=True)
 
     checkpoint_name = os.path.basename(checkpoint_path.rstrip("/"))
@@ -523,7 +523,7 @@ def main() -> None:
     parser.add_argument(
         "--wandb_table_path",
         type=Path,
-        default=Path("runs/benchmark/results/wandb_benchmark_table.json"),
+        default=Path("code/group_model/runs/benchmark/results/wandb_benchmark_table.json"),
         help="Local JSON file that stores cumulative benchmark rows before syncing to W&B.",
     )
 
