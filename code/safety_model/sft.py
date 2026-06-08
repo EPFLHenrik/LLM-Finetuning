@@ -90,7 +90,7 @@ def parse_args() -> argparse.Namespace:
         "--datasets",
         nargs="+",
         required=True,
-        help="Dataset names under data/processed/sft/<name> with train and test splits.",
+        help="Dataset names under data/safety/processed/sft/<name> with train and test splits.",
     )
     parser.add_argument(
         "--train-sizes",
@@ -190,7 +190,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--validation-output-dir",
         type=Path,
-        default=Path("runs/sft_validation"),
+        default=Path("code/safety_model/runs/sft_validation"),
         help="Where validation generations and metric JSON files are written.",
     )
     parser.add_argument("--validation-think", action=argparse.BooleanOptionalAction, default=True)
@@ -562,7 +562,7 @@ def evaluate_checkpoint_on_validation_with_vllm(
     This intentionally runs only after the training model has been deleted and CUDA
     cache has been cleared, so vLLM never competes with the training graph/model.
     """
-    from utils.evaluate.score import main as evaluate_score
+    from code.safety_model.utils.evaluate.score import main as evaluate_score
     from vllm import LLM, SamplingParams
 
     outputs_dir = output_dir / "outputs"
@@ -570,8 +570,11 @@ def evaluate_checkpoint_on_validation_with_vllm(
     outputs_dir.mkdir(parents=True, exist_ok=True)
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    jsonl_path = outputs_dir / f"{run_name}_epoch_{epoch:02d}_validation.jsonl"
-    results_path = results_dir / f"{run_name}_epoch_{epoch:02d}_validation_results.json"
+    # run_name may contain path separators (e.g. "safety_model/sft").
+    # Keep filenames flat under outputs/results to avoid missing parent dirs.
+    safe_run_name = run_name.replace("/", "_").replace("\\", "_")
+    jsonl_path = outputs_dir / f"{safe_run_name}_epoch_{epoch:02d}_validation.jsonl"
+    results_path = results_dir / f"{safe_run_name}_epoch_{epoch:02d}_validation_results.json"
 
     print(f"[validation] Loading checkpoint with vLLM: {checkpoint_path}")
     llm = LLM(model=str(checkpoint_path), dtype="auto", seed=seed)

@@ -492,7 +492,7 @@ def main() -> None:
     parser.add_argument(
         "--wandb_table_path",
         type=Path,
-        default=Path("runs/benchmark/results/wandb_benchmark_table.json"),
+        default=Path("code/safety_model/runs/benchmark/results/wandb_benchmark_table.json"),
         help="Local JSON file that stores cumulative benchmark rows before syncing to W&B.",
     )
 

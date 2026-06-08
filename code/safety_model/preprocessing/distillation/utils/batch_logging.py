@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from preprocessing.distillation.utils.generation_types import GenerationResult
+from code.safety_model.preprocessing.distillation.utils.generation_types import GenerationResult
 
 
 class BatchFailureLogger:

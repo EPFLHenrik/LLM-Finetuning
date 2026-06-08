@@ -5,12 +5,12 @@ from typing import Iterable
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 
-from preprocessing.distillation.utils.generation_types import (
+from code.safety_model.preprocessing.distillation.utils.generation_types import (
     AttemptState,
     GenerationResult,
     GenerationTask,
 )
-from preprocessing.distillation.utils.output_parsing import (
+from code.safety_model.preprocessing.distillation.utils.output_parsing import (
     BoxedAnswerExtractor,
     ThinkTagReasoningExtractor,
 )

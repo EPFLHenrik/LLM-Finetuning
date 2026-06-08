@@ -1,10 +1,10 @@
 from datasets import load_from_disk
 from code.safety_model.constants.global_variables import DatasetFieldNames
 
-dataset_path = "data/raw/SGXSTest/train"
+dataset_path = "data/safety/raw/SGXSTest/train"
 dataset = load_from_disk(dataset_path)
 
-output_path = "data/processed/benchmark/sgxstest"
+output_path = "data/safety/processed/benchmark/sgxstest"
 
 print("dataset[0]:", dataset[0])
 

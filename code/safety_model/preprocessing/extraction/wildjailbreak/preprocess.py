@@ -13,13 +13,13 @@ from code.safety_model.constants.global_variables import DatasetFieldNames, Rand
 SEED = Random.SEED
 LETTERS = [chr(ord("A") + i) for i in range(26)]
 
-OUT_COMBO = Path("data/processed/sft/wildjailbreak/safety_combo")
-OUT_BINARY = Path("data/processed/sft/wildjailbreak/binary_choice")
-OUT_COMPARISON = Path("data/processed/sft/wildjailbreak/statement_comparison")
+OUT_COMBO = Path("data/safety/processed/sft/wildjailbreak/safety_combo")
+OUT_BINARY = Path("data/safety/processed/sft/wildjailbreak/binary_choice")
+OUT_COMPARISON = Path("data/safety/processed/sft/wildjailbreak/statement_comparison")
 
-BENCH_COMBO = Path("data/processed/benchmark/wildjailbreak/safety_combo")
-BENCH_BINARY = Path("data/processed/benchmark/wildjailbreak/binary_choice")
-BENCH_COMPARISON = Path("data/processed/benchmark/wildjailbreak/statement_comparison")
+BENCH_COMBO = Path("data/safety/processed/benchmark/wildjailbreak/safety_combo")
+BENCH_BINARY = Path("data/safety/processed/benchmark/wildjailbreak/binary_choice")
+BENCH_COMPARISON = Path("data/safety/processed/benchmark/wildjailbreak/statement_comparison")
 
 COMBO_CATEGORIES = [
     ("vanilla_benign", "Harmless and direct"),
@@ -341,8 +341,8 @@ def print_stats(name, ds):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_path", type=str, default="data/raw/wildjailbreak/train")
-    parser.add_argument("--eval_path", type=str, default="data/raw/wildjailbreak_eval/train")
+    parser.add_argument("--train_path", type=str, default="data/safety/raw/wildjailbreak/train")
+    parser.add_argument("--eval_path", type=str, default="data/safety/raw/wildjailbreak_eval/train")
     parser.add_argument("--internal_test_ratio", type=float, default=0.05)
     parser.add_argument("--combo_max_per_type", type=int, default=None)
     parser.add_argument("--benchmark_ratio", type=float, default=1.0,

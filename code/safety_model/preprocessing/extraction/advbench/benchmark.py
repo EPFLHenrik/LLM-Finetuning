@@ -2,10 +2,10 @@ from datasets import load_from_disk
 from code.safety_model.constants.global_variables import DatasetFieldNames
 import hashlib
 
-dataset_path = "data/raw/advbench/train"
+dataset_path = "data/safety/raw/advbench/train"
 dataset = load_from_disk(dataset_path)
 
-output_path = "data/processed/benchmark/advbench"
+output_path = "data/safety/processed/benchmark/advbench"
 
 print("dataset[0]:", dataset[0])
 

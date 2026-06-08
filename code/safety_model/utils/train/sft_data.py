@@ -8,9 +8,9 @@ import torch
 from datasets import load_from_disk
 from torch.utils.data import DataLoader
 
-from constants.global_variables import DatasetFieldNames
+from code.safety_model.constants.global_variables import DatasetFieldNames
 
-DATA_DIR = Path("data/processed/sft")
+DATA_DIR = Path("data/safety/processed/sft")
 
 
 @dataclass

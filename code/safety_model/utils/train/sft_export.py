@@ -8,7 +8,7 @@ from peft import PeftModel
 from transformers import AutoModelForCausalLM
 
 
-STATIC_CHAT_TEMPLATE_PATH = Path("constants/chat_template.jinja")
+STATIC_CHAT_TEMPLATE_PATH = Path("code/safety_model/constants/chat_template.jinja")
 
 
 def load_static_chat_template(template_path: Path = STATIC_CHAT_TEMPLATE_PATH) -> str:
