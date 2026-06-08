@@ -49,7 +49,7 @@ def run_benchmark_eval(
     if limit is not None:
         dataset = dataset.select(range(limit))  # type: ignore
 
-    output_dir = Path(f"runs/benchmark/outputs/{benchmark}")
+    output_dir = Path(f"code/safety_model/runs/benchmark/outputs/{benchmark}")
     output_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{run_name}_epoch-{epoch}_{'think' if think_mode else 'no_think'}_{limit if limit is not None else 'full'}.jsonl"
     output_path = output_dir / filename

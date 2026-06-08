@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from constants.system_prompt import (
+from code.safety_model.constants.system_prompt import (
     TEACHER_MODEL_SYSTEM_PROMPT,
     TEACHER_MODEL_SYSTEM_PROMPT_FALLBACK,
 )

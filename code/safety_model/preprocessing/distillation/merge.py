@@ -18,9 +18,6 @@ def merge_datasets(input_dir: str):
     - train_passed: original train dataset
     - train_fallback: original train_fallback dataset
     - train: merged train + train_fallback
-    - test_passed: original test dataset
-    - test_fallback: original test_fallback dataset
-    - test: merged test + test_fallback
     """
     
     # Validate input directory exists
@@ -30,10 +27,8 @@ def merge_datasets(input_dir: str):
     # Check for required datasets
     train_path = os.path.join(input_dir, "train")
     train_fallback_path = os.path.join(input_dir, "train_fallback")
-    test_path = os.path.join(input_dir, "test")
-    test_fallback_path = os.path.join(input_dir, "test_fallback")
     
-    required_paths = [train_path, train_fallback_path, test_path, test_fallback_path]
+    required_paths = [train_path, train_fallback_path]
     for path in required_paths:
         if not os.path.isdir(path):
             raise ValueError(f"Required dataset directory not found: {path}")
@@ -41,7 +36,7 @@ def merge_datasets(input_dir: str):
     print(f"Processing datasets in: {input_dir}")
     
     # ===== TRAIN DATASET PROCESSING =====
-    print("\n[1/2] Processing TRAIN datasets...")
+    print("\n[1/1] Processing TRAIN datasets...")
     
     # Load datasets
     print("  Loading train dataset...")
@@ -71,37 +66,6 @@ def merge_datasets(input_dir: str):
     shutil.move(train_temp_path, train_new_path)
     print(f"    Saved to: {train_new_path}")
     
-    # ===== TEST DATASET PROCESSING =====
-    print("\n[2/2] Processing TEST datasets...")
-    
-    # Load datasets
-    print("  Loading test dataset...")
-    test_data = load_from_disk(test_path)
-    print(f"    test: {len(test_data)} samples")
-    
-    print("  Loading test_fallback dataset...")
-    test_fallback_data = load_from_disk(test_fallback_path)
-    print(f"    test_fallback: {len(test_fallback_data)} samples")
-    
-    # Rename original test to test_passed
-    test_passed_path = os.path.join(input_dir, "test_passed")
-    print(f"  Renaming test -> test_passed...")
-    shutil.move(test_path, test_passed_path)
-    print(f"    Saved to: {test_passed_path}")
-    
-    # Merge test_fallback with test_passed
-    print("  Merging test_fallback + test_passed...")
-    test_merged = concatenate_datasets([test_fallback_data, test_data])
-    print(f"    Merged dataset: {len(test_merged)} samples")
-    
-    # Save merged as test (use temp location first to avoid conflicts)
-    test_new_path = os.path.join(input_dir, "test")
-    test_temp_path = os.path.join(input_dir, "test_temp")
-    print(f"  Saving merged dataset as test...")
-    test_merged.save_to_disk(test_temp_path)
-    shutil.move(test_temp_path, test_new_path)
-    print(f"    Saved to: {test_new_path}")
-    
     # ===== SUMMARY =====
     print("\n" + "="*60)
     print("MERGE COMPLETE")
@@ -110,9 +74,6 @@ def merge_datasets(input_dir: str):
     print(f"  ✓ train_passed:    {len(train_data)} samples")
     print(f"  ✓ train_fallback:  {len(train_fallback_data)} samples")
     print(f"  ✓ train:           {len(train_merged)} samples (merged)")
-    print(f"  ✓ test_passed:     {len(test_data)} samples")
-    print(f"  ✓ test_fallback:   {len(test_fallback_data)} samples")
-    print(f"  ✓ test:            {len(test_merged)} samples (merged)")
     print("="*60)
 
 

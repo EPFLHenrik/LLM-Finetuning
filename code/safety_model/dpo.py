@@ -250,7 +250,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--validation-output-dir",
         type=Path,
-        default=Path("runs/safety/dpo_validation"),
+        default=Path("code/safety_model/runs/safety/dpo_validation"),
         help="Where validation generations and metric JSON files are written.",
     )
     parser.add_argument(

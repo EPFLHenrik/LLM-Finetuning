@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from constants.global_variables import TrainingConstants
+from code.safety_model.constants.global_variables import TrainingConstants
 
 def parse_generation_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(

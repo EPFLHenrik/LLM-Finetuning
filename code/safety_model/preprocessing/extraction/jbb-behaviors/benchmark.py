@@ -1,13 +1,13 @@
 from datasets import load_from_disk, concatenate_datasets
 from code.safety_model.constants.global_variables import DatasetFieldNames
 
-dataset_path_harmful = "data/raw/jbb-behaviors/harmful"
-dataset_path_benign = "data/raw/jbb-behaviors/benign"
+dataset_path_harmful = "data/safety/raw/jbb-behaviors/harmful"
+dataset_path_benign = "data/safety/raw/jbb-behaviors/benign"
 
 dataset_harmful = load_from_disk(dataset_path_harmful)
 dataset_benign = load_from_disk(dataset_path_benign)
 
-output_path = "data/processed/benchmark/jbb-behaviors"
+output_path = "data/safety/processed/benchmark/jbb-behaviors"
 
 print("dataset_harmful[0]:", dataset_harmful[0])
 print("dataset_benign[0]:", dataset_benign[0])

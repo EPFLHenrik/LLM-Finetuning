@@ -149,39 +149,55 @@ Expected artifact:
 Generate preference pairs from the SFT model outputs. Run each block in order.
 
 ```
-python -m code.safety_model.preprocessing.dpo.pair_creation \
+python -m code.safety_model.preprocessing.dpo.pair_generation \
     --checkpoint checkpoints/safety_model/sft/hf_model \
-    --dataset_path data/safety/processed/sft/wildguardmix/binary_choice \
-    --output_path data/safety/processed/dpo/wildguardmix/binary_choice \
+    --dataset_path data/safety/processed/sft/wildguardmix/binary_choice/train \
+    --output_path data/safety/processed/dpo/wildguardmix/binary_choice/train \
     --start_index 3000 \
-    --end_index 6000
+    --end_index 6000 && \
+
+cp -r \
+    data/safety/processed/sft/wildguardmix/binary_choice/test \
+    data/safety/processed/dpo/wildguardmix/binary_choice/
 ```
 
 ```
-python -m code.safety_model.preprocessing.dpo.pair_creation \
+python -m code.safety_model.preprocessing.dpo.pair_generation \
     --checkpoint checkpoints/safety_model/sft/hf_model \
-    --dataset_path data/safety/processed/sft/wildguardmix/subcategory_classification \
-    --output_path data/safety/processed/dpo/wildguardmix/subcategory_classification \
+    --dataset_path data/safety/processed/sft/wildguardmix/subcategory_classification/train \
+    --output_path data/safety/processed/dpo/wildguardmix/subcategory_classification/train \
     --start_index 5000 \
-    --end_index 10000
+    --end_index 10000 && \
+
+cp -r \
+    data/safety/processed/sft/wildguardmix/subcategory_classification/test \
+    data/safety/processed/dpo/wildguardmix/subcategory_classification/
 ```
 
 ```
-python -m code.safety_model.preprocessing.dpo.pair_creation \
+python -m code.safety_model.preprocessing.dpo.pair_generation \
     --checkpoint checkpoints/safety_model/sft/hf_model \
-    --dataset_path data/safety/processed/sft/wildguardmix/safety_combo \
-    --output_path data/safety/processed/dpo/wildguardmix/safety_combo \
+    --dataset_path data/safety/processed/sft/wildguardmix/safety_combo/train \
+    --output_path data/safety/processed/dpo/wildguardmix/safety_combo/train \
     --start_index 5000 \
-    --end_index 10000
+    --end_index 10000 && \
+
+cp -r \
+    data/safety/processed/sft/wildguardmix/safety_combo/test \
+    data/safety/processed/dpo/wildguardmix/safety_combo/
 ```
 
 ```
-python -m code.safety_model.preprocessing.dpo.pair_creation \
+python -m code.safety_model.preprocessing.dpo.pair_generation \
     --checkpoint checkpoints/safety_model/sft/hf_model \
-    --dataset_path data/safety/processed/sft/safetybench \
-    --output_path data/safety/processed/dpo/safetybench \
+    --dataset_path data/safety/processed/sft/safetybench/train \
+    --output_path data/safety/processed/dpo/safetybench/train \
     --start_index 0 \
-    --end_index 10000
+    --end_index 10000 && \
+
+cp -r \
+    data/safety/processed/sft/safetybench/test \
+    data/safety/processed/dpo/safetybench/
 ```
 
 ## 6. DPO training
@@ -207,5 +223,12 @@ Expected artifact:
 - `checkpoints/safety_model/dpo`
 
 
+## 7. Benchmarking
+To evaluate any checkpoint on the safety benchmarks, run the following command:
 
+`python -m code.safety_model.benchmark --name <my-model-name> --benchmark <benchmark_name> --checkpoint <checkpoint_dir>`
 
+replace `--benchmark <...>` with `--run_all` to run all benchmarks present in data/safety/processed/benchmark/.
+
+Example:
+`python -m code.safety_model.benchmark --name <my-model-name> --benchmark <benchmark_name> --checkpoint <checkpoint_dir>`
