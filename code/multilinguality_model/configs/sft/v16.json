@@ -1,0 +1,185 @@
+{
+  "output_name": "v16",
+  "notes": "Non-thinking answer-only SFT run. Target around 3k train examples per language after mixed balancing, around 15k total. Assistant targets are boxed answers only, with no manually added <think> tags; any empty thinking tokens should come only from the tokenizer/chat template if applicable. Keep all INCLUDE and Global PIQA in the pool. Use a considerable amount of Global MMLU for all languages. Use around 1.5k local/regional benchmark-style examples from CEval for Chinese, MILU for Hindi, and MERA for Russian. For Italian and Spanish, include a small amount of HeadQA and Exams, plus capped generated legal/administrative data: Polizia di Stato, Quaderno Prefettizia, Quaderno Economia Politica, Italian Civil Code, and Spain BOE legislation. Benchmark source_ids from benchmark_all.jsonl must be filtered out before train/val writing.",
+  "mode": "non_thinking",
+
+  "non_thinking_style": "boxed_only",
+
+  "enable_test_split": false,
+
+  "max_per_language": 6000,
+  "max_per_dataset": 20000,
+  "max_per_language_mixed": 3000,
+  "max_per_language_mixed_val": 300,
+
+  "benchmark_path": "data/multilinguality/benchmarks/benchmark_all.jsonl",
+
+  "dataset_registry": {
+    "include": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"],
+      "loader": "include",
+      "mode": "as_is",
+      "max_per_language": 3000,
+      "max_per_dataset": 15000,
+      "split_caps": {
+        "val": 500,
+        "test": 0
+      }
+    },
+
+    "global_piqa": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"],
+      "loader": "global_piqa",
+      "mode": "as_is",
+      "max_per_language": 1500,
+      "max_per_dataset": 7500,
+      "split_caps": {
+        "val": 300,
+        "test": 0
+      }
+    },
+
+    "global_mmlu": {
+      "languages": ["russian", "chinese", "hindi", "italian", "spanish"],
+      "loader": "global_mmlu",
+      "language_caps": {
+        "russian": 2200,
+        "chinese": 2200,
+        "hindi": 2200,
+        "italian": 2200,
+        "spanish": 2200
+      },
+      "max_per_dataset": 11000,
+      "split_caps": {
+        "val": 800,
+        "test": 0
+      }
+    },
+
+    "ceval": {
+      "languages": ["chinese"],
+      "loader": "ceval",
+      "language_caps": {
+        "chinese": 1500
+      },
+      "max_per_dataset": 1500,
+      "split_caps": {
+        "val": 300,
+        "test": 0
+      }
+    },
+
+    "milu": {
+      "languages": ["hindi"],
+      "loader": "milu",
+      "max_per_language": 1500,
+      "max_per_dataset": 1500,
+      "split_caps": {
+        "val": 300,
+        "test": 0
+      }
+    },
+
+    "mera": {
+      "languages": ["russian"],
+      "loader": "mera",
+      "max_per_language": 1500,
+      "max_per_dataset": 1500,
+      "stratify_by": "subset",
+      "subject_caps": {
+        "mamuramu": 285,
+        "ruopenbookqa": 600,
+        "ruworldtree": 300,
+        "mathlogicqa": 315,
+        "parus": 0,
+        "use": 0,
+        "rcb": 0,
+        "rwsd": 0
+      },
+      "split_caps": {
+        "val": 400,
+        "test": 0
+      }
+    },
+
+    "head_qa": {
+      "languages": ["spanish", "italian"],
+      "loader": "head_qa",
+      "language_caps": {
+        "spanish": 500,
+        "italian": 400
+      },
+      "max_per_dataset": 900,
+      "split_caps": {
+        "val": 100,
+        "test": 0
+      }
+    },
+
+    "exams": {
+      "languages": ["italian", "spanish"],
+      "loader": "exams",
+      "max_per_language": 500,
+      "max_per_dataset": 1000,
+      "split_caps": {
+        "val": 100,
+        "test": 0
+      }
+    },
+
+    "polizia_di_stato_clean": {
+      "languages": ["italian"],
+      "loader": "polizia_di_stato",
+      "max_per_language": 250,
+      "max_per_dataset": 250,
+      "split_caps": {
+        "val": 50,
+        "test": 0
+      }
+    },
+
+    "quaderno_prefettizia_clean": {
+      "languages": ["italian"],
+      "loader": "quaderno_prefettizia",
+      "max_per_language": 400,
+      "max_per_dataset": 400,
+      "split_caps": {
+        "val": 60,
+        "test": 0
+      }
+    },
+
+    "quaderno_prefettizia_economia_politica_clean": {
+      "languages": ["italian"],
+      "loader": "quaderno_prefettizia_economia_politica",
+      "max_per_language": 250,
+      "max_per_dataset": 250,
+      "split_caps": {
+        "val": 50,
+        "test": 0
+      }
+    },
+
+    "italian_civil_code": {
+      "languages": ["italian"],
+      "loader": "italian_civil_code",
+      "max_per_language": 400,
+      "max_per_dataset": 400,
+      "split_caps": {
+        "val": 60,
+        "test": 0
+      }
+    },
+
+    "spain_boe_legislation": {
+      "languages": ["spanish"],
+      "loader": "spain_boe_legislation",
+      "max_per_language": 700,
+      "max_per_dataset": 700,
+      "split_caps": {
+        "val": 80,
+        "test": 0
+      }
+    }
+  }
+}

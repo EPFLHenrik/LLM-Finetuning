@@ -1,0 +1,103 @@
+{
+  "output_name": "v10",
+  "notes": "added distilled examples in the val set, to not have an OOD val set",
+  "distilled_dirs": [
+    "data/multilinguality/distilled"
+  ],
+  "invalid_distilled_policy": "raw_train",
+  "distilled_val_fraction": 0.2,
+  "max_per_language": 4000,
+  "max_per_dataset": 10000,
+  "max_per_language_mixed": 5000,
+  "dataset_registry": {
+    "include": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"],
+      "mode": "as_is",
+      "split_caps": {"val": 800}
+    },
+
+    "global_piqa": {
+      "languages": null,
+      "mode": "recarve",
+      "split_caps": {"train": 0, "val": null, "test": null},
+      "max_per_dataset": 0
+    },
+
+    "mgsm": {
+      "languages": null,
+      "max_per_language": 100,
+      "max_per_dataset": 500,
+      "split_caps": {"val": 100}
+    },
+
+    "milu": {
+      "languages": ["hindi"],
+      "language_caps": {"hindi": 4000},
+      "max_per_language": 4000,
+      "max_per_dataset": 4000,
+      "split_caps": {"val": 500}
+    },
+
+    "ceval": {
+      "languages": ["chinese"],
+      "language_caps": {"chinese": 4000},
+      "max_per_language": 4000,
+      "max_per_dataset": 4000,
+      "split_caps": {"val": 500}
+    },
+
+    "cultsportqa": {
+      "languages": ["chinese", "hindi"],
+      "max_per_language": 1500,
+      "max_per_dataset": 3000,
+      "split_caps": {"val": 600}
+    },
+
+    "belebele": {
+      "languages": null,
+      "max_per_language": 300,
+      "max_per_dataset": 1500,
+      "split_caps": {"val": 100}
+    },
+
+    "exams": {
+      "languages": ["italian", "spanish"],
+      "split_caps": {"val": 300}
+    },
+
+    "head_qa": {
+      "languages": ["spanish", "italian"],
+      "language_caps": {"spanish": 1300, "italian": 1300},
+      "max_per_dataset": 2600,
+      "split_caps": {"val": 600}
+    },
+
+    "mera": {
+      "languages": ["russian"],
+      "max_per_language": 3000,
+      "max_per_dataset": 3000,
+      "stratify_by": "subset",
+      "subject_caps": {
+        "mamuramu": 285,
+        "ruopenbookqa": 600,
+        "ruworldtree": 115,
+        "mathlogicqa": 300,
+        "parus": 0
+      },
+      "split_caps": {"val": 200}
+    },
+
+    "global_mmlu": {
+      "languages": ["russian", "chinese", "hindi", "italian", "spanish"],
+      "language_caps": {
+        "russian": 3000,
+        "chinese": 1000,
+        "hindi": 1000,
+        "italian": 3000,
+        "spanish": 3000
+      },
+      "max_per_dataset": 6000,
+      "split_caps": {"val": 800}
+    }
+  }
+}

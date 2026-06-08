@@ -1,0 +1,77 @@
+{
+  "output_name": "v20-russian",
+  "notes": "Russian-only non-thinking SFT for language-specialist adapter merge experiment. Target 10k train examples. Uses MERA and RuBQ as main regional/native sources, plus Global MMLU and MMLU-ProX as general anchors. Benchmark filtering uses the full benchmarks/ directory.",
+  "mode": "non_thinking",
+  "non_thinking_style": "boxed_only",
+  "enable_test_split": false,
+
+  "max_per_language": 10000,
+  "max_per_dataset": 30000,
+  "max_per_language_mixed": 10500,
+  "max_per_language_mixed_val": 800,
+
+  "benchmark_path": "data/multilinguality/benchmarks",
+
+  "dataset_registry": {
+    "include": {
+      "languages": ["russian"],
+      "loader": "include",
+      "mode": "as_is",
+      "max_per_language": 800,
+      "max_per_dataset": 800,
+      "split_caps": { "val": 100, "test": 0 }
+    },
+
+    "global_piqa": {
+      "languages": ["russian"],
+      "loader": "global_piqa",
+      "mode": "as_is",
+      "max_per_language": 200,
+      "max_per_dataset": 200,
+      "split_caps": { "val": 40, "test": 0 }
+    },
+
+    "global_mmlu": {
+      "languages": ["russian"],
+      "loader": "global_mmlu",
+      "max_per_language": 3000,
+      "max_per_dataset": 3000,
+      "split_caps": { "val": 200, "test": 0 }
+    },
+
+    "mmlu_prox": {
+      "languages": ["russian"],
+      "loader": "mmlu_prox",
+      "max_per_language": 3000,
+      "max_per_dataset": 3000,
+      "split_caps": { "val": 200, "test": 0 }
+    },
+
+    "mera": {
+      "languages": ["russian"],
+      "loader": "mera",
+      "max_per_language": 4000,
+      "max_per_dataset": 4000,
+      "stratify_by": "subset",
+      "subject_caps": {
+        "mamuramu": 285,
+        "ruopenbookqa": 1200,
+        "ruworldtree": 115,
+        "mathlogicqa": 600,
+        "parus": 400,
+        "use": 0,
+        "rcb": 0,
+        "rwsd": 0
+      },
+      "split_caps": { "val": 150, "test": 0 }
+    },
+
+    "rubq": {
+      "languages": ["russian"],
+      "loader": "rubq",
+      "max_per_language": 1000,
+      "max_per_dataset": 1000,
+      "split_caps": { "val": 100, "test": 0 }
+    }
+  }
+}

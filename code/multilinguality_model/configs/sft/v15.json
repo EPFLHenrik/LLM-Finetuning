@@ -1,0 +1,197 @@
+{
+  "output_name": "v15",
+  "notes": "Medium-large clean run after v14 underfit. Target around 5k train examples per language after mixed balancing, around 25k total. Keep all INCLUDE and Global PIQA in the pool. Increase Global MMLU substantially for all languages, with extra Spanish. Use substantial CEval/MILU/MERA for Chinese/Hindi/Russian. For Italian and Spanish, include stronger regional/legal data. Assumes gold_fallback examples have been removed or quarantined before building.",
+  "distilled_dirs": [
+    "data/multilinguality/distilled/v2_fallback/sft_1"
+  ],
+  "distilled_val_fraction": 0.15,
+  "max_per_language": 20000,
+  "max_per_dataset": 30000,
+  "max_per_language_mixed": 5000,
+  "train_block_shuffle": true,
+  "train_block_size": 16,
+
+  "dataset_registry": {
+    "include": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"],
+      "split_caps": {
+        "val": 200
+      }
+    },
+
+    "global_piqa": {
+      "languages": null,
+      "split_caps": {
+        "val": 200
+      }
+    },
+
+    "spain_boe_constitucion_espanola": {
+      "languages": ["spanish"]
+    },
+
+    "spain_boe_estatuto_andalucia": {
+      "languages": ["spanish"]
+    },
+
+    "spain_boe_estatuto_cataluna": {
+      "languages": ["spanish"]
+    },
+
+    "spain_boe_estatuto_canarias": {
+      "languages": ["spanish"]
+    },
+
+    "spain_boe_estatuto_comunitat_valenciana": {
+      "languages": ["spanish"]
+    },
+
+    "spain_boe_estatuto_galicia": {
+      "languages": ["spanish"]
+    },
+
+    "spain_boe_estatuto_madrid": {
+      "languages": ["spanish"]
+    },
+
+    "global_mmlu": {
+      "languages": ["russian", "chinese", "hindi", "italian", "spanish"],
+      "language_caps": {
+        "russian": 2200,
+        "chinese": 2200,
+        "hindi": 2200,
+        "italian": 3000,
+        "spanish": 3000
+      },
+      "max_per_dataset": 15000,
+      "split_caps": {
+        "val": 500
+      }
+    },
+
+    "ceval": {
+      "languages": ["chinese"],
+      "language_caps": {
+        "chinese": 2200
+      },
+      "max_per_dataset": 2200,
+      "split_caps": {
+        "val": 200
+      }
+    },
+
+    "milu": {
+      "languages": ["hindi"],
+      "language_caps": {
+        "hindi": 2200
+      },
+      "max_per_dataset": 2200,
+      "split_caps": {
+        "val": 200
+      }
+    },
+
+    "mera": {
+      "languages": ["russian"],
+      "language_caps": {
+        "russian": 2200
+      },
+      "max_per_dataset": 2200,
+      "split_caps": {
+        "val": 200
+      }
+    },
+
+    "italian_civil_code": {
+      "languages": ["italian"],
+      "language_caps": {
+        "italian": 1500
+      },
+      "max_per_dataset": 1500,
+      "split_caps": {
+        "val": 120
+      }
+    },
+
+    "quaderno_prefettizia_clean": {
+      "languages": ["italian"],
+      "language_caps": {
+        "italian": 1000
+      },
+      "max_per_dataset": 1000,
+      "split_caps": {
+        "val": 100
+      }
+    },
+
+    "quaderno_prefettizia_economia_politica_clean": {
+      "languages": ["italian"],
+      "language_caps": {
+        "italian": 400
+      },
+      "max_per_dataset": 400,
+      "split_caps": {
+        "val": 60
+      }
+    },
+
+    "polizia_di_stato_clean": {
+      "languages": ["italian"],
+      "language_caps": {
+        "italian": 400
+      },
+      "max_per_dataset": 400,
+      "split_caps": {
+        "val": 60
+      }
+    },
+
+    "mgsm": {
+      "languages": null,
+      "max_per_dataset": 0,
+      "split_caps": {
+        "val": 0,
+        "test": 0
+      }
+    },
+
+    "cultsportqa": {
+      "languages": ["chinese", "hindi"],
+      "language_caps": {
+        "chinese": 400,
+        "hindi": 400
+      },
+      "max_per_dataset": 800,
+      "split_caps": {
+        "val": 80,
+        "test": 0
+      }
+    },
+
+    "exams": {
+      "languages": ["italian", "spanish"],
+      "language_caps": {
+        "italian": 300,
+        "spanish": 400
+      },
+      "max_per_dataset": 700,
+      "split_caps": {
+        "val": 60,
+        "test": 0
+      }
+    },
+
+    "head_qa": {
+      "languages": ["spanish", "italian"],
+      "language_caps": {
+        "spanish": 400,
+        "italian": 200
+      },
+      "max_per_dataset": 600,
+      "split_caps": {
+        "val": 60,
+        "test": 0
+      }
+    }
+  }
+}

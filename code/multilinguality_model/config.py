@@ -1,0 +1,102 @@
+"""multilingual/config.py"""
+from pathlib import Path
+
+# REPO = get_repo_root()
+REPO = Path(__file__).resolve().parents[1]
+DEFAULT_MODEL_NAME = "Qwen/Qwen3-1.7B"
+SFT_DATA_DIR = REPO / "multilingual" / "data" / "sft"
+TARGET_LANGUAGES = {
+    "russian": {"include_config": "Russian",  "mgsm_configs": ["ru"]},
+    "chinese": {"include_config": "Chinese",  "mgsm_configs": ["zh"]},
+    "italian": {"include_config": "Italian",  "mgsm_configs": []},
+    "spanish": {"include_config": "Spanish",  "mgsm_configs": ["es"]},
+    "hindi":   {"include_config": "Hindi",    "mgsm_configs": []},
+    "english": {"include_config": None,       "mgsm_configs": ["en"]},
+}
+
+LETTERS = [chr(ord("A") + i) for i in range(26)]
+MCQ_LETTERS = ["A", "B", "C", "D"]
+
+# Only the system prompt is under our control during official CI eval.
+# The user turn is the raw question, unmodified.
+
+SYSTEM_PROMPT_GROUP = """\
+You are a careful reasoning assistant.
+ 
+Reason through the problem when needed.
+ 
+Your final answer must appear exactly once inside \\boxed{...}.
+ 
+Rules:
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- For math questions, output only the final answer inside \\boxed{...}.
+- Do not include explanations or extra text inside the box.
+- Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+ 
+Examples:
+\\boxed{B}
+\\boxed{42}"""
+
+
+SYSTEM_PROMPT = """\
+You are a knowledgeable multilingual assistant with expertise across all domains including regional knowledge, science, math, history, law, and culture. You will be given a multiple-choice question in any language.
+Think briefly, in the language of the question, drawing on your regional and cultural knowledge to identify the correct answer.
+
+Rules:
+- Your final answer must appear exactly once inside \boxed{...}.
+- Do not include explanations or extra text inside the box.
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- For math questions, output only the final answer inside \\boxed{...}.
+- Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+
+Example:
+\\boxed{B}
+\\boxed{42}"""
+
+
+
+SYSTEM_PROMPT_NON_THINKING = """\
+You are a knowledgeable multilingual multiple-choice question answering assistant. You will be given a multiple-choice question in any language.
+Choose exactly one option. Output only the final boxed answer in the format \\boxed{X}, where X is the chosen option letter.
+
+Rules:
+- Your response must contain exactly one boxed answer. Never leave the final answer unboxed.
+- Do not include anything before or after the boxed answer.
+- Do not explain. Do not include extra text inside the box.
+- For multiple-choice questions, output only the correct capital letter inside \\boxed{...}.
+- Never output multiple boxed answers.
+
+Example:
+\\boxed{B}"""
+
+
+SYSTEM_PROMPT_NON_THINKING_AUGMENTED = """\
+You are a knowledgeable multilingual multiple-choice question answering assistant with expertise across all domains, including regional knowledge, science, math, history, law, and culture. You will be given a question in any language.
+
+Most questions are MCQ. Questions may have a variable number of labeled options, up to 20 options, with labels from A through T. Choose exactly one option. Output only the final boxed answer in the format \\boxed{X}, where X is the chosen option letter.
+
+Rules:
+- For multiple-choice questions (MCQ), output only the correct capital letter inside \\boxed{...}. Do not include explanations. Do not include anything before or after the boxed answer.
+- The chosen MCQ letter must be one of the option labels shown in the question, from A through T.
+- For non-MCQ math questions, you may reason briefly before giving the final answer inside \\boxed{...}.
+- Your response must contain exactly one boxed answer. Never output multiple boxed answers.
+- Never leave the final answer unboxed.
+
+Examples:
+\\boxed{B}
+\\boxed{42}
+"""
+
+
+# Local token budgets. 3072 gives MCQ enough headroom for a short think
+# block without letting the model loop. CI uses 16384.
+DEFAULT_MAX_NEW_TOKENS_BY_TASK = {
+    "mcq":  4096,
+    "math": 4096,
+}
+
+# Used when no dedicated val split exists (e.g. INCLUDE, MGSM only have test).
+VAL_FRACTION = 0.15
+VAL_SEED = 42

@@ -1,0 +1,76 @@
+{
+  "output_name": "v12",
+  "notes": "100% distilled. 3-way split. 15k train, 3k/language cap. Prioritize culturally local datasets. Italian civil code included. No HEAD-QA Italian (translated). Max Spanish coverage.",
+  "distilled_dirs": [
+    "data/multilinguality/distilled/v2_fallback/sft_1"
+  ],
+  "distilled_val_fraction": 0.15,
+  "distilled_test_fraction": 0.05,
+  "max_per_language": 8000,
+  "max_per_dataset": 15000,
+  "max_per_language_mixed": 3000,
+
+  "dataset_registry": {
+    "include": {
+      "languages": ["italian", "spanish", "russian", "chinese", "hindi"]
+    },
+
+    "global_piqa": {
+      "languages": null,
+      "max_per_dataset": 2000
+    },
+
+    "italian_civil_code": {
+      "languages": ["italian"]
+    },
+
+    "milu": {
+      "languages": ["hindi"],
+      "language_caps": {"hindi": 8000},
+      "max_per_dataset": 8000,
+      "split_caps": {"val": 200, "test": 100}
+    },
+
+    "ceval": {
+      "languages": ["chinese"],
+      "language_caps": {"chinese": 7000},
+      "max_per_dataset": 7000,
+      "split_caps": {"val": 400, "test": 100}
+    },
+
+    "cultsportqa": {
+      "languages": ["chinese", "hindi"],
+      "max_per_language": 2000,
+      "max_per_dataset": 4000
+    },
+
+    "exams": {
+      "languages": ["italian", "spanish"]
+    },
+
+    "head_qa": {
+      "languages": ["spanish"],
+      "language_caps": {"spanish": 4830},
+      "max_per_dataset": 4830,
+      "split_caps": {"val": 300, "test": 200}
+    },
+
+    "mera": {
+      "languages": ["russian"],
+      "split_caps": {"val": 200, "test": 200}
+    },
+
+    "global_mmlu": {
+      "languages": ["russian", "chinese", "hindi", "italian", "spanish"],
+      "language_caps": {
+        "russian": 1000,
+        "chinese": 682,
+        "hindi":   661,
+        "italian": 1000,
+        "spanish": 2000
+      },
+      "max_per_dataset": 10000,
+      "split_caps": {"val": 400, "test": 200}
+    }
+  }
+}

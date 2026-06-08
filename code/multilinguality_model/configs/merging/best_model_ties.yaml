@@ -1,0 +1,23 @@
+merge_method: ties
+base_model: Qwen/Qwen3-1.7B
+models:
+  - model: Qwen/Qwen3-1.7B
+    parameters:
+      weight: 1.0
+      density: 0.5
+  - model: checkpoints/multilinguality_model/v1
+    parameters:
+      weight: 1.0
+      density: 0.5
+  - model: checkpoints/multilinguality_model/v20-russian
+    parameters:
+      weight: 1.0
+      density: 0.5
+  - model: checkpoints/multilinguality_model/v20-hindi
+    parameters:
+      weight: 1.0
+      density: 0.5
+dtype: bfloat16
+parameters:
+  normalize: true
+  int8_mask: true
