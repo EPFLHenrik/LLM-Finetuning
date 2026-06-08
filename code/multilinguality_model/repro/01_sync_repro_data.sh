@@ -38,7 +38,7 @@ def copy_tree(source_dir: Path, target_dir: Path) -> None:
         copied += 1
     print(f"{target_dir}: copied {copied} files")
 
-versions = ["v1", "v20-russian", "v20-hindi"]
+versions = ["v1", "v20-chinese", "v20-hindi", "v20-italian", "v20-russian", "v20-spanish"]
 patterns = [f"sft_data/{version}/**" for version in versions] + ["benchmarks/**"]
 
 snapshot = Path(
@@ -61,7 +61,7 @@ copy_tree(
 )
 PY
 
-for version in v1 v20-russian v20-hindi; do
+for version in v1 v20-chinese v20-hindi v20-italian v20-russian v20-spanish; do
   test -f "data/multilinguality/sft/${version}/train_mixed.jsonl"
   test -f "data/multilinguality/sft/${version}/val_mixed.jsonl"
 done

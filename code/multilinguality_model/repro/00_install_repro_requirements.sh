@@ -26,7 +26,7 @@ text = path.read_text(encoding="utf-8")
 if "import torch" not in text:
     text = "import torch\n" + text
 
-patch = '''
+patch = """
 try:
     ConfiguredModuleArchitecture.model_rebuild(
         force=True,
@@ -38,10 +38,10 @@ try:
     )
 except Exception as exc:
     print(f"[mergekit patch warning] {exc}")
-'''
+"""
 
 if "ConfiguredModuleArchitecture.model_rebuild(" not in text:
-    text = text.rstrip() + "\\n\\n" + patch + "\\n"
+    text = text.rstrip() + "\n\n" + patch + "\n"
 
 path.write_text(text, encoding="utf-8")
 print(f"patched {path}")

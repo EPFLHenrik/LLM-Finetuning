@@ -1,0 +1,17 @@
+{
+  "model_name": "checkpoints/multilinguality_model/best_model",
+  "val_file": "data/multilinguality/benchmarks/mmlu_prox/mmlu_prox_hard_1000.jsonl",
+  "provided_file": "/scratch/workspace/emma/standard-project-m3-mystery-machine/M2-archive/validation/multilingual.jsonl",
+  "output_dir": "runs/benchmark/results/multilinguality_model/best_model/mmlu_prox_hard",
+  "n": null,
+  "use_vllm": true,
+  "do_sample": false,
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "top_k": -1,
+  "tensor_parallel_size": 1,
+  "max_model_len": 8192,
+  "mcq_max_new_tokens": 4096,
+  "math_max_new_tokens": 4096,
+  "runtime_seconds": 24.995857771020383
+}

@@ -15,6 +15,7 @@ CONFIG="code/multilinguality_model/configs/merging/best_model_ties.yaml"
 RAW_DIR="checkpoints/multilinguality_model/best_model_raw"
 FINAL_DIR="checkpoints/multilinguality_model/best_model"
 CHAT_TEMPLATE="code/multilinguality_model/assets/chat_template_multilingual-nonthinking.jinja"
+GENERATION_CONFIG="code/multilinguality_model/assets/generation_config.json"
 
 for model_dir in \
   "checkpoints/multilinguality_model/v1" \
@@ -36,6 +37,11 @@ if [[ ! -f "${CHAT_TEMPLATE}" ]]; then
   exit 1
 fi
 
+if [[ ! -f "${GENERATION_CONFIG}" ]]; then
+  echo "Missing generation config: ${GENERATION_CONFIG}" >&2
+  exit 1
+fi
+
 echo "Merging models into temporary directory"
 rm -rf "${RAW_DIR}" "${FINAL_DIR}"
 mkdir -p "$(dirname "${RAW_DIR}")"
@@ -51,6 +57,7 @@ python -m multilinguality_model.train.export_full \
   --output_dir "${FINAL_DIR}" \
   --run_name best_model \
   --chat_template "${CHAT_TEMPLATE}" \
+  --generation_config "${GENERATION_CONFIG}" \
   --overwrite \
   --skip_model_load
 

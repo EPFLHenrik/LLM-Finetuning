@@ -1,7 +1,6 @@
 # Multilingual component
 
-This folder contains the multilingual dataset, training, and evaluation code used for the M3 submission.
-It focuses on reproducible data preparation, multilingual SFT training, merge workflows, and vLLM-based evaluation.
+This folder contains the multilingual dataset, training, and evaluation code used for the M3 submission. It focuses on reproducible data preparation, multilingual SFT training, merge workflows and vLLM-based evaluation.
 
 ## Overview
 
