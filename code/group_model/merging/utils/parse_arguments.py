@@ -25,6 +25,8 @@ def parse_merge_args():
         help="Optional weights. Defaults to uniform.",
     )
 
+    parser.add_argument("--density", type=float, default=0.8)
+
     parser.add_argument("--dtype", type=str, default="bfloat16")
 
     args = parser.parse_args()
