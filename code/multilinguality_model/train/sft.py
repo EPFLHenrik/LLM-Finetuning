@@ -21,8 +21,7 @@ sys.path.insert(0, str(REPO))
 
 from multilinguality_model.config import (
     REPO as MLREPO,
-    SYSTEM_PROMPT,
-    SYSTEM_PROMPT_GROUP,
+    SYSTEM_PROMPT_THINKING,
     SYSTEM_PROMPT_NON_THINKING,
     SYSTEM_PROMPT_NON_THINKING_AUGMENTED,
 )
@@ -64,10 +63,8 @@ def _load_jsonl(path: Path) -> Dataset:
 
 
 def _select_system_prompt(name: str) -> str:
-    if name == "individual":
-        return SYSTEM_PROMPT
-    if name == "group":
-        return SYSTEM_PROMPT_GROUP
+    if name == "thinking":
+        return SYSTEM_PROMPT_THINKING
     if name == "non_thinking":
         return SYSTEM_PROMPT_NON_THINKING
     if name == "non_thinking_augmented":
@@ -106,8 +103,8 @@ def parse_args():
     parser.add_argument(
         "--system_prompt",
         type=str,
-        default="individual",
-        choices=["individual", "group", "non_thinking", "non_thinking_augmented"],
+        default="non_thinking",
+        choices=["thinking", "non_thinking", "non_thinking_augmented"],
         help=(
             "System prompt variant. Ignored when --preserve_system_prompt is set."
         ),
