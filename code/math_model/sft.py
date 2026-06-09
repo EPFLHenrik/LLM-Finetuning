@@ -1,19 +1,6 @@
 """LoRA SFT for Qwen3-1.7B on math reasoning data.
 
-Run from the pod with the JSONL produced by `code.math_model.preprocessing.sft.build_corpus`:
-
-    python -m code.math_model.sft \\
-        --data /scratch/<user>/sft_data/openr1_math_5k.jsonl \\
-        --output /scratch/<user>/ckpt/math_sft_v1 \\
-        --epochs 2 \\
-        --lr 2e-4
-
-Saves a LoRA adapter every `--save-steps` (default 100), keeping ALL
-checkpoints so we can pick the best by held-out eval. Adapter only -- the
-base model isn't copied, so each checkpoint is ~50-100 MB.
-
-After training, merge + push the chosen checkpoint with:
-    python -m code.math_model.huggingface.push_checkpoint <ckpt-dir>
+Saves a LoRA adapter every `--save-steps` (default 100). Adapter only.
 """
 from __future__ import annotations
 

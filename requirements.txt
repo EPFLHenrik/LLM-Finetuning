@@ -25,3 +25,14 @@ pandas
 matplotlib
 seaborn
 vllm
+ms-swift>=3.0
+math-verify
+liger-kernel>=0.4
+bitsandbytes>=0.45
+vllm
+peft
+trl
+huggingface_hub>=0.24
+datasets>=2.0
+transformers
+flash-attn

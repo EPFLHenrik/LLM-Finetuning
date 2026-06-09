@@ -13,24 +13,6 @@ Two benchmark profiles are supported:
 
 Both profiles compute weighted pass@1 and pass@8 at the 16K final-grading
 budget via Math-Verify on `\\boxed{}` extraction.
-
-Usage (from the repo root):
-
-    # Default: broad profile, 16K budget, pass@8 (matches CI contract).
-    python -m code.math_model.benchmark \\
-        --name shipped \\
-        --checkpoint cs-552-2026-mystery-machine/math_model \\
-        --benchmark broad
-
-    # Full profile (slower, ~5h on a single A100):
-    python -m code.math_model.benchmark \\
-        --name shipped --checkpoint cs-552-2026-mystery-machine/math_model \\
-        --benchmark full
-
-    # Run both profiles back-to-back:
-    python -m code.math_model.benchmark \\
-        --name shipped --checkpoint cs-552-2026-mystery-machine/math_model \\
-        --run_all
 """
 from __future__ import annotations
 

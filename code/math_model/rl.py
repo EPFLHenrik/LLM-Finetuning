@@ -12,30 +12,7 @@ Two policy-optimisation objectives are supported via `--loss`:
           which is the TRL flag combination for GSPO.
 
   - cispo (token-level importance sampling with detached IS-weight clipping)
-          Same family as GRPO; used in the original 55% CI baseline run.
-
-Usage (from the repo root):
-
-    # Phase 1: from the SFT-merged checkpoint, base-filtered learnability pool.
-    python -m code.math_model.rl \\
-        --model    /scratch/<user>/ckpt/qwen3_1.7b_sft600_merged \\
-        --dataset  /scratch/<user>/rl_data/deepscaler_filtered.jsonl \\
-        --output   /scratch/<user>/ckpt/math_rl_phase1 \\
-        --steps 500
-
-    # Phase 2: from the phase-1-merged checkpoint, policy-refiltered pool.
-    python -m code.math_model.rl \\
-        --model    /scratch/<user>/ckpt/math_rl_phase1_merged \\
-        --dataset  /scratch/<user>/rl_data/deepscaler_filtered_phase1.jsonl \\
-        --output   /scratch/<user>/ckpt/math_rl_phase2 \\
-        --steps 800
-
-After each phase, merge the LoRA into the base before continuing:
-
-    python -m code.math_model.huggingface.push_checkpoint \\
-        /scratch/<user>/ckpt/math_rl_phase1/checkpoint-500 \\
-        --local-out /scratch/<user>/ckpt/math_rl_phase1_merged \\
-        --skip-vllm-check
+          Same family as GRPO.
 """
 from __future__ import annotations
 
@@ -73,7 +50,7 @@ def main() -> None:
                     help="Policy-optimisation objective. gspo (default, shipped) "
                          "uses sequence-level IS; cispo uses token-level IS "
                          "with detached-weight clipping (matches the original "
-                         "55% CI baseline).")
+                         "55%% CI baseline).")
     ap.add_argument("--eps-high", type=float, default=5.0,
                     help="CISPO clip threshold. Ignored when --loss=gspo.")
 
