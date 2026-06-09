@@ -20,7 +20,7 @@ case "${MODEL_KEY}" in
   v1)
     SFT_VERSION="v1"
     RUN_NAME="v1"
-    EPOCHS=1
+    EPOCHS=2
     LR="2e-4"
     BATCH_SIZE=1
     GRAD_ACCUM=16
