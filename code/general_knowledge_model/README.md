@@ -26,7 +26,6 @@ Scripts that convert raw dataset formats into the `prompt`/`answer` JSONL schema
 | `preprocess_cais_mmlu.py` | Converts cais/mmlu test splits to `prompt`/`answer` JSONL; maps numeric answer indices to letters. |
 | `preprocess_hf.py` | Generic HuggingFace dataset preprocessor: builds prompts from configurable question/choice/answer field names. |
 | `preprocess_math_mcq.py` | Converts MATH `train.jsonl` into 4-choice MCQ format; extracts the gold `\boxed{}` answer and generates type-appropriate distractors. |
-| `preprocess_mcq_chat.py` | Converts flat MCQ JSONL into chat-style JSONL (system / user / assistant) with the gold answer boxed in the assistant turn. |
 | `preprocess_mmlu_auxiliary_train.py` | Preprocesses MMLU `auxiliary_train` into `prompt`/`answer` JSONL; handles both index-based and letter-based answer formats. |
 | `preprocess_mmlu_pro_test.py` | Preprocesses MMLU-Pro test JSONL into `prompt`/`answer` format with lettered options appended. |
 | `preprocess_scienceqa.py` | Preprocesses ScienceQA train split; drops image-based rows, formats choices, and converts the answer to a letter. |
@@ -53,6 +52,8 @@ Utilities for data management, model setup, filtering, evaluation, and deploymen
 | `setup_baseline.py` | Downloads and configures a baseline checkpoint (default: `Qwen/Qwen3-1.7B`); patches the system message and chat template. |
 | `summarize_benchmarks.py` | Aggregates per-benchmark `evaluation_summary.json` files into a single JSONL summary. |
 | `task_field_distribution.py` | Prints the value distribution of a field (default: `task`) in a JSONL dataset; useful for inspecting data before preprocessing. |
+| `build_dpo_dataset.py` | Builds DPO training pairs from student run files and teacher distillation data; pairs each prompt where the student was wrong with the teacher's correct completion as chosen and the student's wrong completion as rejected. |
+| `merge_lora.py` | Merges a LoRA adapter into a base model by applying weights manually (W_new = W + scaling × B @ A) without requiring bitsandbytes/CUDA; saves the merged model to disk. |
 
 
 ---
@@ -68,7 +69,7 @@ Core training and inference scripts.
 | `lora_post_train.py` | LoRA SFT training with TRL's `SFTTrainer` on chat-formatted JSONL (produced by the `preprocess_*_chat.py` scripts). |
 | `merge_reasoning_from_student_teacher.py` | Joins two JSONL files (student and teacher runs) on matching prompt+answer pairs and outputs chat-style rows. |
 | `resample_wrong_answers.py` | Re-runs vLLM inference only on rows with `correct == false` and rescores them; correct rows pass through unchanged. |
-| `swissai.py` | Async batch inference against the Swiss AI API (`Qwen/Qwen3.5-27B`); two-pass per dataset — initial run then retry wrong answers — writing `swissai_merged.jsonl` per dataset folder. |
+| `dpo_train.py` | DPO training on `(prompt, chosen, rejected)` pairs using TRL's `DPOTrainer`; supports LoRA and W&B logging. Input produced by `scripts/build_dpo_dataset.py`. |
 
 ---
 
@@ -83,4 +84,7 @@ End-to-end pipeline scripts. Run them in numbered order from any working directo
 | `2_distill_all.sh` | For each preprocessed train dataset, runs the student and teacher models via `generate_answers.py`, resamples wrong answers with `resample_wrong_answers.py`, and merges the corrected outputs with `merge_reasoning_from_student_teacher.py`. Appends merged rows to `data/preprocessing/merged_distillations.jsonl` and logs per-dataset accuracy stats. Requires `HF_TOKEN`. |
 | `3_sft.sh` | LoRA SFT on `data/preprocessing/merged_distillations.jsonl` using the base student model; saves a merged checkpoint to `models/full_sft`. Requires `WANDB_API_KEY`. |
 | `4_prepare_grpo.sh` | Runs three seeded inference passes over `data/preprocessing/full_train.jsonl` using `models/full_sft`, then filters to the partial-success zone (correct 1–2 out of 3 times) via `filter_partial_success.py`, writing `data/preprocessing/grpo_runs/partial_success.jsonl`. Requires `HF_TOKEN`. |
-| `5_run_grpo.sh` | GRPO fine-tuning on `data/preprocessing/grpo_runs/partial_success.jsonl` starting from `models/full_sft`; saves the final model to `models/full_math_grpo`. |
+| `5_run_grpo.sh` | GRPO fine-tuning on `data/preprocessing/grpo_runs/partial_success.jsonl` starting from `models/full_sft`; saves the final model to `models/sft_grpo`. |
+| `6_prepare_dpo.sh` | Builds DPO training pairs via `scripts/build_dpo_dataset.py` using the three GRPO run files and `data/preprocessing/merged_distillations.jsonl` as the teacher source; writes `data/preprocessing/dpo_pairs.jsonl`. |
+| `7_run_gpo.sh` | DPO fine-tuning on `data/preprocessing/dpo_pairs.jsonl` starting from `models/sft_grpo`; saves the final model to `models/sft_grpo_dpo`. Requires `WANDB_API_KEY`. |
+| `8_run_all_benchmark_evals.sh` | Evaluates `models/full_math_grpo` against all preprocessed benchmark splits under `data/preprocessing/benchmarks/`; writes per-benchmark JSON reports to `results/full_math_grpo/benchmarks/` and a combined summary to `results/full_math_grpo/benchmarks/benchmark_summary.json`. |

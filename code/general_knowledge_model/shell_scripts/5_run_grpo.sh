@@ -11,7 +11,7 @@ PREPROCESSING_DIR="$DATA_DIR/preprocessing"
 python "$TRAINING_DIR/grpo_train.py" \
   --model-folder "$PROJECT_DIR/models/full_sft" \
   --dataset-file "$PREPROCESSING_DIR/grpo_runs/partial_success.jsonl" \
-  --output-dir "$PROJECT_DIR/models/full_math_grpo" \
+  --output-dir "$PROJECT_DIR/models/sft_grpo" \
   --use-lora \
   --overwrite-output \
   --save-strategy steps \
