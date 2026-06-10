@@ -342,6 +342,44 @@ python -m code.math_model.evaluation.run_benchmark \
     --benchmark broad
 ```
 
+## Results
+
+Evaluated on the `broad` profile at the 16K budget with `n = 8` (pass@8). The raw
+evaluator outputs for every stage below are committed under
+[results/eval/](results/eval/) (see its [README](results/eval/README.md) for the
+file-to-checkpoint mapping).
+
+**Lineage (weighted over the broad subsets):**
+
+| Stage | weighted pass@1 | weighted pass@8 | MATH-500 (L1–5) pass@8 |
+|---|---|---|---|
+| Base Qwen3-1.7B | 0.490 | 0.655 | 0.810 |
+| + SFT (checkpoint-600) | 0.424 | 0.625 | 0.890 |
+| + GSPO phase 1 | 0.417 | 0.645 | 0.940 |
+| + GSPO phase 2 (**final**) | 0.419 | **0.684** | 0.910 |
+
+**Per-subset, base vs. final (pass@1 / pass@8):**
+
+| Subset | n | Base | Final |
+|---|---|---|---|
+| MATH-500 (L1–5) | 100 | 0.757 / 0.810 | 0.771 / 0.910 |
+| MATH-500 (L5)   | 80  | 0.583 / 0.688 | 0.531 / 0.800 |
+| AIME 2024       | 30  | 0.346 / 0.633 | 0.242 / 0.667 |
+| AIME 2025       | 30  | 0.325 / 0.500 | 0.212 / 0.433 |
+| GSM8K           | 50  | 0.912 / 0.940 | 0.853 / 0.960 |
+| **Weighted**    |     | **0.490 / 0.655** | **0.419 / 0.684** |
+
+The two-stage recipe lifts the headline weighted **pass@8 from 0.655 to 0.684**.
+SFT enforces the `\boxed{}` format and raises pass@8 on the easier and
+mid-difficulty subsets (MATH-500 L1–5 pass@8 0.810 → 0.890), but trades down
+pass@1 on the hardest competition sets — a coverage/confidence trade-off in which
+diverse sampling (pass@8) benefits more than greedy-style pass@1. GSPO phase 1
+sharpens mid-difficulty pass@8 (MATH-500 L1–5 → 0.940) yet leaves AIME coverage
+flat; re-filtering the RL pool against the phase-1 policy and running the second
+GSPO phase recovers AIME pass@8 (AIME 2024 0.533 → 0.667) and gives the best
+weighted pass@8 (0.684) — the shipped checkpoint. (The format alignment from SFT
+is also what drives the large gain on the external 4K-budget pass@1 metric.)
+
 ## Outputs
 
 **Checkpoints** (under `checkpoints/math_model/`):
@@ -352,6 +390,8 @@ python -m code.math_model.evaluation.run_benchmark \
 **Metrics** (written by the evaluator):
 - `code/math_model/results/eval/<model>_<budget>_<profile>_think-<on|off>_n-<n>.json`
   — full per-subset and per-problem results, including the weighted aggregate.
+  The committed lineage artifacts in [results/eval/](results/eval/) follow this
+  schema.
 - `code/math_model/RUNS.md` — one summary row appended per evaluation run.
 
 **Released artifacts** (Hugging Face):
