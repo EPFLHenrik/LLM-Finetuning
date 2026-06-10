@@ -28,10 +28,3 @@ For the models, as in the M2 release, we require your models in the following **
 | `cs-552-2026-<your-org>/multilingual_model` | one teammate | multilinguality |
 
 `M2-archive` contains the template repository from the M2 release in case you need to refer back to any of its content.
-
-## Specific READMEs
-- Safety Model: [README.md](code/safety_model/README.md)
-- Multilinguality Model: [README.md](code/multilinguality_model/README.md)
-- Math Model: [README.md](code/math_model/README.md)
-- General Knowledge Model: [README.md](code/general_knowledge_model/README.md)
-- Group Model: [README.md](code/group_model/README.md)
