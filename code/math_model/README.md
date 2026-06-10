@@ -150,7 +150,7 @@ python -m code.math_model.sft \
     --max-length 8192
 ```
 
-Trains LoRA `r=32, α=64` on all linear projections in bf16 with Flash-Attention 2
+Trains LoRA `r=16, α=32` on all linear projections in bf16 with Flash-Attention 2
 + gradient checkpointing. The adapter is saved every 200 steps; `checkpoint-600`
 (the lowest-step plateau) is used as the RL starting point.
 
