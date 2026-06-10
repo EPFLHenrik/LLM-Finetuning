@@ -46,54 +46,63 @@ This script performs:
 - `repro/05_eval_best_model.sh` — evaluate the merged model.
 - `repro/requirements.txt` — reproduction-specific Python dependencies.
 
-## Current dataset coverage
+## Data and Hugging Face storage
 
-This package supports the following multilingual datasets and source categories:
+No dataset files are committed to this repository. The `data/` folder is git-ignored and will be empty on a fresh clone. All data artifacts live on the Hugging Face dataset repo:
 
-- `include`
-- `mgsm`
-- `global_mmlu`
-- `global_piqa`
-- `ceval`
-- `cmmlu`
-- `milu`
-- `mera`
-- `head_qa`
-- `polizia_di_stato`
-- `quaderno_prefettizia`
-- `spain_boe_legislation`
-- `italian_civil_code`
-- `rubq`
-- `demre`
-- `exams`
-- `mmlu_prox`
-- `belebele`
+**[`cs-552-2026-mystery-machine/multilingual`](https://huggingface.co/datasets/cs-552-2026-mystery-machine/multilingual)**
 
-The pipeline uses processed JSONL files under `data/multilinguality/` and can fetch raw, processed, and distilled artifacts from the HF dataset repo if needed.
+| Folder | Contents |
+|---|---|
+| [`processed_data/`](https://huggingface.co/datasets/cs-552-2026-mystery-machine/multilingual/tree/main/processed_data) | Preprocessed JSONL files, one per source dataset |
+| [`benchmarks/`](https://huggingface.co/datasets/cs-552-2026-mystery-machine/multilingual/tree/main/benchmarks) | Evaluation benchmark splits used by the eval pipeline |
+| [`sft_data/`](https://huggingface.co/datasets/cs-552-2026-mystery-machine/multilingual/tree/main/sft_data) | Final SFT mixtures used for training |
+| [`raw_data/`](https://huggingface.co/datasets/cs-552-2026-mystery-machine/multilingual/tree/main/raw_data) | Raw source files before preprocessing |
+| [`distilled_data/`](https://huggingface.co/datasets/cs-552-2026-mystery-machine/multilingual/tree/main/distilled_data) | Distilled reasoning traces (generated but not used in the final SFT mixture) |
+
+The `repro/` scripts handle syncing the relevant subsets locally before training and evaluation:
+- `repro/01_sync_repro_data.sh` fetches `processed_data/`, `benchmarks/`, and `sft_data/` into `data/multilinguality/`.
+- `data_pipeline/download_processed_data.py` and `data_pipeline/download_distilled_data.py` can fetch individual subsets on demand. The main local data root is `data/multilinguality/`.
+
 
 ## Repository tree
 
 ```
 multilinguality_model/
-├── assets/                              # prompt templates for chat formatting
+├── .gitkeep                          
+├── README.md
+├── __init__.py
+├── config.py
+├── paths.py
+├── utils.py
+├── setup_env.sh                       # environment setup for reproduction/local workflow
+├── assets/                            # prompt templates and chat formatting assets
+│   ├── README.md
 │   ├── chat_template.jinja
-│   ├── chat_template_multilingual-thinking.jinja
+│   ├── chat_template_multilingual-augmented.jinja
 │   ├── chat_template_multilingual-nonthinking.jinja
-│   └── chat_template_multilingual-augmented.jinja
-├── configs/                             # training and merging configuration templates
+│   ├── chat_template_multilingual-thinking.jinja
+│   └── generation_config.json
+├── configs/
 │   └── merging/
-│       └── best_model_ties.yaml         # merge configuration used by repro workflow
-├── data_pipeline/                       # data download, parse, preprocess, benchmark, distill
+│       └── best_model_ties.yaml       # merge configuration used by repro workflow
+├── data_pipeline/                     # data download, parsing, preprocessing, distillation
+│   ├── README.md
+│   ├── __init__.py
+│   ├── download_distilled_data.py
+│   ├── download_processed_data.py
 │   ├── distillation/
-│   │   ├── distill_fallback.py          # main distillation pipeline
-│   │   └── distill_1stage.py            # one-stage distillation path
+│   │   ├── __init__.py
+│   │   └── distill_fallback.py        # main distillation pipeline (not used for final selected models)
 │   ├── generation/
-│   │   ├── filter_italian_mcq.py        # filter generated Italian MCQs
+│   │   ├── __init__.py
+│   │   ├── filter_italian_mcq.py
 │   │   ├── generate_italian_civil_code_mcq.py
 │   │   ├── generate_rubq_mcq.py
 │   │   └── generate_spain_boe_mcq.py
 │   ├── parsing/
-│   │   ├── download_utils.py            # HF raw file download helper
+│   │   ├── __init__.py
+│   │   ├── download_utils.py
 │   │   ├── merge_boe_jsonl.py
 │   │   ├── parse_ccse.py
 │   │   ├── parse_demre.py
@@ -102,11 +111,11 @@ multilinguality_model/
 │   │   ├── parse_spain_boe_constitucion_espanola.py
 │   │   └── parse_spanish_regional_statutes.py
 │   └── preprocessing/
-│       ├── build_benchmark.py           # benchmark split and manifest builder
+│       ├── build_benchmark.py
 │       ├── preprocess_ceval.py
 │       ├── preprocess_cmmlu.py
 │       ├── preprocess_cultsportqa.py
-│       ├── preprocess_exams.py          # legacy reproduction preprocessing
+│       ├── preprocess_exams.py
 │       ├── preprocess_global_mmlu.py
 │       ├── preprocess_global_piqa.py
 │       ├── preprocess_head_qa.py
@@ -116,17 +125,28 @@ multilinguality_model/
 │       ├── preprocess_mmlu_prox.py
 │       ├── preprocess_polizia_di_stato.py
 │       ├── preprocess_quaderno_prefettizia.py
-│       └── run_preprocessing_all.py     # run all preprocessing
-├── eval/                                # evaluation and scoring tools
-│   ├── run_eval_vllm.py                 # vLLM inference evaluator
-│   ├── score.py                         # scoring for generated completions
-│   ├── aggregate_results.py             # merge multiple run summaries
-│   ├── extract_answer.py                # answer extraction and normalization
-│   ├── pass_at_k.py                     # pass@k analysis
-│   ├── benchmarks.py                    # benchmark-specific logic
-│   └── bash/                            # example shell wrappers
-├── generation.py                        # common generation utilities
-├── loaders/                             # dataset loaders for unified example creation
+│       └── run_preprocessing_all.py
+├── eval/                              # evaluation and scoring logic, including vLLM runner
+│   ├── README.md
+│   ├── __init__.py
+│   ├── aggregate_results.py
+│   ├── benchmarks.py
+│   ├── eval_utils.py
+│   ├── evaluation.py
+│   ├── extract_answer.py
+│   ├── pass_at_k.py
+│   ├── run_eval_vllm.py
+│   ├── score.py
+│   └── bash/
+│       ├── eval_do_sample.sh
+│       ├── eval_group_models_hugo.sh
+│       ├── eval_loop.sh
+│       └── eval_merged.sh
+├── generation.py                     # shared generation utilities
+├── loaders/                          # dataset loaders for unified example creation
+│   ├── README.md
+│   ├── __init__.py
+│   ├── ccse_loader.py
 │   ├── ceval_loader.py
 │   ├── cmmlu_loader.py
 │   ├── cultsportqa_loader.py
@@ -142,12 +162,14 @@ multilinguality_model/
 │   ├── milu_loader.py
 │   ├── mmlu_prox_loader.py
 │   ├── polizia_di_stato_loader.py
+│   ├── quaderno_prefettizia_economia_politica_loader.py
 │   ├── quaderno_prefettizia_loader.py
-│   ├── recarve_utils.py                 # shared split/recarve utilities
+│   ├── recarve_utils.py              # shared split/recarve utilities
 │   ├── rubq_loader.py
 │   ├── spain_boe_legislation_loader.py
 │   └── belebele_loader.py
-├── merging/                             # model merge experiments and merge helpers
+├── merging/                          # model merge experiments and PEFT merge helpers
+│   ├── README.md
 │   ├── full_slerp.py
 │   ├── full_task_arithmetic.py
 │   ├── full_ties.py
@@ -155,45 +177,31 @@ multilinguality_model/
 │   ├── LoRA_dare_ties.py
 │   ├── LoRA_task_arithmetic.py
 │   ├── LoRA_ties.py
-│   └── utils/                           # shared merge argument helpers
-├── repro/                               # reproduction workflow and HF sync scripts
-│   ├── reproduce_best_model.sh          # full end-to-end reproduction script
-│   ├── 00_install_repro_requirements.sh # install reproduction dependencies
-│   ├── 01_sync_repro_data.sh           # download processed datasets and benchmarks from HF
-│   ├── 02_train_export_source_model.sh # train a single source model
-│   ├── 03_train_export_all_sources.sh  # train all source models sequentially
-│   ├── 04_merge_best_model.sh          # merge the trained source models
-│   ├── 05_eval_best_model.sh           # evaluate the merged model
-│   └── requirements.txt                # reproduction-specific deps
-├── train/                               # SFT data build, training, and export
-│   ├── build_sft_data.py                # build mixed SFT datasets
-│   ├── build_distilled_sft_data.py      # build SFT from distilled examples
-│   ├── build_sft_augmented_mcq.py       # augmented MCQ mixture builder
-│   ├── sft.py                           # main supervised fine-tuning entry point
-│   ├── export.py                        # export adapter artifacts and tokenizer files
-│   ├── export_full.py                   # export full checkpoint or adapter bundle
-│   ├── check_sft_stats.py               # SFT dataset statistics checks
-│   ├── inspect_formatted_sft.py         # inspect final chat-formatted SFT examples
-│   └── push_base_tokenizer.py           # tokenizer sync helper
-├── tests/                               # unit tests and data invariant checks
-│   └── test_sft_data.py
-├── __init__.py
-├── config.py
-├── paths.py
-├── utils.py
-└── README.md
+│   └── utils/
+│       ├── parse_arguments.py
+│       └── peft_merge.py
+├── repro/                            # reproduction workflow and HF sync scripts
+│   ├── README.md
+│   ├── reproduce_best_model.sh
+│   ├── 00_install_repro_requirements.sh
+│   ├── 01_sync_repro_data.sh
+│   ├── 02_train_export_source_model.sh
+│   ├── 03_train_export_all_sources.sh
+│   ├── 04_merge_best_model.sh
+│   ├── 05_eval_best_model.sh
+│   └── requirements.txt
+├── train/                            # SFT dataset building, training, and export
+│   ├── build_distilled_sft_data.py
+│   ├── build_sft_augmented_mcq.py
+│   ├── build_sft_data.py
+│   ├── export.py
+│   ├── export_full.py
+│   └── sft.py
+└── tests/                            # unit tests and data invariant checks
+    ├── README.md
+    └── test_sft_data.py
 ```
 
-## Data and HF fetch behavior
-
-This package is designed to work from a clean repo clone with no large dataset artifacts committed.
-The main local data root is `data/multilinguality/`.
-
-- `data_pipeline/download_processed_data.py` pulls processed JSONL from `cs-552-2026-mystery-machine/multilingual`.
-- `data_pipeline/download_distilled_data.py` pulls distilled JSONL from the same HF dataset repo.
-- `data_pipeline/parsing/download_utils.py` can fetch raw source files into `data/multilinguality/raw/`.
-
-Because `data/*` is ignored, the repo itself contains code only; data is downloaded locally on demand.
 
 ## Evaluation
 
@@ -221,8 +229,8 @@ The final SFT data format is chat-style JSONL compatible with the prompt templat
 ## Notes
 
 - `repro/` is the primary reproduction entry point for this component.
-- Final model checkpoints are saved under `checkpoints/multilinguality_model/`.
+- Upon following the reproduction scripts in `repro/`, model checkpoints are saved under `checkpoints/multilinguality_model/`.
 - The merged best model is saved to `checkpoints/multilinguality_model/best_model`.
-- Evaluation results are saved to `runs/benchmark/results/multilinguality_model/best_model`.
 - Merge config used by the reproduction workflow: `code/multilinguality_model/configs/merging/best_model_ties.yaml`.
+- Fetched processed data, SFT mixtures, and benchmarks are saved under `data/multilinguality/`.
 - Evaluation uses vLLM and requires a GPU pod.
