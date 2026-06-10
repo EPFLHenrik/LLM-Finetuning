@@ -1,0 +1,98 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/models/Qwen3-1.7B-baseline
+Output dir: multilingual/eval/results/sft/base/full
+Runtime seconds: 52.03
+Runtime minutes: 0.87
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 3000,
+  "correct": 1024,
+  "accuracy": 0.3413,
+  "box_compliance_rate": 0.7227,
+  "valid_only_accuracy": 0.4723,
+  "n_valid_boxed": 2168
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+ chinese 600      158    0.2633               0.5000               0.5267            300
+   hindi 600      162    0.2700               0.7450               0.3624            447
+ italian 600      258    0.4300               0.8733               0.4924            524
+ russian 600      233    0.3883               0.8333               0.4660            500
+ spanish 600      213    0.3550               0.6617               0.5365            397
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+                               dataset    n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+                                  ccse   50        5    0.1000               0.1800               0.5556              9
+                                 ceval  100       29    0.2900               0.6000               0.4833             60
+                                 cmmlu   50       16    0.3200               0.5800               0.5517             29
+                           cultsportqa  250       60    0.2400               0.5560               0.4317            139
+                           global_mmlu 1000      350    0.3500               0.8210               0.4263            821
+                           global_piqa  250       60    0.2400               0.3920               0.6122             98
+                               head_qa  150       69    0.4600               0.9400               0.4894            141
+                               include  500      176    0.3520               0.6960               0.5057            348
+                    italian_civil_code   75       45    0.6000               0.9067               0.6618             68
+                                  mera  150       72    0.4800               0.7733               0.6207            116
+                                  milu  100       25    0.2500               0.7300               0.3425             73
+                      polizia_di_stato   25       10    0.4000               0.7600               0.5263             19
+                  quaderno_prefettizia   75       29    0.3867               0.9467               0.4085             71
+quaderno_prefettizia_economia_politica   25        8    0.3200               0.8400               0.3810             21
+                                  rubq  100       26    0.2600               0.8700               0.2989             87
+                 spain_boe_legislation  100       44    0.4400               0.6800               0.6471             68
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+                               dataset language   n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+                                  ccse  spanish  50        5    0.1000               0.1800               0.5556              9
+                                 ceval  chinese 100       29    0.2900               0.6000               0.4833             60
+                                 cmmlu  chinese  50       16    0.3200               0.5800               0.5517             29
+                           cultsportqa  chinese 100       19    0.1900               0.2600               0.7308             26
+                           cultsportqa    hindi 150       41    0.2733               0.7533               0.3628            113
+                           global_mmlu  chinese 200       68    0.3400               0.7000               0.4857            140
+                           global_mmlu    hindi 200       58    0.2900               0.8600               0.3372            172
+                           global_mmlu  italian 200       68    0.3400               0.8500               0.4000            170
+                           global_mmlu  russian 200       83    0.4150               0.9300               0.4462            186
+                           global_mmlu  spanish 200       73    0.3650               0.7650               0.4771            153
+                           global_piqa  chinese  50        3    0.0600               0.0800               0.7500              4
+                           global_piqa    hindi  50        6    0.1200               0.1400               0.8571              7
+                           global_piqa  italian  50       20    0.4000               0.8000               0.5000             40
+                           global_piqa  russian  50       23    0.4600               0.6400               0.7188             32
+                           global_piqa  spanish  50        8    0.1600               0.3000               0.5333             15
+                               head_qa  italian  50       25    0.5000               1.0000               0.5000             50
+                               head_qa  spanish 100       44    0.4400               0.9100               0.4835             91
+                               include  chinese 100       23    0.2300               0.4100               0.5610             41
+                               include    hindi 100       32    0.3200               0.8200               0.3902             82
+                               include  italian 100       53    0.5300               0.8500               0.6235             85
+                               include  russian 100       29    0.2900               0.7900               0.3671             79
+                               include  spanish 100       39    0.3900               0.6100               0.6393             61
+                    italian_civil_code  italian  75       45    0.6000               0.9067               0.6618             68
+                                  mera  russian 150       72    0.4800               0.7733               0.6207            116
+                                  milu    hindi 100       25    0.2500               0.7300               0.3425             73
+                      polizia_di_stato  italian  25       10    0.4000               0.7600               0.5263             19
+                  quaderno_prefettizia  italian  75       29    0.3867               0.9467               0.4085             71
+quaderno_prefettizia_economia_politica  italian  25        8    0.3200               0.8400               0.3810             21
+                                  rubq  russian 100       26    0.2600               0.8700               0.2989             87
+                 spain_boe_legislation  spanish 100       44    0.4400               0.6800               0.6471             68
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

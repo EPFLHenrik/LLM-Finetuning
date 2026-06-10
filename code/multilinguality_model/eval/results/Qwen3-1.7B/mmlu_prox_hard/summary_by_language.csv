@@ -1,0 +1,6 @@
+language,n,correct,accuracy,box_compliance_rate,valid_only_accuracy,n_valid_boxed
+chinese,200,49,0.245,0.95,0.2579,190
+hindi,200,47,0.235,0.975,0.241,195
+italian,200,52,0.26,0.975,0.2667,195
+russian,200,57,0.285,0.985,0.2893,197
+spanish,200,57,0.285,0.94,0.3032,188

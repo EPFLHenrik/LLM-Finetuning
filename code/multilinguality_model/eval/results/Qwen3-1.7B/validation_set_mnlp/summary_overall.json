@@ -1,0 +1,8 @@
+{
+  "n": 10,
+  "correct": 3,
+  "accuracy": 0.3,
+  "box_compliance_rate": 0.7,
+  "valid_only_accuracy": 0.4286,
+  "n_valid_boxed": 7
+}

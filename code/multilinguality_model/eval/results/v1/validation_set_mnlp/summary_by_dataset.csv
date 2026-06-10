@@ -1,0 +1,2 @@
+dataset,n,correct,accuracy,box_compliance_rate,valid_only_accuracy,n_valid_boxed
+provided,10,6,0.6,1.0,0.6,10

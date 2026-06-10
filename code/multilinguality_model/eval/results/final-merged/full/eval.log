@@ -1,0 +1,135 @@
+============================================================
+Model:      multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5
+Val file:   multilingual/data/benchmarks/benchmark_all.jsonl
+Output:     multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full
+TP size:    1
+============================================================
+INFO 06-07 22:26:20 [utils.py:233] non-default args: {'tokenizer': 'multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'disable_log_stats': True, 'model': 'multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5'}
+WARNING 06-07 22:26:20 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_FA_CMAKE_GPU_ARCHES
+WARNING 06-07 22:26:20 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_FLASH_ATTN_VERSION
+INFO 06-07 22:26:20 [model.py:549] Resolved architecture: Qwen3ForCausalLM
+INFO 06-07 22:26:20 [model.py:1678] Using max model len 8192
+INFO 06-07 22:26:20 [scheduler.py:238] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 06-07 22:26:20 [vllm.py:790] Asynchronous scheduling is enabled.
+(EngineCore pid=49234) INFO 06-07 22:26:22 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5', speculative_config=None, tokenizer='multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=8192, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_images_per_batch': 0, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+(EngineCore pid=49234) INFO 06-07 22:26:23 [parallel_state.py:1400] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.16.144.185:57273 backend=nccl
+(EngineCore pid=49234) INFO 06-07 22:26:23 [parallel_state.py:1716] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=49234) INFO 06-07 22:26:24 [gpu_model_runner.py:4735] Starting to load model multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5...
+(EngineCore pid=49234) INFO 06-07 22:26:25 [cuda.py:334] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=49234) INFO 06-07 22:26:25 [flash_attn.py:596] Using FlashAttention version 2
+(EngineCore pid=49234) <frozen importlib._bootstrap_external>:1297: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=49234) <frozen importlib._bootstrap_external>:1297: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=49234) INFO 06-07 22:26:25 [weight_utils.py:848] Prefetching checkpoint files into page cache started (in background)
+(EngineCore pid=49234) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(EngineCore pid=49234) INFO 06-07 22:26:37 [weight_utils.py:825] Prefetching checkpoint files: 10% (1/1)
+(EngineCore pid=49234) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:12<00:00, 12.47s/it]
+(EngineCore pid=49234) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:12<00:00, 12.47s/it]
+(EngineCore pid=49234) 
+(EngineCore pid=49234) INFO 06-07 22:26:38 [default_loader.py:384] Loading weights took 12.66 seconds
+(EngineCore pid=49234) INFO 06-07 22:26:38 [weight_utils.py:843] Prefetching checkpoint files into page cache finished in 12.66s
+(EngineCore pid=49234) INFO 06-07 22:26:38 [gpu_model_runner.py:4820] Model loading took 3.22 GiB memory and 13.442755 seconds
+(EngineCore pid=49234) INFO 06-07 22:26:45 [backends.py:1051] Using cache directory: /root/.cache/vllm/torch_compile_cache/268ade1253/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=49234) INFO 06-07 22:26:45 [backends.py:1111] Dynamo bytecode transform time: 6.00 s
+(EngineCore pid=49234) INFO 06-07 22:26:47 [backends.py:372] Cache the graph of compile range (1, 8192) for later use
+(EngineCore pid=49234) INFO 06-07 22:26:51 [backends.py:390] Compiling a graph for compile range (1, 8192) takes 5.93 s
+(EngineCore pid=49234) INFO 06-07 22:26:53 [decorators.py:655] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/fe69aa4584223b2cb0c123d4ed757a7dba8bab192ec58c8ed9465617a788bd5f/rank_0_0/model
+(EngineCore pid=49234) INFO 06-07 22:26:53 [monitor.py:48] torch.compile took 14.01 s in total
+(EngineCore pid=49234) INFO 06-07 22:26:53 [monitor.py:76] Initial profiling/warmup run took 0.17 s
+(EngineCore pid=49234) INFO 06-07 22:26:54 [kv_cache_utils.py:829] Overriding num_gpu_blocks=0 with num_gpu_blocks_override=512
+(EngineCore pid=49234) INFO 06-07 22:26:54 [gpu_model_runner.py:5876] Profiling CUDA graph memory: PIECEWISE=51 (largest=512), FULL=35 (largest=256)
+(EngineCore pid=49234) INFO 06-07 22:26:55 [gpu_model_runner.py:5955] Estimated CUDA graph memory: 0.48 GiB total
+(EngineCore pid=49234) INFO 06-07 22:26:56 [gpu_worker.py:436] Available KV cache memory: 31.55 GiB
+(EngineCore pid=49234) INFO 06-07 22:26:56 [gpu_worker.py:470] In v0.19, CUDA graph memory profiling will be enabled by default (VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1), which more accurately accounts for CUDA graph memory during KV cache allocation. To try it now, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1 and increase --gpu-memory-utilization from 0.9000 to 0.9122 to maintain the same effective KV cache size.
+(EngineCore pid=49234) INFO 06-07 22:26:56 [kv_cache_utils.py:1319] GPU KV cache size: 295,376 tokens
+(EngineCore pid=49234) INFO 06-07 22:26:56 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 36.06x
+(EngineCore pid=49234) Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   6%|▌         | 3/51 [00:00<00:01, 28.55it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  14%|█▎        | 7/51 [00:00<00:01, 29.12it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  20%|█▉        | 10/51 [00:00<00:01, 29.22it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  27%|██▋       | 14/51 [00:00<00:01, 30.87it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:00<00:01, 32.21it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  43%|████▎     | 22/51 [00:00<00:00, 32.47it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  51%|█████     | 26/51 [00:00<00:00, 28.43it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  57%|█████▋    | 29/51 [00:00<00:00, 28.77it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  65%|██████▍   | 33/51 [00:01<00:00, 30.35it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  73%|███████▎  | 37/51 [00:01<00:00, 31.77it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  80%|████████  | 41/51 [00:01<00:00, 31.37it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  88%|████████▊ | 45/51 [00:01<00:00, 31.61it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  96%|█████████▌| 49/51 [00:01<00:00, 30.85it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:01<00:00, 30.26it/s]
+(EngineCore pid=49234) Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]Capturing CUDA graphs (decode, FULL):  11%|█▏        | 4/35 [00:00<00:01, 28.72it/s]Capturing CUDA graphs (decode, FULL):  20%|██        | 7/35 [00:00<00:01, 26.06it/s]Capturing CUDA graphs (decode, FULL):  29%|██▊       | 10/35 [00:00<00:00, 26.25it/s]Capturing CUDA graphs (decode, FULL):  40%|████      | 14/35 [00:00<00:00, 29.66it/s]Capturing CUDA graphs (decode, FULL):  51%|█████▏    | 18/35 [00:00<00:00, 31.53it/s]Capturing CUDA graphs (decode, FULL):  63%|██████▎   | 22/35 [00:00<00:00, 31.23it/s]Capturing CUDA graphs (decode, FULL):  74%|███████▍  | 26/35 [00:00<00:00, 31.49it/s]Capturing CUDA graphs (decode, FULL):  86%|████████▌ | 30/35 [00:00<00:00, 32.73it/s]Capturing CUDA graphs (decode, FULL):  97%|█████████▋| 34/35 [00:01<00:00, 33.30it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:01<00:00, 31.39it/s]
+(EngineCore pid=49234) INFO 06-07 22:27:00 [gpu_model_runner.py:6046] Graph capturing finished in 4 secs, took 0.42 GiB
+(EngineCore pid=49234) INFO 06-07 22:27:00 [gpu_worker.py:597] CUDA graph pool memory: 0.42 GiB (actual), 0.48 GiB (estimated), difference: 0.06 GiB (15.4%).
+(EngineCore pid=49234) INFO 06-07 22:27:00 [core.py:283] init engine (profile, create kv cache, warmup model) took 21.14 seconds
+Loaded 3000 examples from benchmark_all.jsonl
+Rendering prompts:   0%|          | 0/3000 [00:00<?, ?it/s]Rendering prompts:   3%|▎         | 100/3000 [00:00<00:02, 997.93it/s]Rendering prompts:   7%|▋         | 210/3000 [00:00<00:02, 1053.79it/s]Rendering prompts:  11%|█         | 333/3000 [00:00<00:02, 1130.50it/s]Rendering prompts:  16%|█▌        | 478/3000 [00:00<00:02, 1255.66it/s]Rendering prompts:  21%|██        | 620/3000 [00:00<00:01, 1314.22it/s]Rendering prompts:  25%|██▌       | 763/3000 [00:00<00:01, 1351.60it/s]Rendering prompts:  30%|██▉       | 899/3000 [00:00<00:01, 1348.22it/s]Rendering prompts:  35%|███▍      | 1047/3000 [00:00<00:01, 1389.04it/s]Rendering prompts:  40%|████      | 1212/3000 [00:00<00:01, 1467.09it/s]Rendering prompts:  45%|████▌     | 1359/3000 [00:01<00:01, 1337.00it/s]Rendering prompts:  50%|████▉     | 1495/3000 [00:01<00:01, 1190.76it/s]Rendering prompts:  54%|█████▍    | 1621/3000 [00:01<00:01, 1208.07it/s]Rendering prompts:  58%|█████▊    | 1748/3000 [00:01<00:01, 1224.52it/s]Rendering prompts:  62%|██████▏   | 1873/3000 [00:01<00:00, 1212.18it/s]Rendering prompts:  67%|██████▋   | 1996/3000 [00:01<00:00, 1205.24it/s]Rendering prompts:  71%|███████   | 2123/3000 [00:01<00:00, 1220.71it/s]Rendering prompts:  75%|███████▌  | 2254/3000 [00:01<00:00, 1246.54it/s]Rendering prompts:  79%|███████▉  | 2380/3000 [00:01<00:00, 1242.40it/s]Rendering prompts:  84%|████████▍ | 2514/3000 [00:01<00:00, 1268.35it/s]Rendering prompts:  88%|████████▊ | 2642/3000 [00:02<00:00, 1253.61it/s]Rendering prompts:  92%|█████████▏| 2768/3000 [00:02<00:00, 1245.63it/s]Rendering prompts:  97%|█████████▋| 2897/3000 [00:02<00:00, 1257.50it/s]Rendering prompts: 100%|██████████| 3000/3000 [00:02<00:00, 1265.74it/s]
+Processed prompts:   0%|          | 0/3000 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:  22%|██▏       | 668/3000 [00:00<00:00, 6597.29it/s, est. speed input: 1644762.73 toks/s, output: 39585.02 toks/s]Processed prompts:  44%|████▍     | 1328/3000 [00:01<00:01, 851.20it/s, est. speed input: 246137.35 toks/s, output: 5880.04 toks/s]  Processed prompts:  54%|█████▍    | 1631/3000 [00:02<00:02, 487.79it/s, est. speed input: 172630.60 toks/s, output: 3669.10 toks/s]Processed prompts:  60%|██████    | 1806/3000 [00:03<00:02, 447.24it/s, est. speed input: 159886.76 toks/s, output: 3385.71 toks/s]Processed prompts:  64%|██████▍   | 1925/3000 [00:03<00:02, 433.77it/s, est. speed input: 156485.95 toks/s, output: 3280.73 toks/s]Processed prompts:  67%|██████▋   | 2015/3000 [00:03<00:02, 414.58it/s, est. speed input: 152636.48 toks/s, output: 3185.22 toks/s]Processed prompts:  70%|██████▉   | 2088/3000 [00:03<00:02, 411.60it/s, est. speed input: 150768.48 toks/s, output: 3147.15 toks/s]Processed prompts:  72%|███████▏  | 2169/3000 [00:04<00:02, 404.10it/s, est. speed input: 148063.21 toks/s, output: 3100.41 toks/s]Processed prompts:  74%|███████▍  | 2222/3000 [00:04<00:01, 402.41it/s, est. speed input: 146781.30 toks/s, output: 3077.26 toks/s]Processed prompts:  76%|███████▌  | 2271/3000 [00:04<00:01, 386.28it/s, est. speed input: 144865.71 toks/s, output: 3037.70 toks/s]Processed prompts:  78%|███████▊  | 2344/3000 [00:04<00:01, 398.53it/s, est. speed input: 143735.76 toks/s, output: 3023.27 toks/s]Processed prompts:  80%|███████▉  | 2388/3000 [00:04<00:01, 401.69it/s, est. speed input: 144207.88 toks/s, output: 3011.65 toks/s]Processed prompts:  82%|████████▏ | 2470/3000 [00:04<00:01, 431.99it/s, est. speed input: 143817.19 toks/s, output: 3013.68 toks/s]Processed prompts:  84%|████████▍ | 2516/3000 [00:05<00:01, 408.25it/s, est. speed input: 142026.61 toks/s, output: 2986.91 toks/s]Processed prompts:  85%|████████▌ | 2558/3000 [00:05<00:01, 355.47it/s, est. speed input: 139515.97 toks/s, output: 2935.22 toks/s]Processed prompts:  88%|████████▊ | 2632/3000 [00:05<00:01, 359.39it/s, est. speed input: 138060.02 toks/s, output: 2907.99 toks/s]Processed prompts:  90%|█████████ | 2703/3000 [00:05<00:00, 402.10it/s, est. speed input: 138623.06 toks/s, output: 2915.24 toks/s]Processed prompts:  92%|█████████▏| 2773/3000 [00:05<00:00, 428.60it/s, est. speed input: 138479.10 toks/s, output: 2917.50 toks/s]Processed prompts: 100%|██████████| 3000/3000 [00:05<00:00, 428.60it/s, est. speed input: 147332.02 toks/s, output: 3138.65 toks/s]Processed prompts: 100%|██████████| 3000/3000 [00:05<00:00, 523.10it/s, est. speed input: 147332.02 toks/s, output: 3138.65 toks/s]
+Saved: multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full/val_results.jsonl
+Saved: multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full/all_results.jsonl
+
+============================================================
+SUMMARY (per dataset/language)
+============================================================
+                               dataset language   n  correct  accuracy  box_compliance_rate
+                                  ccse  spanish  50       39    0.7800                  1.0
+                                 ceval  chinese 100       58    0.5800                  1.0
+                                 cmmlu  chinese  50       38    0.7600                  1.0
+                           cultsportqa  chinese 100       88    0.8800                  1.0
+                           cultsportqa    hindi 150       79    0.5267                  1.0
+                           global_mmlu  chinese 200      122    0.6100                  1.0
+                           global_mmlu    hindi 200       90    0.4500                  1.0
+                           global_mmlu  italian 200      113    0.5650                  1.0
+                           global_mmlu  russian 200      112    0.5600                  1.0
+                           global_mmlu  spanish 200      126    0.6300                  1.0
+                           global_piqa  chinese  50       30    0.6000                  1.0
+                           global_piqa    hindi  50       29    0.5800                  1.0
+                           global_piqa  italian  50       29    0.5800                  1.0
+                           global_piqa  russian  50       35    0.7000                  1.0
+                           global_piqa  spanish  50       42    0.8400                  1.0
+                               head_qa  italian  50       28    0.5600                  1.0
+                               head_qa  spanish 100       41    0.4100                  1.0
+                               include  chinese 100       75    0.7500                  1.0
+                               include    hindi 100       56    0.5600                  1.0
+                               include  italian 100       68    0.6800                  1.0
+                               include  russian 100       56    0.5600                  1.0
+                               include  spanish 100       76    0.7600                  1.0
+                    italian_civil_code  italian  75       51    0.6800                  1.0
+                                  mera  russian 150      100    0.6667                  1.0
+                                  milu    hindi 100       42    0.4200                  1.0
+                      polizia_di_stato  italian  25       15    0.6000                  1.0
+                  quaderno_prefettizia  italian  75       42    0.5600                  1.0
+quaderno_prefettizia_economia_politica  italian  25       10    0.4000                  1.0
+                                  rubq  russian 100       41    0.4100                  1.0
+                 spain_boe_legislation  spanish 100       77    0.7700                  1.0
+
+============================================================
+SUMMARY (per language)
+============================================================
+language   n  correct  accuracy  box_compliance_rate
+ chinese 600      411    0.6850                  1.0
+   hindi 600      296    0.4933                  1.0
+ italian 600      356    0.5933                  1.0
+ russian 600      344    0.5733                  1.0
+ spanish 600      401    0.6683                  1.0
+
+============================================================
+SUMMARY (per dataset)
+============================================================
+                               dataset    n  correct  accuracy  box_compliance_rate
+                                  ccse   50       39    0.7800                  1.0
+                                 ceval  100       58    0.5800                  1.0
+                                 cmmlu   50       38    0.7600                  1.0
+                           cultsportqa  250      167    0.6680                  1.0
+                           global_mmlu 1000      563    0.5630                  1.0
+                           global_piqa  250      165    0.6600                  1.0
+                               head_qa  150       69    0.4600                  1.0
+                               include  500      331    0.6620                  1.0
+                    italian_civil_code   75       51    0.6800                  1.0
+                                  mera  150      100    0.6667                  1.0
+                                  milu  100       42    0.4200                  1.0
+                      polizia_di_stato   25       15    0.6000                  1.0
+                  quaderno_prefettizia   75       42    0.5600                  1.0
+quaderno_prefettizia_economia_politica   25       10    0.4000                  1.0
+                                  rubq  100       41    0.4100                  1.0
+                 spain_boe_legislation  100       77    0.7700                  1.0
+
+Overall accuracy: 0.603 (1808/3000)
+Runtime seconds: 49.64
+Runtime minutes: 0.83
+
+Summary files saved:
+  multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full/summary_by_dataset_language.csv
+  multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full/summary_by_language.csv
+  multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full/summary_by_dataset.csv
+  multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full/summary_overall.json
+  multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full/summary.csv
+  multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full/summary.txt
+(EngineCore pid=49234) INFO 06-07 22:27:09 [core.py:1210] Shutdown initiated (timeout=0)
+(EngineCore pid=49234) INFO 06-07 22:27:09 [core.py:1233] Shutdown complete
+Finished OK: tune_v1_ru_hi_base_d0p5 / full at Sun Jun  7 22:27:11 UTC 2026

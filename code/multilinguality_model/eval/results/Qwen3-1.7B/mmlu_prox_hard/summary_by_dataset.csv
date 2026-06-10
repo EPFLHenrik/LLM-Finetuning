@@ -1,0 +1,2 @@
+dataset,n,correct,accuracy,box_compliance_rate,valid_only_accuracy,n_valid_boxed
+mmlu_prox,1000,262,0.262,0.965,0.2715,965

@@ -108,3 +108,16 @@ pass_at_k.py          pass@k estimator
 extract_answer.py     boxed-answer and math-equivalence helpers
 evaluation.py         older/general pandas evaluator
 ```
+
+## Saved results
+ 
+Pre-computed evaluation results for three model checkpoints are stored in `eval/results/`:
+ 
+```
+eval/results/
+  Qwen3-1.7B/     base model (Qwen/Qwen3-1.7B)
+  v1/             best SFT multilingual checkpoint
+  final-merged/   final individual model (TIES merge of v1 + Russian/Hindi specialists)
+```
+ 
+Each folder contains three subfolders: `full/` (all benchmark datasets), `mmlu_prox_hard/`, and `validation_set_mnlp/`, the validation set of 10 examples provided to us, used as complementary evaluation only..
