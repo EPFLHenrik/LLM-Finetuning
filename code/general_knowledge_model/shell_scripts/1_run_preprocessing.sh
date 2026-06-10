@@ -34,33 +34,27 @@ PYEOF
     mv "$DATA_DIR/processed/train_datasets/merged_distillation.jsonl" \
        "$DATA_DIR/processed/train_datasets/merged_distillations.jsonl"
 
+STUDENT_MODEL_DIR="$PROJECT_DIR/checkpoints/general_knowledge_model/qwen_thinking3"
+TEACHER_MODEL_DIR="$PROJECT_DIR/checkpoints/general_knowledge_model/teacher"
+
 step "Download student model (Qwen/Qwen3-1.7B)"
-python - <<PYEOF
-import os
-from pathlib import Path
-from huggingface_hub import snapshot_download
-output_dir = Path("$PROJECT_DIR/checkpoints/general_knowledge_model/qwen_thinking3")
-if (output_dir / "config.json").exists():
-    print("Already present, skipping.")
-else:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    snapshot_download(repo_id="Qwen/Qwen3-1.7B", local_dir=str(output_dir), token=os.environ["HF_TOKEN"])
-    print("Download complete.")
-PYEOF
+if [ ! -f "$STUDENT_MODEL_DIR/config.json" ]; then
+    python "$GK_DIR/scripts/setup_baseline.py" \
+        --output-dir "$STUDENT_MODEL_DIR" \
+        --yes
+else
+    echo "Already present, skipping."
+fi
 
 step "Download teacher model (Qwen/Qwen3-14B)"
-python - <<PYEOF
-import os
-from pathlib import Path
-from huggingface_hub import snapshot_download
-output_dir = Path("$PROJECT_DIR/checkpoints/general_knowledge_model/teacher")
-if (output_dir / "config.json").exists():
-    print("Already present, skipping.")
-else:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    snapshot_download(repo_id="Qwen/Qwen3-14B", local_dir=str(output_dir), token=os.environ["HF_TOKEN"])
-    print("Download complete.")
-PYEOF
+if [ ! -f "$TEACHER_MODEL_DIR/config.json" ]; then
+    python "$GK_DIR/scripts/download_teacher_model.py" \
+        --repo-id "Qwen/Qwen3-14B" \
+        --output-dir "$TEACHER_MODEL_DIR" \
+        --yes
+else
+    echo "Already present, skipping."
+fi
 
 # ─── TRAIN DATASETS ───────────────────────────────────────────────────────────
 

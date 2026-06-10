@@ -37,7 +37,7 @@ The arguments are:
 
 ### Example
 ```
-python -m code.group_model.merging.full_task_arithmetic --merging_targets checkpoints/math checkpoints/knowledge checkpoints/multilingual checkpoints/safety --output_path checkpoints/merged_model
+python -m code.group_model.merging.full_task_arithmetic --merging_targets checkpoints/math_model checkpoints/general_knowledge_model/sft_grpo_dpo checkpoints/multilingual_model checkpoints/safety_model --output_path checkpoints/merged_model
 ```
 
 ## 3. Model Benchmarking
