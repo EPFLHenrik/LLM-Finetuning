@@ -23,5 +23,6 @@ tqdm
 openai
 pandas
 matplotlib
+mergekit
 seaborn
 vllm
