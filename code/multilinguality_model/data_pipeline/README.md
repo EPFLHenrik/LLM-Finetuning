@@ -20,6 +20,7 @@ It is organized into four main sections:
 - The JSONL format is the main intermediate format.
 - Each preprocessing script is intended to overwrite only its own target files.
 - This README covers the whole data pipeline; subfolders do not each have separate README files.
+- For reproduction, running this pipeline is **not** required. SFT data mixtures and benchmarks are fetched from HF by `repro/01_sync_repro_data.sh`. Full processed datasets can also be pulled separately via `data_pipeline/download_processed_data.py` if needed.
 
 ## Run the pipeline
 
@@ -40,11 +41,3 @@ Dry-run without executing:
 ```bash
 python -m multilinguality_model.data_pipeline.preprocessing.run_preprocessing_all --dry-run
 ```
-
-Include deprecated EXAMS preprocessing:
-
-```bash
-python -m multilinguality_model.data_pipeline.preprocessing.run_preprocessing_all --include-exams
-```
-
-EXAMS is kept for reproducibility but is not part of the active benchmark.
