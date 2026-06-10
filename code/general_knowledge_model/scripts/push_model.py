@@ -31,18 +31,29 @@ ALLOWED_FILES = (
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Push a model directory to Hugging Face")
     parser.add_argument("model_dir", type=Path, help="Local model directory to upload")
+    parser.add_argument(
+        "--files",
+        nargs="+",
+        metavar="FILENAME",
+        help="Upload only these filenames (e.g. --files model.safetensors). Must be in ALLOWED_FILES.",
+    )
     args = parser.parse_args(argv)
 
     model_dir = args.model_dir.expanduser().resolve()
     if not model_dir.is_dir():
         raise FileNotFoundError(f"Model directory not found: {model_dir}")
 
+    candidates = args.files if args.files else list(ALLOWED_FILES)
+    for name in candidates:
+        if name not in ALLOWED_FILES:
+            raise ValueError(f"File not in allowlist: {name}. Allowed: {ALLOWED_FILES}")
+
     token = os.environ.get("HF_TOKEN") or os.environ.get("HF_HUB_TOKEN")
 
     api = HfApi()
     api.create_repo(repo_id=TARGET_REPO_ID, repo_type="model", exist_ok=True, token=token)
     upload_paths = []
-    for filename in ALLOWED_FILES:
+    for filename in candidates:
         file_path = model_dir / filename
         if not file_path.is_file():
             print(f"[warn] Skipping missing file: {file_path}")

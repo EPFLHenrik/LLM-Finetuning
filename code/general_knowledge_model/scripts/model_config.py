@@ -154,26 +154,38 @@ def adapt_checkpoint(
     token: str | None,
     trust_remote_code: bool,
     use_fast: bool,
+    in_place: bool = False,
 ) -> None:
-    print(f"Loading model from {model_path}...")
-    model = AutoModelForCausalLM.from_pretrained(
-        model_path,
-        token=token,
-        trust_remote_code=trust_remote_code,
-    )
+    if in_place:
+        # Only load the tokenizer; write changed files directly into model_path.
+        print(f"Loading tokenizer from {model_path}...")
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_path,
+            token=token,
+            trust_remote_code=trust_remote_code,
+            use_fast=use_fast,
+        )
+        output_dir = model_path
+    else:
+        print(f"Loading model from {model_path}...")
+        model = AutoModelForCausalLM.from_pretrained(
+            model_path,
+            token=token,
+            trust_remote_code=trust_remote_code,
+        )
 
-    print(f"Loading tokenizer from {model_path}...")
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_path,
-        token=token,
-        trust_remote_code=trust_remote_code,
-        use_fast=use_fast,
-    )
+        print(f"Loading tokenizer from {model_path}...")
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_path,
+            token=token,
+            trust_remote_code=trust_remote_code,
+            use_fast=use_fast,
+        )
 
-    print(f"Saving model weights/config to {output_dir}...")
-    model.save_pretrained(output_dir, safe_serialization=True)
-    print(f"Saving tokenizer files to {output_dir}...")
-    tokenizer.save_pretrained(output_dir)
+        print(f"Saving model weights/config to {output_dir}...")
+        model.save_pretrained(output_dir, safe_serialization=True)
+        print(f"Saving tokenizer files to {output_dir}...")
+        tokenizer.save_pretrained(output_dir)
 
     # Override selected config files after save_pretrained.
     if _should_apply(cmd, "config") and CONFIG_OVERRIDE is not None:
@@ -209,7 +221,7 @@ def adapt_checkpoint(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", required=True, help="Source model directory")
-    parser.add_argument("--output-dir", required=True, help="Target directory for the adapted checkpoint")
+    parser.add_argument("--output-dir", default=None, help="Target directory for the adapted checkpoint (not needed with --in-place)")
     parser.add_argument(
         "--cmd",
         default="all",
@@ -221,14 +233,21 @@ def main() -> None:
     parser.add_argument("--no-trust-remote-code", dest="trust_remote_code", action="store_false")
     parser.add_argument("--use-fast", action="store_true", default=True)
     parser.add_argument("--no-fast", dest="use_fast", action="store_false")
+    parser.add_argument("--in-place", action="store_true", default=False,
+                        help="Write config/jinja files directly into --model-path without copying model weights")
     args = parser.parse_args()
 
     model_path = Path(args.model_path)
     if not model_path.exists():
         raise FileNotFoundError(f"Model path not found: {model_path}")
 
-    output_dir = Path(args.output_dir)
-    _safe_overwrite_output(output_dir)
+    if args.in_place:
+        output_dir = model_path
+    else:
+        if args.output_dir is None:
+            raise SystemExit("--output-dir is required unless --in-place is set")
+        output_dir = Path(args.output_dir)
+        _safe_overwrite_output(output_dir)
 
     adapt_checkpoint(
         model_path=model_path,
@@ -237,6 +256,7 @@ def main() -> None:
         token=args.token,
         trust_remote_code=args.trust_remote_code,
         use_fast=args.use_fast,
+        in_place=args.in_place,
     )
 
     print("Done")

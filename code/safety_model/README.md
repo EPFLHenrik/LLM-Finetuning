@@ -11,7 +11,8 @@ Reproduce the final submitted safety model by:
 - generating distilled reasoning data,
 - training an SFT adapter,
 - creating DPO preference pairs,
-- training the final DPO adapter.
+- training the final DPO adapter,
+- Evaluate any model on any safety benchmark.
 
 ## Before You Start
 
@@ -223,12 +224,17 @@ Expected artifact:
 - `checkpoints/safety_model/dpo`
 
 
-## 7. Benchmarking
-To evaluate any checkpoint on the safety benchmarks, run the following command:
+## 7. Model Benchmarking
 
-`python -m code.safety_model.benchmark --name <my-model-name> --benchmark <benchmark_name> --checkpoint <checkpoint_dir>`
+To evaluate any checkpoint on any benchmarks, `code/safety_model/benchmark.py` script has to be run with the following arguments:
+- `--name`, name of the model benchmark, by default the model checkpoint path.
+- `--benchmark`, name of the benchmark in `data/safety_model/benchmark/`.
+- `--checkpoint`, path of the model to be evaluated.
+- `--limit`, maximum number of samples per benchmark to evaluate. If not specified, the entire benchmark is considered.
 
-replace `--benchmark <...>` with `--run_all` to run all benchmarks present in data/safety/processed/benchmark/.
+replace `--benchmark <...>` with `--run_all` to run all benchmarks present in `data/safety_model/benchmark/`.
 
-Example:
-`python -m code.safety_model.benchmark --name <my-model-name> --benchmark <benchmark_name> --checkpoint <checkpoint_dir>`
+### Example:
+```
+python -m code.safety_model.benchmark --name sft_benchmark --checkpoint checkpoints/sft/hf_model --run_all
+```

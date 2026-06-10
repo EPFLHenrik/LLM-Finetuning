@@ -29,7 +29,7 @@ except ImportError as exc:  # pragma: no cover - depends on runtime environment.
     raise SystemExit("vLLM is not installed in this environment. Install vllm to use this script.") from exc
 
 
-TEACHER_MODEL_DIR = Path("/scratch/workspace/henrik/standard-project-m2-mystery-machine/models/teacher")
+TEACHER_MODEL_DIR = Path(__file__).resolve().parents[3] / "checkpoints" / "general_knowledge_model" / "teacher"
 
 SYSTEM_MESSAGE = (
     "You are an expert teacher helping a much smaller, 1.7B parameter language model learn how to reason. "

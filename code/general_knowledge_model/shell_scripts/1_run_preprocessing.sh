@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Preprocess all datasets in <project-root>/data/datasets into <project-root>/data/preprocessing.
+# Preprocess all datasets in <project-root>/data/general_knowledge/raw into <project-root>/data/general_knowledge/processed.
 # Run from any directory; paths are resolved relative to this script's location.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GK_DIR="$(dirname "$SCRIPT_DIR")"            # general_knowledge_model/
-DATA_DIR="$GK_DIR/../../data"                # project-root/data/
-DATASETS_DIR="$DATA_DIR/datasets"
-OUT_DIR="$DATA_DIR/preprocessing"
+GK_DIR="$(dirname "$SCRIPT_DIR")"               # general_knowledge_model/
+PROJECT_DIR="$(dirname "$(dirname "$GK_DIR")")"  # project root
+DATA_DIR="$PROJECT_DIR/data/general_knowledge"
+DATASETS_DIR="$DATA_DIR/raw"
+OUT_DIR="$DATA_DIR/processed"
 PY="$GK_DIR/preprocessing"
 
 step() { echo; echo "=== $* ==="; }

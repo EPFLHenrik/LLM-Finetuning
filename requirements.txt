@@ -23,6 +23,7 @@ tqdm
 openai
 pandas
 matplotlib
+mergekit
 seaborn
 vllm
 ms-swift>=3.0
