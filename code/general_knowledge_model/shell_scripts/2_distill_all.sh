@@ -72,8 +72,8 @@ for train_file in "$PREPROCESSING_DIR/train_datasets"/*/train.jsonl; do
         "$dir/student_corrected.jsonl" \
         "$dir/teacher_corrected.jsonl" \
         --output "$dir/merged_student_teacher.jsonl" \
-        --distillation-output "$PREPROCESSING_DIR/merged_distillations.jsonl" \
-        --wrong-output "$PREPROCESSING_DIR/wrong_distillations.jsonl"
+        --distillation-output "$PREPROCESSING_DIR/train_datasets/merged_distillations.jsonl" \
+        --wrong-output "$PREPROCESSING_DIR/train_datasets/wrong_distillations.jsonl"
 
     {
         echo "  --- stats: $dir ---"

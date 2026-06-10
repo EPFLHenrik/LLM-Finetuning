@@ -11,7 +11,56 @@ DATASETS_DIR="$DATA_DIR/raw"
 OUT_DIR="$DATA_DIR/processed"
 PY="$GK_DIR/preprocessing"
 
+HF_TOKEN="${HF_TOKEN:?HF_TOKEN environment variable is required}"
+
 step() { echo; echo "=== $* ==="; }
+
+# ─── DOWNLOAD ─────────────────────────────────────────────────────────────────
+
+step "Download dataset from HuggingFace"
+python - <<PYEOF
+import os
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id="cs-552-2026-mystery-machine/general_knowledge",
+    repo_type="dataset",
+    local_dir="$DATA_DIR",
+    token=os.environ["HF_TOKEN"],
+)
+print("Download complete.")
+PYEOF
+# HF repo uses the singular form; normalise to the plural form used throughout
+[ -f "$DATA_DIR/processed/train_datasets/merged_distillation.jsonl" ] && \
+    mv "$DATA_DIR/processed/train_datasets/merged_distillation.jsonl" \
+       "$DATA_DIR/processed/train_datasets/merged_distillations.jsonl"
+
+step "Download student model (Qwen/Qwen3-1.7B)"
+python - <<PYEOF
+import os
+from pathlib import Path
+from huggingface_hub import snapshot_download
+output_dir = Path("$PROJECT_DIR/checkpoints/general_knowledge_model/qwen_thinking3")
+if (output_dir / "config.json").exists():
+    print("Already present, skipping.")
+else:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_download(repo_id="Qwen/Qwen3-1.7B", local_dir=str(output_dir), token=os.environ["HF_TOKEN"])
+    print("Download complete.")
+PYEOF
+
+step "Download teacher model (Qwen/Qwen3-14B)"
+python - <<PYEOF
+import os
+from pathlib import Path
+from huggingface_hub import snapshot_download
+output_dir = Path("$PROJECT_DIR/checkpoints/general_knowledge_model/teacher")
+if (output_dir / "config.json").exists():
+    print("Already present, skipping.")
+else:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_download(repo_id="Qwen/Qwen3-14B", local_dir=str(output_dir), token=os.environ["HF_TOKEN"])
+    print("Download complete.")
+PYEOF
 
 # ─── TRAIN DATASETS ───────────────────────────────────────────────────────────
 
@@ -22,7 +71,7 @@ python "$PY/merge_math_splits.py" \
 step "MATH — convert to 4-choice MCQ format"
 python "$PY/preprocess_math_mcq.py" \
   "$DATASETS_DIR/train_datasets/MATH/train.jsonl" \
-  "$OUT_DIR/train_datasets/MATH/train.jsonl" \
+  --output "$OUT_DIR/train_datasets/MATH/train.jsonl" \
   --seed 42
 
 step "FinTrain — convert to MCQ format"
@@ -30,15 +79,15 @@ python "$PY/convert_fintrain_to_mcq.py" \
   "$DATASETS_DIR/train_datasets/FinTrain/train.jsonl" \
   "$OUT_DIR/train_datasets/FinTrain/train.jsonl"
 
-step "MMLU auxiliary train"
-python "$PY/preprocess_mmlu_auxiliary_train.py" \
-  "$DATASETS_DIR/train_datasets/mmlu_auxtrain_labelled/default/train.jsonl" \
-  --output "$OUT_DIR/train_datasets/mmlu_auxtrain/train.jsonl"
-
 step "MMLU auxiliary train — filter to selected categories"
 python "$PY/filter_dataset_by_categories.py" \
-  --input  "$OUT_DIR/train_datasets/mmlu_auxtrain/train.jsonl" \
-  --output "$OUT_DIR/train_datasets/mmlu_auxtrain/train_filtered.jsonl"
+  --input  "$DATASETS_DIR/train_datasets/mmlu_auxtrain_labelled/default/train.jsonl" \
+  --output "$DATASETS_DIR/train_datasets/mmlu_auxtrain_labelled/default/train_filtered.jsonl"
+
+step "MMLU auxiliary train — preprocess filtered split"
+python "$PY/preprocess_mmlu_auxiliary_train.py" \
+  "$DATASETS_DIR/train_datasets/mmlu_auxtrain_labelled/default/train_filtered.jsonl" \
+  --output "$OUT_DIR/train_datasets/mmlu_aux_filtered/train.jsonl"
 
 step "CommonsenseQA — train + validation"
 python "$PY/preprocess_hf.py" \
@@ -141,7 +190,7 @@ python "$PY/preprocess_sft_econ.py" \
   "$OUT_DIR/benchmarks/sft_dataset_econ/test.jsonl"
 
 step "Merge all train splits into full_train.jsonl"
-cat "$OUT_DIR/train_datasets"/*/train.jsonl > "$OUT_DIR/full_train.jsonl"
+cat "$OUT_DIR/train_datasets"/*/train.jsonl > "$OUT_DIR/train_datasets/full_train.jsonl"
 
 echo
 echo "All preprocessing complete. Outputs written to: $OUT_DIR"
