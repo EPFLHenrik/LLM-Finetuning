@@ -137,11 +137,24 @@ multilinguality_model/
 │   ├── pass_at_k.py
 │   ├── run_eval_vllm.py
 │   ├── score.py
-│   └── bash/
-│       ├── eval_do_sample.sh
-│       ├── eval_group_models_hugo.sh
-│       ├── eval_loop.sh
-│       └── eval_merged.sh
+│   ├── bash/
+│   │   ├── eval_do_sample.sh
+│   │   ├── eval_group_models_hugo.sh
+│   │   ├── eval_loop.sh
+│   │   └── eval_merged.sh
+│   └── results/                       # pre-computed evaluation results
+│       ├── Qwen3-1.7B/                # base model, untuned
+│       │   ├── full/
+│       │   ├── mmlu_prox_hard/
+│       │   └── validation_set_mnlp/
+│       ├── v1/                        # best SFT multilingual checkpoint
+│       │   ├── full/
+│       │   ├── mmlu_prox_hard/
+│       │   └── validation_set_mnlp/
+│       └── final-merged/             # final individual model (TIES merge)
+│           ├── full/
+│           ├── mmlu_prox_hard/
+│           └── validation_set_mnlp/
 ├── generation.py                     # shared generation utilities
 ├── loaders/                          # dataset loaders for unified example creation
 │   ├── README.md
