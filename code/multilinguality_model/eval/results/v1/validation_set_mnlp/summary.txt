@@ -1,0 +1,50 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1
+Output dir: multilingual/eval/results/sft/v1/validation_set_mnlp
+Runtime seconds: 18.84
+Runtime minutes: 0.31
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 10,
+  "correct": 6,
+  "accuracy": 0.6,
+  "box_compliance_rate": 1.0,
+  "valid_only_accuracy": 0.6,
+  "n_valid_boxed": 10
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+   mixed 10        6       0.6                  1.0                  0.6             10
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+ dataset  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+provided 10        6       0.6                  1.0                  0.6             10
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+ dataset language  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+provided    mixed 10        6       0.6                  1.0                  0.6             10
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+provided_results.jsonl
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+============================================================

@@ -1,0 +1,17 @@
+dataset,n,correct,accuracy,box_compliance_rate
+ccse,50,39,0.78,1.0
+ceval,100,58,0.58,1.0
+cmmlu,50,38,0.76,1.0
+cultsportqa,250,167,0.668,1.0
+global_mmlu,1000,563,0.563,1.0
+global_piqa,250,165,0.66,1.0
+head_qa,150,69,0.46,1.0
+include,500,331,0.662,1.0
+italian_civil_code,75,51,0.68,1.0
+mera,150,100,0.6667,1.0
+milu,100,42,0.42,1.0
+polizia_di_stato,25,15,0.6,1.0
+quaderno_prefettizia,75,42,0.56,1.0
+quaderno_prefettizia_economia_politica,25,10,0.4,1.0
+rubq,100,41,0.41,1.0
+spain_boe_legislation,100,77,0.77,1.0

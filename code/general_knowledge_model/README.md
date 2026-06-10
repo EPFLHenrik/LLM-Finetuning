@@ -77,22 +77,16 @@ Core training and inference scripts.
 
 ### Data
 
-The dataset is hosted at <https://huggingface.co/datasets/cs-552-2026-mystery-machine/general_knowledge/tree/main> and contains two top-level folders: `raw/` and `processed/`. Choose one of the two options below:
-
-**Option A — Full pipeline (scripts 1–8)**
-Download the contents of the `raw/` folder and place them under `$PROJECT_DIR/data/general_knowledge/raw/`, then run all shell scripts in order (`1_run_preprocessing.sh` through `8_run_all_benchmark_evals.sh`). Scripts 1 and 2 will produce the processed files needed by the later stages.
-
-**Option B — Skip preprocessing (scripts 3–8)**
-Download the contents of the `processed/` folder and place them under `$PROJECT_DIR/data/general_knowledge/processed/`. This folder already contains `full_train.jsonl`, `merged_distillations.jsonl`, and `wrong_distillations.jsonl`, so you can skip scripts 1 and 2 and start directly from `3_sft.sh`.
+`1_run_preprocessing.sh` downloads the dataset from HuggingFace automatically (requires `HF_TOKEN`). The repository contains both `raw/` (used by the full pipeline) and `processed/` (pre-computed `full_train.jsonl`, `merged_distillations.jsonl`, and `wrong_distillations.jsonl`). To skip preprocessing and start directly from `3_sft.sh`, run `1_run_preprocessing.sh` for the download step only and then proceed to script 3.
 
 ### Models
 
-Download the following models from HuggingFace and place them at the indicated paths before running the pipeline:
+Both models are downloaded automatically by `1_run_preprocessing.sh` (requires `HF_TOKEN`). Downloads are skipped if the target directory already contains a `config.json`.
 
 | Model | HuggingFace source | Local path |
 |---|---|---|
-| Student base model (Qwen3-1.7B) | <https://huggingface.co/Qwen/Qwen3-1.7B> | `$PROJECT_DIR/checkpoints/general_knowledge_model/qwen_thinking3` |
-| Teacher model (Qwen3-14B) | <https://huggingface.co/Qwen/Qwen3-14B> | `$PROJECT_DIR/checkpoints/general_knowledge_model/teacher` |
+| Student base model (Qwen3-1.7B) | `Qwen/Qwen3-1.7B` | `$PROJECT_DIR/checkpoints/general_knowledge_model/qwen_thinking3` |
+| Teacher model (Qwen3-14B) | `Qwen/Qwen3-14B` | `$PROJECT_DIR/checkpoints/general_knowledge_model/teacher` |
 
 ---
 

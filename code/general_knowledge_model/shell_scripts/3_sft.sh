@@ -15,7 +15,7 @@ python "$GK_DIR/scripts/model_config.py" \
     --in-place
 
 python "$TRAINING_DIR/lora_post_train.py" \
-    --dataset-file "$PREPROCESSING_DIR/merged_distillations.jsonl" \
+    --dataset-file "$PREPROCESSING_DIR/train_datasets/merged_distillations.jsonl" \
     --model-folder "$PROJECT_DIR/checkpoints/general_knowledge_model/qwen_thinking3" \
     --output-dir "$PROJECT_DIR/checkpoints/general_knowledge_model/full_sft" \
     --run-name sft_full_math \

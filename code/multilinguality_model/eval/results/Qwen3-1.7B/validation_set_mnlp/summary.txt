@@ -1,0 +1,50 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/models/Qwen3-1.7B-baseline
+Output dir: multilingual/eval/results/sft/base/validation_set_mnlp
+Runtime seconds: 19.19
+Runtime minutes: 0.32
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 10,
+  "correct": 3,
+  "accuracy": 0.3,
+  "box_compliance_rate": 0.7,
+  "valid_only_accuracy": 0.4286,
+  "n_valid_boxed": 7
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+   mixed 10        3       0.3                  0.7               0.4286              7
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+ dataset  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+provided 10        3       0.3                  0.7               0.4286              7
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+ dataset language  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+provided    mixed 10        3       0.3                  0.7               0.4286              7
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+provided_results.jsonl
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+============================================================

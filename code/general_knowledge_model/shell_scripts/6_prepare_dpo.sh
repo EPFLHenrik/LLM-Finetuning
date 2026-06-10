@@ -12,5 +12,5 @@ python "$GK_DIR/scripts/build_dpo_dataset.py" \
         "$PREPROCESSING_DIR/grpo_runs/run1.jsonl" \
         "$PREPROCESSING_DIR/grpo_runs/run2.jsonl" \
         "$PREPROCESSING_DIR/grpo_runs/run3.jsonl" \
-    --distillation "$PREPROCESSING_DIR/merged_distillations.jsonl" \
+    --distillation "$PREPROCESSING_DIR/train_datasets/merged_distillations.jsonl" \
     --output "$PREPROCESSING_DIR/dpo_pairs.jsonl"

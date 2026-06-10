@@ -1,0 +1,6 @@
+language,n,correct,accuracy,box_compliance_rate
+chinese,600,411,0.685,1.0
+hindi,600,296,0.4933,1.0
+italian,600,356,0.5933,1.0
+russian,600,344,0.5733,1.0
+spanish,600,401,0.6683,1.0

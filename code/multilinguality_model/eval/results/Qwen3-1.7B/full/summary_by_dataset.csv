@@ -1,0 +1,17 @@
+dataset,n,correct,accuracy,box_compliance_rate,valid_only_accuracy,n_valid_boxed
+ccse,50,5,0.1,0.18,0.5556,9
+ceval,100,29,0.29,0.6,0.4833,60
+cmmlu,50,16,0.32,0.58,0.5517,29
+cultsportqa,250,60,0.24,0.556,0.4317,139
+global_mmlu,1000,350,0.35,0.821,0.4263,821
+global_piqa,250,60,0.24,0.392,0.6122,98
+head_qa,150,69,0.46,0.94,0.4894,141
+include,500,176,0.352,0.696,0.5057,348
+italian_civil_code,75,45,0.6,0.9067,0.6618,68
+mera,150,72,0.48,0.7733,0.6207,116
+milu,100,25,0.25,0.73,0.3425,73
+polizia_di_stato,25,10,0.4,0.76,0.5263,19
+quaderno_prefettizia,75,29,0.3867,0.9467,0.4085,71
+quaderno_prefettizia_economia_politica,25,8,0.32,0.84,0.381,21
+rubq,100,26,0.26,0.87,0.2989,87
+spain_boe_legislation,100,44,0.44,0.68,0.6471,68

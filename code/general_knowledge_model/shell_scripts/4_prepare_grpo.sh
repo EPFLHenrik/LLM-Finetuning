@@ -10,7 +10,7 @@ PREPROCESSING_DIR="$DATA_DIR/processed"
 
 HF_TOKEN="${HF_TOKEN:?HF_TOKEN environment variable is required}"
 
-python "$TRAINING_DIR/generate_answers.py" "$PREPROCESSING_DIR/full_train.jsonl" \
+python "$TRAINING_DIR/generate_answers.py" "$PREPROCESSING_DIR/train_datasets/full_train.jsonl" \
     --model-dir "$PROJECT_DIR/checkpoints/general_knowledge_model/full_sft" \
     --output "$PREPROCESSING_DIR/grpo_runs/run1.jsonl" \
     --hf-token "$HF_TOKEN" \
@@ -20,7 +20,7 @@ python "$TRAINING_DIR/generate_answers.py" "$PREPROCESSING_DIR/full_train.jsonl"
     --max-model-len 10240 \
     --max-num-seqs 32
 
-python "$TRAINING_DIR/generate_answers.py" "$PREPROCESSING_DIR/full_train.jsonl" \
+python "$TRAINING_DIR/generate_answers.py" "$PREPROCESSING_DIR/train_datasets/full_train.jsonl" \
     --model-dir "$PROJECT_DIR/checkpoints/general_knowledge_model/full_sft" \
     --output "$PREPROCESSING_DIR/grpo_runs/run2.jsonl" \
     --hf-token "$HF_TOKEN" \
@@ -30,7 +30,7 @@ python "$TRAINING_DIR/generate_answers.py" "$PREPROCESSING_DIR/full_train.jsonl"
     --max-model-len 10240 \
     --max-num-seqs 32
 
-python "$TRAINING_DIR/generate_answers.py" "$PREPROCESSING_DIR/full_train.jsonl" \
+python "$TRAINING_DIR/generate_answers.py" "$PREPROCESSING_DIR/train_datasets/full_train.jsonl" \
     --model-dir "$PROJECT_DIR/checkpoints/general_knowledge_model/full_sft" \
     --output "$PREPROCESSING_DIR/grpo_runs/run3.jsonl" \
     --hf-token "$HF_TOKEN" \

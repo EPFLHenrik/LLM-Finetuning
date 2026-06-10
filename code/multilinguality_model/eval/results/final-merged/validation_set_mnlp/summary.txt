@@ -1,0 +1,48 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5
+Output dir: multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/validation_set_mnlp
+Runtime seconds: 19.94
+Runtime minutes: 0.33
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 10,
+  "correct": 6,
+  "accuracy": 0.6,
+  "box_compliance_rate": 1.0
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language  n  correct  accuracy  box_compliance_rate
+   mixed 10        6       0.6                  1.0
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+ dataset  n  correct  accuracy  box_compliance_rate
+provided 10        6       0.6                  1.0
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+ dataset language  n  correct  accuracy  box_compliance_rate
+provided    mixed 10        6       0.6                  1.0
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+provided_results.jsonl
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+============================================================

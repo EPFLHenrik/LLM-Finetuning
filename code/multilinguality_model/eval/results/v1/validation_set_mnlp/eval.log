@@ -1,0 +1,86 @@
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1
+Val file:   None
+Output:     multilingual/eval/results/sft/v1/validation_set_mnlp
+TP size:    1
+============================================================
+INFO 06-09 03:14:03 [utils.py:233] non-default args: {'tokenizer': '/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'disable_log_stats': True, 'model': '/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1'}
+WARNING 06-09 03:14:03 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_FA_CMAKE_GPU_ARCHES
+WARNING 06-09 03:14:03 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_FLASH_ATTN_VERSION
+INFO 06-09 03:14:03 [model.py:549] Resolved architecture: Qwen3ForCausalLM
+INFO 06-09 03:14:03 [model.py:1678] Using max model len 8192
+INFO 06-09 03:14:03 [scheduler.py:238] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 06-09 03:14:03 [vllm.py:790] Asynchronous scheduling is enabled.
+(EngineCore pid=98861) INFO 06-09 03:14:05 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1', speculative_config=None, tokenizer='/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=8192, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=/scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_images_per_batch': 0, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+(EngineCore pid=98861) INFO 06-09 03:14:06 [parallel_state.py:1400] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.16.141.185:34645 backend=nccl
+(EngineCore pid=98861) INFO 06-09 03:14:06 [parallel_state.py:1716] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=98861) INFO 06-09 03:14:07 [gpu_model_runner.py:4735] Starting to load model /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/results/exports/sft_multilingual_v1...
+(EngineCore pid=98861) INFO 06-09 03:14:07 [cuda.py:334] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=98861) INFO 06-09 03:14:07 [flash_attn.py:596] Using FlashAttention version 2
+(EngineCore pid=98861) <frozen importlib._bootstrap_external>:1297: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=98861) <frozen importlib._bootstrap_external>:1297: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=98861) INFO 06-09 03:14:08 [weight_utils.py:848] Prefetching checkpoint files into page cache started (in background)
+(EngineCore pid=98861) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(EngineCore pid=98861) INFO 06-09 03:14:08 [weight_utils.py:825] Prefetching checkpoint files: 10% (1/1)
+(EngineCore pid=98861) INFO 06-09 03:14:08 [weight_utils.py:843] Prefetching checkpoint files into page cache finished in 0.52s
+(EngineCore pid=98861) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  1.37it/s]
+(EngineCore pid=98861) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  1.37it/s]
+(EngineCore pid=98861) 
+(EngineCore pid=98861) INFO 06-09 03:14:08 [default_loader.py:384] Loading weights took 0.90 seconds
+(EngineCore pid=98861) INFO 06-09 03:14:09 [gpu_model_runner.py:4820] Model loading took 3.22 GiB memory and 1.580139 seconds
+(EngineCore pid=98861) INFO 06-09 03:14:12 [backends.py:1051] Using cache directory: /root/.cache/vllm/torch_compile_cache/c996544f3e/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=98861) INFO 06-09 03:14:12 [backends.py:1111] Dynamo bytecode transform time: 2.81 s
+(EngineCore pid=98861) INFO 06-09 03:14:14 [backends.py:285] Directly load the compiled graph(s) for compile range (1, 8192) from the cache, took 1.837 s
+(EngineCore pid=98861) INFO 06-09 03:14:14 [decorators.py:305] Directly load AOT compilation from path /root/.cache/vllm/torch_compile_cache/torch_aot_compile/70fb1029050167fc7aa67aeabca14bf052a445ec8493852daea4d393600bb4d6/rank_0_0/model
+(EngineCore pid=98861) INFO 06-09 03:14:14 [monitor.py:48] torch.compile took 4.95 s in total
+(EngineCore pid=98861) INFO 06-09 03:14:15 [monitor.py:76] Initial profiling/warmup run took 0.18 s
+(EngineCore pid=98861) INFO 06-09 03:14:15 [kv_cache_utils.py:829] Overriding num_gpu_blocks=0 with num_gpu_blocks_override=512
+(EngineCore pid=98861) INFO 06-09 03:14:15 [gpu_model_runner.py:5876] Profiling CUDA graph memory: PIECEWISE=51 (largest=512), FULL=35 (largest=256)
+(EngineCore pid=98861) INFO 06-09 03:14:16 [gpu_model_runner.py:5955] Estimated CUDA graph memory: 0.48 GiB total
+(EngineCore pid=98861) INFO 06-09 03:14:17 [gpu_worker.py:436] Available KV cache memory: 31.58 GiB
+(EngineCore pid=98861) INFO 06-09 03:14:17 [gpu_worker.py:470] In v0.19, CUDA graph memory profiling will be enabled by default (VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1), which more accurately accounts for CUDA graph memory during KV cache allocation. To try it now, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1 and increase --gpu-memory-utilization from 0.9000 to 0.9122 to maintain the same effective KV cache size.
+(EngineCore pid=98861) INFO 06-09 03:14:17 [kv_cache_utils.py:1319] GPU KV cache size: 295,696 tokens
+(EngineCore pid=98861) INFO 06-09 03:14:17 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 36.10x
+(EngineCore pid=98861) Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   4%|▍         | 2/51 [00:00<00:02, 19.28it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  10%|▉         | 5/51 [00:00<00:01, 23.50it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  18%|█▊        | 9/51 [00:00<00:01, 28.72it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  24%|██▎       | 12/51 [00:00<00:01, 28.87it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  29%|██▉       | 15/51 [00:00<00:01, 26.92it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:00<00:01, 26.93it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  43%|████▎     | 22/51 [00:00<00:00, 29.75it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  51%|█████     | 26/51 [00:00<00:00, 31.66it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  59%|█████▉    | 30/51 [00:01<00:00, 31.41it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  67%|██████▋   | 34/51 [00:01<00:00, 29.76it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  75%|███████▍  | 38/51 [00:01<00:00, 30.35it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  82%|████████▏ | 42/51 [00:01<00:00, 31.84it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  90%|█████████ | 46/51 [00:01<00:00, 32.79it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  98%|█████████▊| 50/51 [00:01<00:00, 30.85it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:01<00:00, 29.39it/s]
+(EngineCore pid=98861) Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]Capturing CUDA graphs (decode, FULL):   9%|▊         | 3/35 [00:00<00:01, 24.92it/s]Capturing CUDA graphs (decode, FULL):  20%|██        | 7/35 [00:00<00:00, 31.07it/s]Capturing CUDA graphs (decode, FULL):  31%|███▏      | 11/35 [00:00<00:00, 33.17it/s]Capturing CUDA graphs (decode, FULL):  43%|████▎     | 15/35 [00:00<00:00, 33.40it/s]Capturing CUDA graphs (decode, FULL):  54%|█████▍    | 19/35 [00:00<00:00, 30.75it/s]Capturing CUDA graphs (decode, FULL):  66%|██████▌   | 23/35 [00:00<00:00, 30.54it/s]Capturing CUDA graphs (decode, FULL):  77%|███████▋  | 27/35 [00:00<00:00, 31.39it/s]Capturing CUDA graphs (decode, FULL):  89%|████████▊ | 31/35 [00:00<00:00, 32.94it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:01<00:00, 33.49it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:01<00:00, 32.18it/s]
+(EngineCore pid=98861) INFO 06-09 03:14:20 [gpu_model_runner.py:6046] Graph capturing finished in 4 secs, took 0.42 GiB
+(EngineCore pid=98861) INFO 06-09 03:14:20 [gpu_worker.py:597] CUDA graph pool memory: 0.42 GiB (actual), 0.48 GiB (estimated), difference: 0.06 GiB (15.4%).
+(EngineCore pid=98861) INFO 06-09 03:14:20 [core.py:283] init engine (profile, create kv cache, warmup model) took 11.18 seconds
+Evaluating 10 provided examples...
+Rendering prompts:   0%|          | 0/10 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 10/10 [00:00<00:00, 397.76it/s]
+Processed prompts:   0%|          | 0/10 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts: 100%|██████████| 10/10 [00:00<00:00, 114.15it/s, est. speed input: 29550.38 toks/s, output: 685.03 toks/s]Processed prompts: 100%|██████████| 10/10 [00:00<00:00, 113.98it/s, est. speed input: 29550.38 toks/s, output: 685.03 toks/s]
+Saved: multilingual/eval/results/sft/v1/validation_set_mnlp/provided_results.jsonl
+Saved: multilingual/eval/results/sft/v1/validation_set_mnlp/all_results.jsonl
+
+============================================================
+SUMMARY (per dataset/language)
+============================================================
+ dataset language  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+provided    mixed 10        6       0.6                  1.0                  0.6             10
+
+============================================================
+SUMMARY (per language)
+============================================================
+language  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+   mixed 10        6       0.6                  1.0                  0.6             10
+
+============================================================
+SUMMARY (per dataset)
+============================================================
+ dataset  n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+provided 10        6       0.6                  1.0                  0.6             10
+
+Overall accuracy: 0.600 (6/10)
+Runtime seconds: 18.84
+Runtime minutes: 0.31
+
+Summary files saved:
+  multilingual/eval/results/sft/v1/validation_set_mnlp/summary_by_dataset_language.csv
+  multilingual/eval/results/sft/v1/validation_set_mnlp/summary_by_language.csv
+  multilingual/eval/results/sft/v1/validation_set_mnlp/summary_by_dataset.csv
+  multilingual/eval/results/sft/v1/validation_set_mnlp/summary_overall.json
+  multilingual/eval/results/sft/v1/validation_set_mnlp/summary.csv
+  multilingual/eval/results/sft/v1/validation_set_mnlp/summary.txt
+(EngineCore pid=98861) INFO 06-09 03:14:21 [core.py:1210] Shutdown initiated (timeout=0)
+(EngineCore pid=98861) INFO 06-09 03:14:21 [core.py:1233] Shutdown complete
+Finished OK: v1 / validation_set_mnlp at Tue Jun  9 03:14:23 UTC 2026

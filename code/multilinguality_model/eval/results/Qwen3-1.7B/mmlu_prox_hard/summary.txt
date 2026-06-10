@@ -1,0 +1,58 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      /scratch/workspace/emma/standard-project-m2-mystery-machine/multilingual/models/Qwen3-1.7B-baseline
+Output dir: multilingual/eval/results/sft/base/mmlu_prox_hard
+Runtime seconds: 26.22
+Runtime minutes: 0.44
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 1000,
+  "correct": 262,
+  "accuracy": 0.262,
+  "box_compliance_rate": 0.965,
+  "valid_only_accuracy": 0.2715,
+  "n_valid_boxed": 965
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+ chinese 200       49     0.245                0.950               0.2579            190
+   hindi 200       47     0.235                0.975               0.2410            195
+ italian 200       52     0.260                0.975               0.2667            195
+ russian 200       57     0.285                0.985               0.2893            197
+ spanish 200       57     0.285                0.940               0.3032            188
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+  dataset    n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+mmlu_prox 1000      262     0.262                0.965               0.2715            965
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+  dataset language   n  correct  accuracy  box_compliance_rate  valid_only_accuracy  n_valid_boxed
+mmlu_prox  chinese 200       49     0.245                0.950               0.2579            190
+mmlu_prox    hindi 200       47     0.235                0.975               0.2410            195
+mmlu_prox  italian 200       52     0.260                0.975               0.2667            195
+mmlu_prox  russian 200       57     0.285                0.985               0.2893            197
+mmlu_prox  spanish 200       57     0.285                0.940               0.3032            188
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

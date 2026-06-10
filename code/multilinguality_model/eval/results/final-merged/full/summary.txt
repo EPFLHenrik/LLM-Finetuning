@@ -1,0 +1,96 @@
+============================================================
+EVALUATION SUMMARY
+============================================================
+Model:      multilingual/models/merged/v1_v20/tune_v1_ru_hi_base_d0p5
+Output dir: multilingual/eval/results/merged/v1_v20/tune_v1_ru_hi_base_d0p5/full
+Runtime seconds: 49.64
+Runtime minutes: 0.83
+
+============================================================
+SUMMARY OVERALL
+============================================================
+{
+  "n": 3000,
+  "correct": 1808,
+  "accuracy": 0.6027,
+  "box_compliance_rate": 1.0
+}
+
+============================================================
+SUMMARY BY LANGUAGE
+============================================================
+language   n  correct  accuracy  box_compliance_rate
+ chinese 600      411    0.6850                  1.0
+   hindi 600      296    0.4933                  1.0
+ italian 600      356    0.5933                  1.0
+ russian 600      344    0.5733                  1.0
+ spanish 600      401    0.6683                  1.0
+
+============================================================
+SUMMARY BY DATASET
+============================================================
+                               dataset    n  correct  accuracy  box_compliance_rate
+                                  ccse   50       39    0.7800                  1.0
+                                 ceval  100       58    0.5800                  1.0
+                                 cmmlu   50       38    0.7600                  1.0
+                           cultsportqa  250      167    0.6680                  1.0
+                           global_mmlu 1000      563    0.5630                  1.0
+                           global_piqa  250      165    0.6600                  1.0
+                               head_qa  150       69    0.4600                  1.0
+                               include  500      331    0.6620                  1.0
+                    italian_civil_code   75       51    0.6800                  1.0
+                                  mera  150      100    0.6667                  1.0
+                                  milu  100       42    0.4200                  1.0
+                      polizia_di_stato   25       15    0.6000                  1.0
+                  quaderno_prefettizia   75       42    0.5600                  1.0
+quaderno_prefettizia_economia_politica   25       10    0.4000                  1.0
+                                  rubq  100       41    0.4100                  1.0
+                 spain_boe_legislation  100       77    0.7700                  1.0
+
+============================================================
+SUMMARY BY DATASET/LANGUAGE
+============================================================
+                               dataset language   n  correct  accuracy  box_compliance_rate
+                                  ccse  spanish  50       39    0.7800                  1.0
+                                 ceval  chinese 100       58    0.5800                  1.0
+                                 cmmlu  chinese  50       38    0.7600                  1.0
+                           cultsportqa  chinese 100       88    0.8800                  1.0
+                           cultsportqa    hindi 150       79    0.5267                  1.0
+                           global_mmlu  chinese 200      122    0.6100                  1.0
+                           global_mmlu    hindi 200       90    0.4500                  1.0
+                           global_mmlu  italian 200      113    0.5650                  1.0
+                           global_mmlu  russian 200      112    0.5600                  1.0
+                           global_mmlu  spanish 200      126    0.6300                  1.0
+                           global_piqa  chinese  50       30    0.6000                  1.0
+                           global_piqa    hindi  50       29    0.5800                  1.0
+                           global_piqa  italian  50       29    0.5800                  1.0
+                           global_piqa  russian  50       35    0.7000                  1.0
+                           global_piqa  spanish  50       42    0.8400                  1.0
+                               head_qa  italian  50       28    0.5600                  1.0
+                               head_qa  spanish 100       41    0.4100                  1.0
+                               include  chinese 100       75    0.7500                  1.0
+                               include    hindi 100       56    0.5600                  1.0
+                               include  italian 100       68    0.6800                  1.0
+                               include  russian 100       56    0.5600                  1.0
+                               include  spanish 100       76    0.7600                  1.0
+                    italian_civil_code  italian  75       51    0.6800                  1.0
+                                  mera  russian 150      100    0.6667                  1.0
+                                  milu    hindi 100       42    0.4200                  1.0
+                      polizia_di_stato  italian  25       15    0.6000                  1.0
+                  quaderno_prefettizia  italian  75       42    0.5600                  1.0
+quaderno_prefettizia_economia_politica  italian  25       10    0.4000                  1.0
+                                  rubq  russian 100       41    0.4100                  1.0
+                 spain_boe_legislation  spanish 100       77    0.7700                  1.0
+
+============================================================
+FILES
+============================================================
+all_results.jsonl
+eval.log
+summary.csv
+summary_by_dataset.csv
+summary_by_dataset_language.csv
+summary_by_language.csv
+summary_overall.json
+val_results.jsonl
+============================================================

@@ -1,0 +1,6 @@
+dataset,language,n,correct,accuracy,box_compliance_rate,valid_only_accuracy,n_valid_boxed
+mmlu_prox,chinese,200,56,0.28,1.0,0.28,200
+mmlu_prox,hindi,200,53,0.265,1.0,0.265,200
+mmlu_prox,italian,200,51,0.255,1.0,0.255,200
+mmlu_prox,russian,200,55,0.275,1.0,0.275,200
+mmlu_prox,spanish,200,57,0.285,1.0,0.285,200
