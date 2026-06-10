@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GK_DIR="$(dirname "$SCRIPT_DIR")"               # general_knowledge_model/
 PROJECT_DIR="$(dirname "$(dirname "$GK_DIR")")"  # project root
-DATA_DIR="$PROJECT_DIR/data"
-PREPROCESSING_DIR="$DATA_DIR/preprocessing"
+DATA_DIR="$PROJECT_DIR/data/general_knowledge"
+PREPROCESSING_DIR="$DATA_DIR/processed"
 
 python "$GK_DIR/scripts/build_dpo_dataset.py" \
     --runs \

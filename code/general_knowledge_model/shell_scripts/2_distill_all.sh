@@ -4,13 +4,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GK_DIR="$(dirname "$SCRIPT_DIR")"               # general_knowledge_model/
 PROJECT_DIR="$(dirname "$(dirname "$GK_DIR")")"  # project root
-DATA_DIR="$PROJECT_DIR/data"
+DATA_DIR="$PROJECT_DIR/data/general_knowledge"
 TRAINING_DIR="$GK_DIR/training"
-PREPROCESSING_DIR="$DATA_DIR/preprocessing"
+PREPROCESSING_DIR="$DATA_DIR/processed"
 
 HF_TOKEN="${HF_TOKEN:?HF_TOKEN environment variable is required}"
-TEACHER_MODEL="$PROJECT_DIR/models/teacher"
-STUDENT_MODEL="$PROJECT_DIR/models/qwen3_thinking"
+TEACHER_MODEL="$PROJECT_DIR/checkpoints/general_knowledge_model/teacher"
+STUDENT_MODEL="$PROJECT_DIR/checkpoints/general_knowledge_model/qwen_thinking3"
 
 log_stats() {
     local file="$1"
@@ -71,7 +71,9 @@ for train_file in "$PREPROCESSING_DIR/train_datasets"/*/train.jsonl; do
     python "$TRAINING_DIR/merge_reasoning_from_student_teacher.py" \
         "$dir/student_corrected.jsonl" \
         "$dir/teacher_corrected.jsonl" \
-        --output "$dir/merged_student_teacher.jsonl"
+        --output "$dir/merged_student_teacher.jsonl" \
+        --distillation-output "$PREPROCESSING_DIR/merged_distillations.jsonl" \
+        --wrong-output "$PREPROCESSING_DIR/wrong_distillations.jsonl"
 
     {
         echo "  --- stats: $dir ---"

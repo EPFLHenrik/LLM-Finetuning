@@ -41,8 +41,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--runs", nargs="+", type=Path, required=True,
                         help="generate_answers.py output files (must include completion and correct fields)")
     parser.add_argument("--distillation", type=Path,
-                        default=Path("data/preprocessing/merged_distillation.jsonl"),
-                        help="merged_distillation.jsonl (must include messages with assistant CoT turn)")
+                        default=Path("data/general_knowledge/processed/merged_distillations.jsonl"),
+                        help="merged_distillations.jsonl (must include messages with assistant CoT turn)")
     parser.add_argument("--output", type=Path, required=True,
                         help="Output JSONL file with (prompt, chosen, rejected, answer) rows")
     args = parser.parse_args(argv)

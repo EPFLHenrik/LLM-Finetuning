@@ -125,6 +125,18 @@ def main(argv: list[str] | None = None) -> int:
         default=False,
         help="Prefer teacher's completion when correct; fall back to student only if teacher is wrong but student is correct.",
     )
+    parser.add_argument(
+        "--distillation-output",
+        type=Path,
+        default=None,
+        help="Path to the combined distillations JSONL to append merged rows to.",
+    )
+    parser.add_argument(
+        "--wrong-output",
+        type=Path,
+        default=None,
+        help="Path to the combined wrong-distillations JSONL to append both-wrong rows to.",
+    )
     args = parser.parse_args(argv)
 
     student_path = args.student.expanduser().resolve()
@@ -193,8 +205,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Rows: {len(merged_rows)}")
     print(f"Dropped both-wrong rows: {dropped_both_wrong}")
 
-    distillation_filename = "teacher_distillation.jsonl" if args.prefer_teacher else "merged_distillations.jsonl"
-    merged_distillation_path = Path(__file__).resolve().parents[3] / "data" / "preprocessing" / distillation_filename
+    if args.distillation_output is None:
+        distillation_filename = "teacher_distillation.jsonl" if args.prefer_teacher else "merged_distillations.jsonl"
+        merged_distillation_path = Path(__file__).resolve().parents[3] / "data" / "general_knowledge" / "processed" / distillation_filename
+    else:
+        merged_distillation_path = args.distillation_output.expanduser().resolve()
     merged_distillation_path.parent.mkdir(parents=True, exist_ok=True)
     existing_merged: list[dict[str, Any]] = []
     if merged_distillation_path.exists() and merged_distillation_path.stat().st_size > 0:
@@ -210,7 +225,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Appended {len(new_merged)} rows to {merged_distillation_path} ({len(merged_rows) - len(new_merged)} duplicates skipped)")
 
     if wrong_rows and not args.prefer_teacher:
-        wrong_path = Path(__file__).resolve().parents[3] / "data" / "preprocessing" / "wrong_distillations.jsonl"
+        if args.wrong_output is None:
+            wrong_path = Path(__file__).resolve().parents[3] / "data" / "general_knowledge" / "processed" / "wrong_distillations.jsonl"
+        else:
+            wrong_path = args.wrong_output.expanduser().resolve()
+        wrong_path.parent.mkdir(parents=True, exist_ok=True)
         existing: list[dict[str, Any]] = []
         if wrong_path.exists() and wrong_path.stat().st_size > 0:
             try:

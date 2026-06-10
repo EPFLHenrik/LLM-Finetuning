@@ -5,8 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GK_DIR="$(dirname "$SCRIPT_DIR")"               # general_knowledge_model/
 PROJECT_DIR="$(dirname "$(dirname "$GK_DIR")")"  # project root
 
-MODEL="$PROJECT_DIR/models/sft_grpo_dpo"
-BENCHMARKS="$PROJECT_DIR/data/preprocessing/benchmarks"
+MODEL="$PROJECT_DIR/checkpoints/general_knowledge_model/sft_grpo_dpo"
+BENCHMARKS="$PROJECT_DIR/data/general_knowledge/processed/benchmarks"
 OUTPUT_DIR="$PROJECT_DIR/results/sft_grpo_dpo/benchmarks"
 
 mkdir -p "$OUTPUT_DIR"
