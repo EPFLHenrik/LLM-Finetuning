@@ -35,9 +35,35 @@ The arguments are:
 - `--weights`, weigths attributed to each merge target, by default uniform.
 - `--density`, density factor for compatible merging techniques (like TIES), by default 0.8.
 
-### Example
+### Examples
+This first example requires the reproduction of the 4 individual specialists first, so please follow these 4 readme's first before running this command.
 ```
-python -m code.group_model.merging.full_task_arithmetic --merging_targets checkpoints/math_model checkpoints/general_knowledge_model/sft_grpo_dpo checkpoints/multilingual_model checkpoints/safety_model --output_path checkpoints/merged_model
+python -m code.group_model.merging.full_task_arithmetic --merging_targets checkpoints/math_model/final checkpoints/general_knowledge_model/sft_grpo_dpo checkpoints/multilinguality_model/best_model checkpoints/safety_model/dpo --output_path checkpoints/merged_model
+```
+Alternatively the individual models from hf can be downloaded and used for the merge
+```python
+from huggingface_hub import snapshot_download
+
+models = {
+    "checkpoints/math_model/hf_model":              "cs-552-2026-mystery-machine/math_model",
+    "checkpoints/general_knowledge_model/hf_model": "cs-552-2026-mystery-machine/general_knowledge_model",
+    "checkpoints/multilinguality_model/hf_model":   "cs-552-2026-mystery-machine/multilingual_model",
+    "checkpoints/safety_model/hf_model":            "cs-552-2026-mystery-machine/safety_model",
+}
+
+for local_dir, repo_id in models.items():
+    print(f"Downloading {repo_id} -> {local_dir}")
+    snapshot_download(repo_id=repo_id, local_dir=local_dir)
+```
+Then run the merge on the downloaded models:
+```
+python -m code.group_model.merging.full_task_arithmetic \
+    --merging_targets \
+        checkpoints/math_model/hf_model \
+        checkpoints/general_knowledge_model/hf_model \
+        checkpoints/multilinguality_model/hf_model \
+        checkpoints/safety_model/hf_model \
+    --output_path checkpoints/merged_model
 ```
 
 ## 3. Model Benchmarking
