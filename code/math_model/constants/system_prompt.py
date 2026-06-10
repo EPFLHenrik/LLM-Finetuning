@@ -1,11 +1,4 @@
 """Single source of truth for the math model's system prompt.
-
-This string must stay byte-identical to the `system_prompt` block in
-[code/math_model/huggingface/chat_template.jinja](../training/chat_template.jinja)
-(lines 2-19 of that file). Any edit here must be mirrored there, and any edit
-to chat_template.jinja must be mirrored back here — otherwise the rendered
-chat at training time will disagree with what CI sees at eval time, and the
-SFT v2 fix from PLAN.md §5.2.B.1 stops working.
 """
 
 # Mirrors the {%- set system_prompt %}...{%- endset %} block in

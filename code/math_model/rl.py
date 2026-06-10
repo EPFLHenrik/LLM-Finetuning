@@ -47,10 +47,9 @@ def main() -> None:
 
     # RL objective
     ap.add_argument("--loss", default="gspo", choices=["gspo", "cispo"],
-                    help="Policy-optimisation objective. gspo (default, shipped) "
+                    help="Policy-optimisation objective. gspo (default) "
                          "uses sequence-level IS; cispo uses token-level IS "
-                         "with detached-weight clipping (matches the original "
-                         "55%% CI baseline).")
+                         "with detached-weight clipping.")
     ap.add_argument("--eps-high", type=float, default=5.0,
                     help="CISPO clip threshold. Ignored when --loss=gspo.")
 

@@ -1,7 +1,4 @@
 """Answer extraction and equivalence checking.
-
-Core functions ported from OpenCompass (opencompass/datasets/math.py) with
-minor refactoring to be standalone (no class dependencies, no registry).
 """
 
 from __future__ import annotations
@@ -144,7 +141,7 @@ def normalize_final_answer(final_answer: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# String stripping (v2 variant from OpenCompass MATHEvaluator)
+# String stripping (adapted from the OpenCompass MATHEvaluator)
 # ---------------------------------------------------------------------------
 
 def _fix_fracs(string: str) -> str:
@@ -189,7 +186,7 @@ def _fix_a_slash_b(string: str) -> str:
 
 
 def strip_string(string: str) -> str:
-    """Comprehensive string stripping for math answer comparison (v2)."""
+    """Comprehensive string stripping for math answer comparison."""
     string = str(string).strip()
     string = string.replace("\n", "")
     string = string.rstrip(".")

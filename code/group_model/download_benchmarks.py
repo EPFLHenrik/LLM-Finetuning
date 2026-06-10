@@ -92,9 +92,9 @@ def download_multilingual_benchmark() -> None:
 
 
 def download_math_benchmark() -> None:
-	dataset = load_dataset("cs-552-2026-mystery-machine/math_eval_v2", split="test")
-	normalized = normalize_prompt_answer(dataset, "cs-552-2026-mystery-machine/math_eval_v2:test")
-	save_benchmark(normalized, OUTPUT_ROOT / "math" / "math_eval_v2", "math_eval_v2")
+	dataset = load_dataset("cs-552-2026-mystery-machine/math", split="test")
+	normalized = normalize_prompt_answer(dataset, "cs-552-2026-mystery-machine/math:test")
+	save_benchmark(normalized, OUTPUT_ROOT / "math" / "math", "math")
 
 
 def download_general_knowledge_benchmarks(api: HfApi) -> None:

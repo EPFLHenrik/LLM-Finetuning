@@ -1,27 +1,12 @@
 """Merge a LoRA checkpoint into Qwen3-1.7B and push it to HuggingFace.
 
-Replaces the base-model push (`push_base.py`) on `cs-552-2026-mystery-machine/math_model`
-with the SFT- (or RL-) trained checkpoint of your choice.
-
-Usage:
-    # Push a specific checkpoint:
-    python -m code.math_model.huggingface.push_checkpoint \\
-        /scratch/<user>/ckpt/math_sft_v1/checkpoint-500
-
-    # Push the final (top-level) adapter:
-    python -m code.math_model.huggingface.push_checkpoint /scratch/<user>/ckpt/math_sft_v1
-
-    # Push to a different repo (e.g. an experiment slot):
-    python -m code.math_model.huggingface.push_checkpoint /scratch/.../checkpoint-500 \\
-        --repo cs-552-2026-mystery-machine/math_model_experimental
-
 The script:
   1. Loads the base Qwen3-1.7B
   2. Attaches the LoRA adapter
   3. Merges and unloads (full-weight model)
   4. Saves locally with the team chat template + generation config
   5. Smoke-tests with vLLM (optional via --skip-vllm-check)
-  6. Pushes to HF Hub
+  6. Pushes to HF Hub when --repo is given
 """
 from __future__ import annotations
 
@@ -38,8 +23,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("checkpoint", type=Path,
                     help="LoRA adapter directory (final or checkpoint-N).")
-    ap.add_argument("--repo", default=DEFAULT_REPO,
-                    help=f"HF repo to push to (default: {DEFAULT_REPO}).")
+    ap.add_argument("--repo", default=None,
+                    help="HF repo to push the merged model to. If omitted, the "
+                         f"model is saved locally only (no push). Example: {DEFAULT_REPO}.")
     ap.add_argument("--base-model", default=DEFAULT_BASE_MODEL,
                     help=f"HF repo or local path to merge the LoRA into. "
                          f"Default {DEFAULT_BASE_MODEL}. For RL-on-top-of-SFT, "
@@ -48,12 +34,11 @@ def main() -> None:
                          f"(not bare base, which would lose SFT learnings).")
     ap.add_argument("--local-out", type=Path, default=None,
                     help="Where to save the merged model locally. "
-                         "Default: /scratch/<USER>/checkpoints/<ckpt-stem>_merged")
+                         "Default: checkpoints/math_model/<ckpt-stem>_merged")
     ap.add_argument("--skip-vllm-check", action="store_true",
                     help="Skip the vLLM smoke test (saves ~1 min).")
     args = ap.parse_args()
 
-    import os
     import torch
     from peft import PeftModel
     from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
@@ -61,10 +46,9 @@ def main() -> None:
     template = CHAT_TEMPLATE_PATH.read_text()
 
     if args.local_out is None:
-        user = os.environ.get("USER", "user")
         ckpt_stem = args.checkpoint.name if args.checkpoint.name.startswith("checkpoint-") \
             else args.checkpoint.parent.name + "_final"
-        args.local_out = Path(f"/scratch/{user}/checkpoints/{ckpt_stem}_merged")
+        args.local_out = Path(f"checkpoints/math_model/{ckpt_stem}_merged")
     args.local_out.mkdir(parents=True, exist_ok=True)
 
     # ---------------------------------------------------------------- merge
@@ -82,10 +66,8 @@ def main() -> None:
     tok = AutoTokenizer.from_pretrained(args.base_model)
     tok.chat_template = template
 
-    # Sanity-render. The new template embeds a system prompt and lets the
-    # model emit <think> itself, so the prompt now ends with just
-    # "<|im_start|>assistant\n". We assert the looser invariant: must end with
-    # an open assistant turn, and must include our system-prompt boxed rules.
+    # Sanity-render: the merged tokenizer must open an assistant turn and must
+    # include the system-prompt boxed rules.
     rendered = tok.apply_chat_template(
         [{"role": "user", "content": "What is 2+2?"}],
         tokenize=False, add_generation_prompt=True,
@@ -137,6 +119,10 @@ def main() -> None:
         del llm
 
     # ----------------------------------------------------------------- push
+    if not args.repo:
+        print(f"[done] saved merged model to {args.local_out} (no --repo; not pushed)")
+        return
+
     print(f"[push] {args.repo}")
     merged.push_to_hub(args.repo)
     tok.push_to_hub(args.repo)
@@ -151,7 +137,6 @@ def main() -> None:
     )
 
     print(f"[done] pushed to https://huggingface.co/{args.repo}")
-    print("        Wait for nightly CI (~23:59 UTC) for EVAL_REPORT.md.")
 
 
 if __name__ == "__main__":

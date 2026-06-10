@@ -1,13 +1,4 @@
-"""CLI: score a generations JSONL with the same logic the nightly CI uses.
-
-Usage:
-    python -m evaluate.score \\
-        --generations my_math_gens.jsonl \\
-        --benchmark math \\
-        [--output scored.json]
-
-Input JSONL schema (one object per problem):
-    {"prompt": "...", "answer": "<gold>", "completions": ["<gen 1>", "<gen 2>", ...]}
+"""CLI: score a generations JSONL.
 
 `reference` is accepted as a synonym for `answer`. All rows must have the same
 number of completions; that count is used as `n` for pass@k.
@@ -20,16 +11,13 @@ import json
 import sys
 from pathlib import Path
 
-from .benchmarks import VALID_METHODS, extract_benchmark_answer, is_correct_benchmark_answer
+from .answer_matching import VALID_METHODS, extract_benchmark_answer, is_correct_benchmark_answer
 from .pass_at_k import compute_pass_at_k_for_dataset
 
 
-# Mirrors config/benchmarks.yaml in the CI repo.
+# Benchmark name -> answer-extraction method.
 BENCHMARK_TO_METHOD = {
     "math": "boxed",
-    "knowledge": "boxed",
-    "multilingual": "boxed",
-    "safety": "boxed",
 }
 
 
@@ -119,8 +107,8 @@ def score_generations(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="evaluate.score",
-        description="Score generations with the same logic the MNLP nightly CI uses.",
+        prog="math_model.evaluation.scoring",
+        description="Score a generations JSONL with pass@k.",
     )
     parser.add_argument(
         "--generations",

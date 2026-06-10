@@ -1,25 +1,16 @@
-"""vLLM-based batch generation with EXACTLY the CI's prompt construction:
+"""vLLM-based batch generation with the CI's prompt construction:
 
     tokenizer.apply_chat_template(messages, add_generation_prompt=True)
-
-No system prompt, no extra instructions. Anything custom must live inside
-the chat_template.jinja itself — that's the only signal CI honors.
-
-Local ablations may prepend a string to the user message (PROMPT_VARIANTS in
-config.py) and override Qwen3's enable_thinking default. Both are CI-invisible
-side channels for probing only.
 """
 from typing import List, Dict
 
-from .config import EvalConfig, PROMPT_VARIANTS
+from .config import EvalConfig
 
 
 def build_prompts(items: List[Dict], tokenizer, config: EvalConfig) -> List[str]:
-    prefix = PROMPT_VARIANTS[config.prompt_variant]
     prompts = []
     for item in items:
-        user_content = prefix + item["prompt"] if prefix else item["prompt"]
-        messages = [{"role": "user", "content": user_content}]
+        messages = [{"role": "user", "content": item["prompt"]}]
         prompts.append(
             tokenizer.apply_chat_template(
                 messages,

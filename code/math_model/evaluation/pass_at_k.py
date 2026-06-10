@@ -1,6 +1,4 @@
 """Unbiased pass@k estimator.
-
-From Chen et al. (2021) "Evaluating Large Language Models Trained on Code".
 """
 
 from __future__ import annotations
@@ -55,14 +53,3 @@ def compute_pass_at_k_for_dataset(
         scores = [pass_at_k(n, c, k) for c in per_problem_correct]
         results[f"pass@{k}"] = float(np.mean(scores))
     return results
-
-
-def mean_at_k_for_dataset(per_problem_correct: list[int], n: int, k: int) -> float:
-    """Compute mean correctness over k sampled completions per problem.
-
-    This is equivalent to running pass@1 on the same dataset k times, once per
-    completion slot, then averaging those k accuracies.
-    """
-    if k != n:
-        raise ValueError(f"mean@{k} requires exactly {k} samples per problem; got n={n}")
-    return float(np.mean([c / k for c in per_problem_correct]))

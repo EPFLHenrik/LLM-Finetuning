@@ -1,21 +1,21 @@
-"""Diagnostic metrics on top of pass@k.
+"""Diagnostic metrics that complement pass@k.
 
-`evaluate/` already computes the leaderboard metrics (pass@1, pass@8). These
-extras help explain WHY the model is scoring what it scores:
+`scoring.py` computes the headline metrics (pass@1, pass@8). The metrics here
+help explain why a model scores what it scores:
 
   - box_compliance_rate     : did the model emit \\boxed{...} at all?
-                              (uses the same extractor the CI grader uses, so
-                               this is exactly "the official grader will get
-                               something out of this generation")
+                              (uses the same extractor as scoring, so this is
+                               exactly "the grader will get something out of
+                               this generation")
   - truncation_rate         : did the model run out of context before answering?
                               (vLLM finish_reason == "length")
   - avg_tokens_per_completion : how long is the model thinking? Useful for
-                                deciding if "always thinking mode" is viable
-                                under the 4096-token CI ceiling.
+                                deciding whether always-on thinking mode fits
+                                under the 4096-token budget.
 """
 from typing import List, Dict
 
-from .extract_answer import extract_boxed_answer
+from .answer_extraction import extract_boxed_answer
 
 
 def compute_extra_metrics(generation_results: List[Dict]) -> Dict[str, float]:

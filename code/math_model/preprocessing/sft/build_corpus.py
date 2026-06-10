@@ -1,4 +1,4 @@
-"""Build the SFT v2 training corpus from a curated multi-source mixture.
+"""Build the SFT training corpus from a curated multi-source mixture.
 
 Two-phase pipeline (each phase is idempotent on disk):
 
@@ -8,18 +8,18 @@ Two-phase pipeline (each phase is idempotent on disk):
                 needs-distill list before phase=finalize.
 
   phase=finalize — read the filtered CoT pools + the distilled-traces JSONL,
-                   stratify-sample to the per-source targets in PLAN.md
-                   §5.2.B.1, dedupe by normalized problem fingerprint, format
-                   every row with `messages=[system, user, assistant]`, and
-                   write the final SFT v2 JSONL + a stats sidecar.
+                   stratify-sample to the per-source targets in TARGETS, dedupe
+                   by normalized problem fingerprint, format every row with
+                   `messages=[system, user, assistant]`, and write the final
+                   SFT JSONL + a stats sidecar.
 
 Usage:
     python -m code.math_model.preprocessing.sft.build_corpus --phase prep \\
-        --workdir /scratch/user/sft_data/v2_workdir
+        --workdir data/math/sft/workdir
     # ... run distill_traces.py on needs_distill.jsonl ...
     python -m code.math_model.preprocessing.sft.build_corpus --phase finalize \\
-        --workdir /scratch/user/sft_data/v2_workdir \\
-        --output /scratch/user/sft_data/sft_v2_30k.jsonl
+        --workdir data/math/sft/workdir \\
+        --output data/math/sft/sft_full.jsonl
 
 The workdir holds intermediate per-source `*_cot.jsonl` files and the
 `needs_distill.jsonl` so re-running phase=prep doesn't re-pull from HF on
@@ -43,16 +43,10 @@ from code.math_model.constants.system_prompt import SYSTEM_PROMPT
 # =============================================================================
 # Per-source configuration
 # =============================================================================
-# Target counts (PLAN.md §5.2.B.1). Sum ~30K after dedupe.
-# Rebalanced 2026-05-26 after first prep run:
-#   - NuminaMath-CoT only yielded 3,418 (filter too strict for short formal
-#     solutions) — set target to cap available, not the original 10K
-#   - LIMO 557, s1K-1.1 388 — set targets to cap available
-#   - MATH train (`hendrycks/competition_math` / `lighteval/MATH`) failed to
-#     load; College-Math repos don't exist or schema mismatch — drop both
-#   - To still reach ~30K, bump OpenR1-Math 8K→9K and OpenMathReasoning 5K→16K
-#     (both have plenty of headroom: 45K and 20K available respectively)
-#   - distilled:aime_amc bumped to 400 since 100 problems × ~4 keep-top-k traces
+# Per-source sample targets; sum ~30K after dedupe. Targets reflect each
+# source's post-filter availability (NuminaMath-CoT, LIMO and s1K-1.1 are
+# capped at what survives the CoT/length filter), with OpenR1-Math and
+# OpenMathReasoning carrying the bulk.
 TARGETS = {
     "open-r1/OpenR1-Math-220k":     9000,
     "AI-MO/NuminaMath-CoT":         3418,    # cap = available
@@ -84,7 +78,7 @@ def _token_len(text: str) -> int:
 # Answer extraction + structural filters
 # =============================================================================
 def _extract_boxed(text: str) -> Optional[str]:
-    from code.math_model.evaluation.extract_answer import extract_boxed_answer
+    from code.math_model.evaluation.answer_extraction import extract_boxed_answer
     return extract_boxed_answer(text, strip_double_curly_brace=True)
 
 
@@ -179,7 +173,7 @@ def load_numina_cot(progress_every: int = 10000) -> List[Dict]:
     markers. We extract the gold answer from the solution (or `answer` field
     when present), then synthetically wrap the solution as
     `<think>{solution}</think>\\n\\n\\boxed{gold}` so the model learns to put
-    its reasoning inside a think block during SFT v2."""
+    its reasoning inside a think block during SFT."""
     from datasets import load_dataset
     print("[load] AI-MO/NuminaMath-CoT  split=train")
     ds = load_dataset("AI-MO/NuminaMath-CoT", split="train")
@@ -344,23 +338,6 @@ def collect_needs_distill_problems() -> List[Dict]:
     from datasets import load_dataset
     out: List[Dict] = []
 
-    # MATH train (Hendrycks competition_math). The trickiest part is which
-    # repo on HF is mirrored: hendrycks/competition_math or lighteval/MATH.
-    for repo in ("hendrycks/competition_math", "lighteval/MATH"):
-        try:
-            print(f"[load no-CoT] {repo} split=train")
-            ds = load_dataset(repo, split="train", trust_remote_code=False)
-            for row in ds:
-                problem = (row.get("problem") or "").strip()
-                solution = row.get("solution") or ""
-                gold = _extract_boxed(solution) or ""
-                if problem and gold:
-                    out.append({"problem": problem, "gold": gold,
-                                "source": f"distilled:competition_math"})
-            break
-        except Exception as e:
-            print(f"  [warn] failed to load {repo}: {e}")
-
     # AIME 2024
     try:
         print("[load no-CoT] Maxwell-Jia/AIME_2024 split=train")
@@ -398,22 +375,6 @@ def collect_needs_distill_problems() -> List[Dict]:
                 out.append({"problem": problem, "gold": gold, "source": "distilled:aime_amc"})
     except Exception as e:
         print(f"  [warn] AMC23 unavailable: {e}")
-
-    # College Math — there are several repos; try a popular one.
-    for repo in ("Mathwell/College-Math", "TIGER-Lab/MathInstruct"):
-        try:
-            print(f"[load no-CoT] {repo}")
-            ds = load_dataset(repo, split="train")
-            n_before = len(out)
-            for row in ds:
-                problem = (row.get("problem") or row.get("question") or "").strip()
-                gold = str(row.get("answer") or row.get("gold") or "").strip()
-                if problem and gold:
-                    out.append({"problem": problem, "gold": gold, "source": "distilled:college_math"})
-            print(f"  [{repo}] +{len(out) - n_before}")
-            break
-        except Exception as e:
-            print(f"  [warn] {repo} unavailable: {e}")
 
     print(f"[no-CoT] total problems needing distillation: {len(out)}")
     return out
@@ -562,7 +523,7 @@ def main() -> None:
     ap.add_argument("--workdir", type=Path, required=True,
                     help="Directory for per-source intermediate JSONLs.")
     ap.add_argument("--output", type=Path, default=None,
-                    help="(phase=finalize) Final SFT v2 JSONL output path.")
+                    help="(phase=finalize) Final SFT JSONL output path.")
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 

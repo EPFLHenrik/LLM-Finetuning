@@ -12,19 +12,21 @@ is done here; difficulty filtering happens downstream in `filter_learnability.py
 
 Usage:
     python -m code.math_model.preprocessing.rl.prepare_pool \\
-        --output /scratch/<user>/rl_data/deepscaler_full.jsonl
+        --output data/math/rl/deepscaler_full.jsonl
 
 Inspect after:
-    python -m code.math_model.preprocessing.rl.prepare_pool --stats /scratch/<user>/rl_data/deepscaler_full.jsonl
+    python -m code.math_model.preprocessing.rl.prepare_pool --stats data/math/rl/deepscaler_full.jsonl
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
 from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Optional
+
+
+DEFAULT_OUTPUT = Path("data/math/rl/deepscaler_full.jsonl")
 
 
 DEFAULT_SOURCE = "agentica-org/DeepScaleR-Preview-Dataset"
@@ -111,8 +113,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stats", type=Path, default=None,
                     help="If given, print stats for an already-prepared JSONL and exit.")
-    ap.add_argument("--output", type=Path, required=False,
-                    help="Output JSONL path. Defaults to /scratch/<USER>/rl_data/deepscaler_full.jsonl")
+    ap.add_argument("--output", type=Path, default=DEFAULT_OUTPUT,
+                    help=f"Output JSONL path (default {DEFAULT_OUTPUT}).")
     ap.add_argument("--limit", type=int, default=None,
                     help="Debug: cap at N rows.")
     args = ap.parse_args()
@@ -121,12 +123,7 @@ def main() -> None:
         stats(args.stats)
         return
 
-    output = args.output
-    if output is None:
-        user = os.environ.get("USER", "user")
-        output = Path(f"/scratch/{user}/rl_data/deepscaler_full.jsonl")
-
-    prepare(output_path=output, limit=args.limit)
+    prepare(output_path=args.output, limit=args.limit)
 
 
 if __name__ == "__main__":

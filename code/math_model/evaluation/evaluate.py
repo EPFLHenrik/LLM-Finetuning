@@ -1,50 +1,9 @@
-"""Multi-dataset weighted evaluation, calibrated against the classroom CI.
-
-Why this exists
----------------
-Our long-running MATH-500 pass@8 evaluation saturated at 85-94% for every
-SFT/RL checkpoint we shipped, but the classroom CI evaluator reports
-base=16-17%, SFT=27-29%, RL=50%. That tells us the classroom set is
-(a) pass@1 not pass@8 and (b) weighted toward problems harder than
-generic MATH-500. So MATH-500 pass@8 is no longer discriminative for our
-checkpoints — it's all noise above 85%.
-
-`eval_v2` reconstructs a difficulty-weighted mixture that is meant to
-*correlate* with the classroom CI score, so checkpoint comparisons made
-locally actually predict what the official grader will say.
-
-Usage
------
-From the repo root:
-
-    # Calibration run — base model. Target: weighted ~ 14-20%.
-    python -m code.math_model.benchmark --model Qwen/Qwen3-1.7B --budget ci
-
-    # Re-evaluate a HF-pushed checkpoint with the 16K final budget:
-    python -m code.math_model.benchmark \\
-        --model cs-552-2026-mystery-machine/math_model --budget final
-
-    # Quick first-pass on 250 problems total (default profile = "default"),
-    # or override with a smaller --profile fast (~120 problems):
-    python -m code.math_model.benchmark --model <ckpt> --profile fast
-
-    # Custom subset selection (comma-separated names from SUBSET_REGISTRY):
-    python -m code.math_model.benchmark --model <ckpt> --subsets aime_2024,aime_2025,math500_hard
-
-Output
-------
-code/math_model/results/eval_v2/<safe_model>_<budget>_<profile>.json
-    - per-subset pass@1 + box_compliance + avg_tokens
-    - weighted aggregate (matches what the classroom CI should approximate)
-    - detailed per-problem grading for failure-mode inspection
-
-Each run also appends one row to code/math_model/RUNS.md.
+"""Multi-dataset weighted evaluation.
 """
 from __future__ import annotations
 
 import argparse
 import json
-from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
@@ -54,16 +13,15 @@ from .dataset_loader import (
     load_aime_2024,
     load_aime_2025,
     load_gsm8k,
-    load_math500,
     load_math500_hard,
     load_math500_stratified,
     load_minerva_math,
     load_olympiad_math,
 )
-from .evaluation import compute_extra_metrics
+from .diagnostics import compute_extra_metrics
 from .generation import run_generation
 
-from .score import score_generations
+from .scoring import score_generations
 
 
 # ---------------------------------------------------------------- subset registry
@@ -255,7 +213,7 @@ def append_runs_md(
         + "|\n"
     )
     if not runs_md.exists():
-        runs_md.write_text("# eval_v2 runs\n\n" + header + sep)
+        runs_md.write_text("# evaluation runs\n\n" + header + sep)
 
     cells = []
     for name in SUBSET_REGISTRY:
@@ -309,7 +267,7 @@ def main() -> None:
                     help="0.6 is a common pass@1 sweet spot. Set 0.0 for greedy.")
     ap.add_argument("--out-dir", type=Path, default=None,
                     help="Where to write the result JSON. Default: "
-                         "code/math_model/results/eval_v2/.")
+                         "code/math_model/results/eval/.")
     args = ap.parse_args()
 
     # ----------------------------------------------------------------- setup
@@ -333,16 +291,16 @@ def main() -> None:
 
     n_overrides = parse_n_overrides(args.n_per_subset)
 
-    repo_root = cfg.repo_root
-    out_dir = args.out_dir or (repo_root / "code" / "math_model" / "results" / "eval_v2")
+    package_root = cfg.package_root
+    out_dir = args.out_dir or (package_root / "results" / "eval")
     out_dir.mkdir(parents=True, exist_ok=True)
-    runs_md = repo_root / "code" / "math_model" / "RUNS.md"
+    runs_md = package_root / "RUNS.md"
 
     when = datetime.now().strftime("%Y-%m-%d %H:%M")
     safe_model = cfg.model_id.replace("/", "_")
     stem = f"{safe_model}_{args.budget}_{args.profile}_think-{args.thinking}_n-{args.n}"
 
-    print(f"\n=== eval_v2 ===")
+    print(f"\n=== evaluate ===")
     print(f"  model     : {cfg.model_id}")
     print(f"  profile   : {args.profile}  (subsets: {subset_names})")
     print(f"  budget    : {args.budget} ({cfg.max_model_len} tokens)")

@@ -17,13 +17,13 @@ Use --limit during smoke-tests.
 
 Usage:
     python -m code.math_model.preprocessing.rl.filter_learnability \\
-        --input  /scratch/<user>/rl_data/deepscaler_full.jsonl \\
-        --output /scratch/<user>/rl_data/deepscaler_filtered.jsonl
+        --input  data/math/rl/deepscaler_full.jsonl \\
+        --output data/math/rl/phase1_filtered.jsonl
 
     # Smoke test on 200 problems:
     python -m code.math_model.preprocessing.rl.filter_learnability \\
-        --input  /scratch/<user>/rl_data/deepscaler_full.jsonl \\
-        --output /scratch/<user>/rl_data/deepscaler_filtered_smoke.jsonl \\
+        --input  data/math/rl/deepscaler_full.jsonl \\
+        --output data/math/rl/phase1_filtered_smoke.jsonl \\
         --limit 200
 """
 from __future__ import annotations
@@ -46,7 +46,7 @@ DEFAULT_TOP_K = 20
 
 
 def _load_input(path: Path, limit: int | None) -> List[Dict]:
-    """Read prepare_rl.py output and adapt to the {prompt, answer} schema that
+    """Read prepare_pool.py output and adapt to the {prompt, answer} schema that
     run_generation expects."""
     items: List[Dict] = []
     with open(path) as f:
@@ -68,7 +68,7 @@ def _load_input(path: Path, limit: int | None) -> List[Dict]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", type=Path, required=True,
-                    help="Prepared RL JSONL from prepare_rl.py.")
+                    help="Prepared RL JSONL from prepare_pool.py.")
     ap.add_argument("--output", type=Path, required=True,
                     help="Filtered JSONL output.")
     ap.add_argument("--model", default="Qwen/Qwen3-1.7B",
@@ -93,7 +93,7 @@ def main() -> None:
     # Lazy imports.
     from vllm import LLM, SamplingParams
     from transformers import AutoTokenizer
-    from code.math_model.evaluation.score import score_generations
+    from code.math_model.evaluation.scoring import score_generations
 
     items = _load_input(args.input, args.limit)
     print(f"[load] {len(items)} problems from {args.input}")

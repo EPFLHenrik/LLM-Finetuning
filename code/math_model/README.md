@@ -1,35 +1,80 @@
-## Math Model Reproducibility Guide
+# Math Reasoning Model
 
-This document describes the exact pipeline used to reproduce the submitted math model.
+A math-reasoning model built on `Qwen/Qwen3-1.7B`, trained with a two-stage
+recipe and evaluated with weighted pass@k across standard competition-math
+benchmarks.
 
-The commands below are intentionally kept in the original order and should be executed sequentially.
+## Overview
 
-## Goal
+The model is fine-tuned from Qwen3-1.7B in two stages:
 
-Reproduce the final submitted math model by:
-- preparing the raw RL problem pool (DeepScaleR),
-- building the SFT corpus (multi-source CoT + distilled AIME/AMC traces),
-- training an SFT adapter (LoRA on the curated CoT mixture),
-- learnability-filtering the RL pool against the base model,
-- training the first GSPO phase on top of the SFT checkpoint,
-- merging the phase-1 adapter and re-filtering the pool against the phase-1 policy,
-- training the second GSPO phase on the re-filtered pool,
-- merging the phase-2 adapter and pushing it to Hugging Face,
-- benchmarking the final checkpoint.
+1. **Supervised fine-tuning (SFT)** — a LoRA adapter trained on a ~30K curated
+   chain-of-thought mixture (multi-source CoT + teacher-distilled AIME/AMC
+   traces).
+2. **Reinforcement learning with verifiable rewards (RLVR)** — two GSPO phases
+   on a learnability-filtered DeepScaleR pool, each re-filtered against the
+   current policy so the training distribution keeps non-zero reward variance.
+
+At inference the model produces a `<think>...</think>` reasoning trace followed
+by a single `\boxed{}` final answer (enforced by the system prompt in
+[constants/system_prompt.py](constants/system_prompt.py), mirrored in
+[huggingface/chat_template.jinja](huggingface/chat_template.jinja)). Evaluation
+computes weighted pass@1 and pass@8 at a 16K-token budget via Math-Verify on the
+`\boxed{}` answer.
+
+## Repository Structure
+
+```
+math_model/
+├── sft.py                          # LoRA SFT entry point
+├── rl.py                           # GRPO/GSPO RL entry point (wraps ms-swift)
+├── constants/
+│   └── system_prompt.py            # shared system prompt (single source of truth)
+├── preprocessing/
+│   ├── sft/
+│   │   ├── build_corpus.py         # build the multi-source SFT CoT corpus
+│   │   └── distill_traces.py       # teacher-distill traces for AIME/AMC
+│   └── rl/
+│       ├── prepare_pool.py         # DeepScaleR -> RL problem pool
+│       ├── filter_learnability.py  # keep [k_lo, k_hi]/N learnable problems
+│       └── add_system_prompt.py    # prepend the system message to RL rows
+├── evaluation/
+│   ├── evaluate.py                 # weighted multi-subset evaluator
+│   ├── run_benchmark.py            # profile-level benchmark CLI
+│   ├── config.py                   # token budgets + EvalConfig
+│   ├── dataset_loader.py           # benchmark loaders
+│   ├── generation.py               # vLLM batch generation
+│   ├── scoring.py                  # pass@k scoring
+│   ├── pass_at_k.py                # unbiased pass@k estimator
+│   ├── diagnostics.py              # box-compliance / truncation / length metrics
+│   ├── answer_extraction.py        # \boxed{} extraction + math equivalence
+│   ├── answer_matching.py          # benchmark answer extraction/comparison
+│   └── materialize_benchmarks.py   # export a profile to the HuggingFace Hub (benchmarks/*.jsonl)
+└── huggingface/
+    ├── push_checkpoint.py          # merge a LoRA, save locally, optionally push to HF
+    └── chat_template.jinja         # chat template (embeds the system prompt)
+```
 
 ## Before You Start
 
 - Run all commands from the repository root.
-- Ensure your Python environment is activated and project dependencies are installed (see [requirements.txt](../../requirements.txt)).
-- For ms-swift (used by `rl.py`): `pip install "ms-swift>=3.0" "math-verify" "liger-kernel>=0.4" "bitsandbytes>=0.45"`.
-- All training stages assume a single NVIDIA A100 (40 GB). The 8K RL phases require Liger Kernel + `num_generations=4` to fit in 40 GB.
-- Substitute `<user>` with your username (or any working directory on shared `/scratch`).
+- Activate your Python environment and install project dependencies (see
+  [requirements.txt](../../requirements.txt)).
+- For ms-swift (used by `rl.py`):
+  `pip install "ms-swift>=3.0" "math-verify" "liger-kernel>=0.4" "bitsandbytes>=0.45"`.
+- All training stages assume a single NVIDIA A100 (40 GB). The 8K RL phases
+  require Liger Kernel + `num_generations=4` to fit in 40 GB.
 
-## 1. Build the SFT corpus
+The full pipeline below is ordered and should be run sequentially.
 
-Two-phase pipeline: pull all upstream chain-of-thought datasets, generate distilled traces for the AIME/AMC tail, then finalise the 30K mixed corpus.
+## Dataset Preparation
 
-### 1.1 Pull CoT sources + emit the "needs distillation" list
+### 1. Build the SFT corpus
+
+Two-phase pipeline: pull all upstream chain-of-thought datasets, distill traces
+for the AIME/AMC tail, then finalize the ~30K mixed corpus.
+
+#### 1.1 Pull CoT sources + emit the "needs distillation" list
 
 ```
 python -m code.math_model.preprocessing.sft.build_corpus \
@@ -37,9 +82,14 @@ python -m code.math_model.preprocessing.sft.build_corpus \
     --workdir data/math/sft/workdir
 ```
 
-This downloads OpenR1-Math-220k, NuminaMath-CoT, GAIR/LIMO, simplescaling/s1K-1.1 and nvidia/OpenMathReasoning, filters each to rows whose assistant trace has `<think>...</think>` + extractable `\boxed{}` + length in `[1500, 8000]` Qwen3 tokens, and writes one `*_cot.jsonl` per source. It also emits `needs_distill.jsonl` containing AIME 2024 / AIME 2025 / AMC 2023 problems that lack CoT traces.
+Downloads OpenR1-Math-220k, NuminaMath-CoT, GAIR/LIMO, simplescaling/s1K-1.1 and
+nvidia/OpenMathReasoning, filters each to rows whose assistant trace has
+`<think>...</think>` + extractable `\boxed{}` + length in `[1500, 8000]` Qwen3
+tokens, and writes one `*_cot.jsonl` per source. It also emits
+`needs_distill.jsonl` containing AIME 2024 / AIME 2025 / AMC 2023 problems that
+lack CoT traces.
 
-### 1.2 Distil reasoning traces with a stronger teacher
+#### 1.2 Distil reasoning traces with a stronger teacher
 
 ```
 python -m code.math_model.preprocessing.sft.distill_traces \
@@ -49,9 +99,12 @@ python -m code.math_model.preprocessing.sft.distill_traces \
     --n-samples 8 --keep-top-k 4 --max-tokens 8192
 ```
 
-vLLM samples eight candidate traces per problem from a 32 B AWQ-quantised teacher, rejection-samples on Math-Verify against the gold answer, and keeps up to four correct traces per problem. The job is resumable (any partial output is detected and skipped).
+vLLM samples eight candidate traces per problem from a 32B AWQ-quantized teacher,
+rejection-samples on Math-Verify against the gold answer, and keeps up to four
+correct traces per problem. The job is resumable (partial output is detected and
+skipped).
 
-### 1.3 Finalise the 30K mixed corpus
+#### 1.3 Finalize the ~30K mixed corpus
 
 ```
 python -m code.math_model.preprocessing.sft.build_corpus \
@@ -60,27 +113,31 @@ python -m code.math_model.preprocessing.sft.build_corpus \
     --output  data/math/sft/sft_full.jsonl
 ```
 
-This stratified-samples each source to the target count, deduplicates by normalised problem fingerprint, and writes the final SFT JSONL with `{messages: [system, user, assistant], source}`.
+Stratified-samples each source to its target count, deduplicates by normalized
+problem fingerprint, and writes the final SFT JSONL with
+`{messages: [system, user, assistant], source}`.
 
-Expected artifact:
-- `data/math/sft/sft_full.jsonl` (~30K rows).
-- `data/math/sft/sft_full_stats.json` (per-source counts and length stats).
+Artifacts:
+- `data/math/sft/sft_full.jsonl` (~30K rows)
+- `data/math/sft/sft_full_stats.json` (per-source counts and length stats)
 
-## 2. Prepare the raw RL problem pool
+### 2. Prepare the raw RL problem pool
 
 ```
 python -m code.math_model.preprocessing.rl.prepare_pool \
     --output data/math/rl/deepscaler_full.jsonl
 ```
 
-Pulls `agentica-org/DeepScaleR-Preview-Dataset` (~40K problems, deduplicated upstream against MATH-500 and AIME 2024/2025) and normalises every row to `{messages: [user], solution, source}`.
+Pulls `agentica-org/DeepScaleR-Preview-Dataset` (~40K problems, deduplicated
+upstream against MATH-500 and AIME 2024/2025) and normalizes every row to
+`{messages: [user], solution, source}`.
 
-Expected artifact:
-- `data/math/rl/deepscaler_full.jsonl` (~40K rows).
+Artifact:
+- `data/math/rl/deepscaler_full.jsonl` (~40K rows)
 
-## 3. SFT
+## Training
 
-Train the LoRA adapter on the curated CoT mixture.
+### 3. SFT
 
 ```
 python -m code.math_model.sft \
@@ -93,13 +150,15 @@ python -m code.math_model.sft \
     --max-length 8192
 ```
 
-This trains LoRA `r=32, α=64` on all linear projections in bf16 with Flash-Attention 2 + gradient checkpointing. Every 200 steps the trainer saves an adapter; we use `checkpoint-600` (the lowest-step plateau, see report Table on SFT plateau analysis) as the RL starting point.
+Trains LoRA `r=32, α=64` on all linear projections in bf16 with Flash-Attention 2
++ gradient checkpointing. The adapter is saved every 200 steps; `checkpoint-600`
+(the lowest-step plateau) is used as the RL starting point.
 
-Expected artifacts:
-- `checkpoints/math_model/sft/checkpoint-200`, `checkpoint-400`, ..., `checkpoint-3448`
+Artifacts:
+- `checkpoints/math_model/sft/checkpoint-200`, `checkpoint-400`, ...
 - `checkpoints/math_model/sft/training_args.json`
 
-### 3.1 Merge the chosen SFT checkpoint into the base weights
+#### 3.1 Merge the chosen SFT checkpoint into the base weights
 
 ```
 python -m code.math_model.huggingface.push_checkpoint \
@@ -108,16 +167,19 @@ python -m code.math_model.huggingface.push_checkpoint \
     --skip-vllm-check
 ```
 
-(Append `--repo cs-552-2026-mystery-machine/math_model_sft` if you also want to push the SFT-only baseline to a separate HF repo.)
+Without `--repo` the merged model is saved locally only (no push). Append
+`--repo <user>/<repo>` to also publish an SFT-only baseline.
 
-Expected artifact:
-- `checkpoints/math_model/sft_merged/` (full Qwen3-1.7B + merged SFT LoRA, ~3.4 GB `model.safetensors`).
+Artifact:
+- `checkpoints/math_model/sft_merged/` (full Qwen3-1.7B + merged SFT LoRA, ~3.4 GB)
 
-## 4. Build the phase-1 RL training pool
+### 4. Build the phase-1 RL training pool
 
-Filter the raw DeepScaleR pool against base Qwen3-1.7B using the offline learnability filter, then prepend the team system prompt so the training distribution matches the inference-time chat template.
+Filter the raw DeepScaleR pool against base Qwen3-1.7B with the offline
+learnability filter, then prepend the system prompt so the training distribution
+matches the inference-time chat template.
 
-### 4.1 Learnability filter (against base Qwen3-1.7B)
+#### 4.1 Learnability filter (against base Qwen3-1.7B)
 
 ```
 python -m code.math_model.preprocessing.rl.filter_learnability \
@@ -127,9 +189,11 @@ python -m code.math_model.preprocessing.rl.filter_learnability \
     --n-samples 8 --k-lo 1 --k-hi 6 --max-tokens 4096
 ```
 
-vLLM runs 8 rollouts per problem at 4K context (T=0.7, top-p 0.95, top-k 20), scores each completion with Math-Verify on the extracted `\boxed{}` answer, and keeps problems with a base pass-count in `[1, 6]/8`. Expect ~1,219 retained rows.
+vLLM runs 8 rollouts per problem at 4K context (T=0.7, top-p 0.95, top-k 20),
+scores each completion with Math-Verify on the extracted `\boxed{}` answer, and
+keeps problems with a base pass-count in `[1, 6]/8`. Expect ~1,219 retained rows.
 
-### 4.2 Prepend the system prompt
+#### 4.2 Prepend the system prompt
 
 ```
 python -m code.math_model.preprocessing.rl.add_system_prompt \
@@ -137,10 +201,10 @@ python -m code.math_model.preprocessing.rl.add_system_prompt \
     --output data/math/rl/phase1_filtered_sys.jsonl
 ```
 
-Expected artifact:
-- `data/math/rl/phase1_filtered_sys.jsonl` (~1,219 rows with `messages = [system, user]`).
+Artifact:
+- `data/math/rl/phase1_filtered_sys.jsonl` (~1,219 rows with `messages = [system, user]`)
 
-## 5. RL training — phase 1 (GSPO from the SFT checkpoint)
+### 5. RL training — phase 1 (GSPO from the SFT checkpoint)
 
 ```
 python -m code.math_model.rl \
@@ -153,12 +217,14 @@ python -m code.math_model.rl \
     --steps 500
 ```
 
-The `gspo` loss is the shipped default (sequence-level importance sampling via the TRL flag `--importance_sampling_level sequence`). All other hyperparameters match the report Table on math training hyperparameters (LR `1e-6`, KL β `1e-3`, save every 50 steps, Liger Kernel ON).
+The `gspo` loss is the default (sequence-level importance sampling via TRL's
+`--importance_sampling_level sequence`). Other hyperparameters: LR `1e-6`,
+KL β `1e-3`, save every 50 steps, Liger Kernel ON.
 
-Expected artifacts:
+Artifacts:
 - `checkpoints/math_model/rl_phase1/checkpoint-{50,100,...,500}`
 
-### 5.1 Merge the phase-1 LoRA into the base
+#### 5.1 Merge the phase-1 LoRA into the base
 
 ```
 python -m code.math_model.huggingface.push_checkpoint \
@@ -168,16 +234,20 @@ python -m code.math_model.huggingface.push_checkpoint \
     --skip-vllm-check
 ```
 
-The `--base-model` flag is critical: the phase-1 LoRA must be merged into the SFT-merged weights, not bare Qwen3-1.7B (which would discard everything SFT learned).
+`--base-model` is critical: the phase-1 LoRA must merge into the SFT-merged
+weights, not bare Qwen3-1.7B (which would discard everything SFT learned).
 
-Expected artifact:
-- `checkpoints/math_model/rl_phase1_merged/` (~3.4 GB).
+Artifact:
+- `checkpoints/math_model/rl_phase1_merged/` (~3.4 GB)
 
-## 6. Re-build the RL training pool against the phase-1 policy
+### 6. Re-build the RL pool against the phase-1 policy
 
-The original `[1, 6]/8` band was computed against base Qwen3-1.7B. After ~500 GSPO steps the policy has drifted; many "learnable for base" problems are now solved on every rollout (or never) and contribute zero gradient. Re-running the filter against the trained policy restores variance.
+The original `[1, 6]/8` band was computed against base Qwen3-1.7B. After ~500
+GSPO steps the policy has drifted; many "learnable for base" problems are now
+solved on every rollout (or never) and contribute zero gradient. Re-running the
+filter against the trained policy restores variance.
 
-### 6.1 Learnability filter (against the phase-1 checkpoint)
+#### 6.1 Learnability filter (against the phase-1 checkpoint)
 
 ```
 python -m code.math_model.preprocessing.rl.filter_learnability \
@@ -189,7 +259,7 @@ python -m code.math_model.preprocessing.rl.filter_learnability \
 
 Expect ~1,235 retained rows (comparable size, different problem set).
 
-### 6.2 Prepend the system prompt
+#### 6.2 Prepend the system prompt
 
 ```
 python -m code.math_model.preprocessing.rl.add_system_prompt \
@@ -197,7 +267,7 @@ python -m code.math_model.preprocessing.rl.add_system_prompt \
     --output data/math/rl/phase2_filtered_sys.jsonl
 ```
 
-## 7. RL training — phase 2 (GSPO from the phase-1 checkpoint)
+### 7. RL training — phase 2 (GSPO from the phase-1 checkpoint)
 
 ```
 python -m code.math_model.rl \
@@ -210,10 +280,10 @@ python -m code.math_model.rl \
     --steps 800
 ```
 
-Expected artifacts:
+Artifacts:
 - `checkpoints/math_model/rl_phase2/checkpoint-{50,100,...,800}`
 
-### 7.1 Merge the phase-2 LoRA and push to Hugging Face
+#### 7.1 Merge the phase-2 LoRA and push to Hugging Face
 
 ```
 python -m code.math_model.huggingface.push_checkpoint \
@@ -223,41 +293,84 @@ python -m code.math_model.huggingface.push_checkpoint \
     --repo cs-552-2026-mystery-machine/math_model
 ```
 
-This script merges the LoRA into the phase-1-merged weights, attaches the team chat template + generation config, smoke-tests the result with vLLM, and pushes the full model to `cs-552-2026-mystery-machine/math_model` so the CI grader can load it.
+Merges the LoRA into the phase-1-merged weights, attaches the chat template +
+generation config, smoke-tests the result with vLLM, and pushes the full model
+to `cs-552-2026-mystery-machine/math_model` so it can be served with vLLM.
 
-Expected artifact:
-- HF model at `cs-552-2026-mystery-machine/math_model` (the final shipped checkpoint).
-- `checkpoints/math_model/final/` (local mirror).
+Artifacts:
+- HF model at `cs-552-2026-mystery-machine/math_model` (final checkpoint)
+- `checkpoints/math_model/final/` (local mirror)
 
-## 8. Benchmarking
+## Evaluation
 
-To evaluate any checkpoint on the calibrated math benchmark, run:
+To evaluate any checkpoint on the calibrated math benchmark:
 
 ```
-python -m code.math_model.benchmark \
+python -m code.math_model.evaluation.run_benchmark \
     --name <my-model-name> \
     --checkpoint <checkpoint_dir_or_HF_id> \
     --benchmark <broad|full|quick>
 ```
 
-Replace `--benchmark <...>` with `--run_all` to run both `broad` and `full` profiles back-to-back. The defaults (`--n 8 --budget final`) match the classroom CI grading contract (pass@8 at 16K tokens).
+Use `--run_all` instead of `--benchmark <...>` to run the `broad` then `full`
+profiles back-to-back. The defaults (`--n 8 --budget final`) compute pass@8 at a
+16K-token budget.
 
-Examples:
+Profiles:
+- **broad** (~290 problems): MATH-500 stratified + MATH-500-hard + AIME 2024/2025
+  + GSM8K. Used for fast checkpoint ranking.
+- **full** (~400 problems): broad + OlympiadBench + Hendrycks-MATH (level 4-5).
+  Used for the final model-selection decision.
+
+The lower-level [evaluate.py](evaluation/evaluate.py) exposes finer control
+(`--profile`, `--subsets`, `--n-per-subset`, `--temperature`, `--out-dir`) if you
+need it.
+
+## Reproducing Results
 
 ```
-# Final shipped checkpoint, broad profile (~3.5 h on a single A100):
-python -m code.math_model.benchmark \
-    --name shipped \
+# Final checkpoint, broad profile (~3.5 h on a single A100):
+python -m code.math_model.evaluation.run_benchmark \
+    --name final \
     --checkpoint cs-552-2026-mystery-machine/math_model \
     --benchmark broad
 
-# Base baseline for the report's main comparison:
-python -m code.math_model.benchmark \
+# Base model baseline for the main comparison:
+python -m code.math_model.evaluation.run_benchmark \
     --name base \
     --checkpoint Qwen/Qwen3-1.7B \
     --benchmark broad
 ```
 
-Results are written to `code/math_model/results/eval_v2/<model>_<budget>_<profile>_think-on_n-<n>.json` and a one-line summary is appended to `code/math_model/RUNS.md`.
+## Outputs
 
-The benchmark subsets and weights are documented in the report (`MATH-500` stratified + `MATH-500-hard` + `AIME 2024/2025` + `GSM8K` for `broad`, plus `OlympiadBench-Math` + `Hendrycks-MATH-L4/5` for `full`); the materialised JSONL versions are also released as part of the team's public dataset at `cs-552-2026-mystery-machine/math` under `benchmarks/`.
+**Checkpoints** (under `checkpoints/math_model/`):
+- `sft/checkpoint-*`, `sft_merged/` — SFT adapters and the merged SFT model.
+- `rl_phase1/checkpoint-*`, `rl_phase1_merged/` — phase-1 RL.
+- `rl_phase2/checkpoint-*`, `final/` — phase-2 RL and the final merged model.
+
+**Metrics** (written by the evaluator):
+- `code/math_model/results/eval/<model>_<budget>_<profile>_think-<on|off>_n-<n>.json`
+  — full per-subset and per-problem results, including the weighted aggregate.
+- `code/math_model/RUNS.md` — one summary row appended per evaluation run.
+
+**Released artifacts** (Hugging Face):
+- Model: `cs-552-2026-mystery-machine/math_model` (LoRA-merged, vLLM-ready).
+- Dataset: `cs-552-2026-mystery-machine/math` — raw RL pool, SFT corpus, RL
+  phase pools, and the materialized benchmark profiles under `benchmarks/`
+  (`broad.jsonl`, `full.jsonl`). Export a profile with
+  [materialize_benchmarks.py](evaluation/materialize_benchmarks.py).
+
+## Notes
+
+- **Answer format.** The system prompt requires exactly one `\boxed{}` answer.
+  Extraction and math equivalence live in
+  [answer_extraction.py](evaluation/answer_extraction.py); pass@k uses the
+  unbiased estimator `1 - C(n-c, k) / C(n, k)`.
+- **Train/eval parity.** Training and evaluation render prompts through the same
+  chat template, so the rollout distribution matches what is served at eval time.
+- **Memory.** RL at 8K context fits a 40 GB A100 only with Liger Kernel and
+  `num_generations=4`; vLLM runs colocated at `gpu_memory_utilization=0.4`.
+- **Determinism.** Loaders, sampling, and training are seeded (default `42`),
+  but vLLM/GPU nondeterminism means pass@k can vary by a few tenths of a point
+  between runs.

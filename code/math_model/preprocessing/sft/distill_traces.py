@@ -1,10 +1,9 @@
 """Distill chain-of-thought traces from a strong teacher model.
 
 For competition-math datasets that ship problems + gold answers but no
-reasoning traces (AIME, AMC, MATH train cleanups, College Math),
-generate `<think>...</think>...\\boxed{...}` traces using a quantized
-DeepSeek-R1-Distill-Qwen teacher, then rejection-sample on Math-Verify
-correctness.
+reasoning traces (AIME, AMC), generate `<think>...</think>...\\boxed{...}`
+traces using a quantized DeepSeek-R1-Distill-Qwen teacher, then
+rejection-sample on Math-Verify correctness.
 
 Input JSONL schema (one per line):
     {"problem": str, "gold": str, "source": str}
@@ -16,8 +15,8 @@ Output JSONL schema:
 
 Usage:
     python -m code.math_model.preprocessing.sft.distill_traces \\
-        --input  /scratch/user/sft_data/needs_distill.jsonl \\
-        --output /scratch/user/sft_data/distilled.jsonl \\
+        --input  data/math/sft/workdir/needs_distill.jsonl \\
+        --output data/math/sft/workdir/distilled.jsonl \\
         --teacher Valdemardi/DeepSeek-R1-Distill-Qwen-32B-AWQ \\
         --n-samples 8 --keep-top-k 4 --max-tokens 8192
 
@@ -76,8 +75,8 @@ def _filter_by_correctness(
     problem: str, gold: str, completions: List[str]
 ) -> List[str]:
     """Return only completions whose extracted `\\boxed{}` answer matches gold
-    under the SAME logic the team's eval uses (`evaluate.extract_answer`)."""
-    from code.math_model.evaluation.extract_answer import extract_boxed_answer, is_equiv
+    under the same logic the evaluator uses (`evaluation.answer_extraction`)."""
+    from code.math_model.evaluation.answer_extraction import extract_boxed_answer, is_equiv
 
     correct: List[str] = []
     for comp in completions:

@@ -14,8 +14,8 @@ system prompt that CI inference will see.
 
 Usage:
     python -m code.math_model.preprocessing.rl.add_system_prompt \\
-        --input  /scratch/user/rl_data/deepscaler_filtered.jsonl \\
-        --output /scratch/user/rl_data/deepscaler_filtered_sft.jsonl
+        --input  data/math/rl/phase1_filtered.jsonl \\
+        --output data/math/rl/phase1_filtered_sys.jsonl
 
 Idempotent: rows that already have a system message at index 0 are passed
 through unchanged.

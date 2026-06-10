@@ -22,7 +22,8 @@ DEFAULT_LORA_TARGETS = [
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", type=Path, required=True,
-                    help="Path to the SFT JSONL produced by prepare_sft.py.")
+                    help="Path to the SFT JSONL produced by "
+                         "preprocessing/sft/build_corpus.py.")
     ap.add_argument("--output", type=Path, required=True,
                     help="Directory for LoRA checkpoints. Will be created.")
 
@@ -91,11 +92,9 @@ def main() -> None:
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
 
-    # Sanity-render to confirm template + tokenizer agree. The new template
-    # (with embedded system prompt) ends the generation prompt with just
-    # `<|im_start|>assistant\n` and lets the model emit `<think>` itself.
-    # The old short template ended with `<|im_start|>assistant\n<think>\n`.
-    # Accept both shapes so this script works pre- and post-v2.
+    # Sanity-render to confirm the template + tokenizer agree. The template
+    # embeds the system prompt and ends the generation prompt with an open
+    # assistant turn, letting the model emit <think> itself.
     sample_msgs = [{"role": "user", "content": "What is 2+2?"}]
     rendered = tok.apply_chat_template(sample_msgs, tokenize=False, add_generation_prompt=True)
     print(f"[tokenizer] template renders to (last 80 chars): ...{rendered[-80:]!r}")
@@ -104,11 +103,10 @@ def main() -> None:
         "Chat template doesn't end with an open assistant turn (or a <think> prefix). "
         f"Last 80 chars: {rendered[-80:]!r}"
     )
-    # If the new template is in use, we expect the system prompt's \\boxed{} rule
-    # to appear in the rendered chat. Soft-warn if not (some templates may differ).
+    # The system prompt's \\boxed{} rule should appear in the rendered chat.
     if "\\boxed{" not in rendered:
         print("[tokenizer] WARN: system prompt with \\boxed{} rules not detected in render. "
-              "Make sure chat_template.jinja matches code/math_model/preprocessing/system_prompt.py.")
+              "Make sure chat_template.jinja matches constants/system_prompt.py.")
 
     # ------------------------------------------------------------------ model
     print(f"[model] loading {BASE_MODEL} (bf16, flash-attn-2 if available)")
