@@ -47,48 +47,27 @@ DATASET_NAME = "AndreaSimeri/Italian_Civil_Code"
 # Prompts
 # ---------------------------------------------------------------------------
 
-SYSTEM_GEN = """Sei un esperto di diritto civile italiano e di costruzione di quesiti giuridici a scelta multipla.
+SYSTEM_GEN = """Sei un esperto di diritto civile italiano e di costruzione di quesiti
+giuridici a scelta multipla. Devi generare UNA sola domanda MCQ in
+italiano a partire dall'articolo del Codice Civile fornito.
 
-Devi generare UNA sola domanda MCQ in italiano a partire dall'articolo del Codice Civile fornito.
-
-Obiettivo:
-Creare una domanda giuridicamente precisa, non banale, con una sola risposta corretta e tre distrattori plausibili ma chiaramente errati.
-
-Usa l'articolo solo se contiene una regola giuridica sufficientemente chiara. Se il testo è troppo breve, incompleto, corrotto, puramente abrogativo, o contiene solo riferimenti normativi senza una regola sostanziale chiara, rispondi SKIP.
-
-Criteri per una buona domanda:
-1. La domanda deve essere rispondibile direttamente dal testo dell'articolo.
-2. La domanda deve testare una condizione, un soggetto, un effetto giuridico, un termine, una competenza, un'eccezione o una conseguenza prevista dall'articolo.
-3. Evita domande troppo meccaniche se l'articolo permette una domanda più precisa.
-4. Non chiedere semplicemente “che cosa dice l'articolo” o “quale affermazione è corretta”.
-5. Non usare conoscenze esterne al testo.
-6. Non trasformare dettagli abrogati, note redazionali o riferimenti storici confusi nella base della domanda.
-7. La formulazione deve essere giuridicamente naturale, formale e grammaticale.
-
-Criteri per la risposta corretta:
-1. Deve essere direttamente supportata dal testo dell'articolo.
-2. Deve essere completa quanto basta, ma non molto più lunga o più dettagliata dei distrattori.
-3. Non deve contenere indizi stilistici che la rendano ovvia.
-4. Non deve essere una copia troppo lunga dell'articolo se può essere formulata in modo più pulito senza cambiare il significato.
+KEPT solo se:
+1. La domanda e' rispondibile direttamente dal testo dell'articolo.
+2. Testa una condizione, soggetto, effetto giuridico, termine,
+   competenza, eccezione o conseguenza prevista dall'articolo.
+3. Formulazione giuridicamente naturale, formale e grammaticale.
 
 Criteri per i distrattori:
-1. Devono essere plausibili per uno studente di diritto, ma chiaramente errati rispetto all'articolo.
-2. Devono appartenere alla stessa categoria della risposta corretta:
-   - soggetti con soggetti;
-   - termini con termini;
-   - autorità con autorità;
-   - effetti giuridici con effetti giuridici;
-   - condizioni con condizioni.
-3. Devono cambiare un elemento giuridicamente rilevante: soggetto, termine, quorum, condizione, eccezione, autorità competente, effetto o limite.
-4. Non usare distrattori assurdi, generici o palesemente inventati.
-5. Non usare distrattori che siano solo informazioni non menzionate ma non incompatibili con l'articolo.
-6. Non usare opzioni “sempre”, “mai”, “in ogni caso”, “senza alcuna limitazione” se sono troppo facili o artificiose.
-7. Non creare più risposte parzialmente corrette.
-8. Tutte le opzioni devono essere simili per lunghezza, stile e livello di specificità.
+1. Plausibili per uno studente di diritto, ma chiaramente errati.
+2. Stessa categoria della risposta corretta (soggetti con soggetti,
+   termini con termini, ecc.).
+3. Modificano un elemento giuridicamente rilevante.
+4. Simili per lunghezza, stile e specificita'.
 
-Preferisci domande di livello medio o medio-difficile. Se dall'articolo si può ottenere solo una domanda banale, rispondi SKIP.
+Se l'articolo e' troppo breve, incompleto, corrotto o puramente
+abrogativo, rispondi SKIP.
 
-Formato di output: JSON puro, senza testo aggiuntivo:
+Formato output (JSON puro, senza testo aggiuntivo):
 {
   "question": "...",
   "options": {"A": "...", "B": "...", "C": "...", "D": "..."},

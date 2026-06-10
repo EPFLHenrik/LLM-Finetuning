@@ -8,7 +8,7 @@ This folder contains the multilingual dataset, training, and evaluation code use
 - `paths.py`: repo-relative data and checkpoint path helpers.
 - `utils.py`: helper functions shared by loaders, training, and evaluation.
 - `assets/`: prompt templates for model generation and evaluation.
-- `configs/`: SFT and merge configuration templates.
+- `configs/`: merge configuration template.
 - `data_pipeline/`: download, parse, preprocess, benchmark, and distill datasets.
 - `loaders/`: dataset loaders that convert processed JSONL into a unified example schema.
 - `train/`: SFT mixture build, training entry points, and export utilities.
@@ -65,9 +65,9 @@ This package supports the following multilingual datasets and source categories:
 - `italian_civil_code`
 - `rubq`
 - `demre`
-- `exams` (legacy/reproducibility)
+- `exams`
 - `mmlu_prox`
-- `belebele` (loader present)
+- `belebele`
 
 The pipeline uses processed JSONL files under `data/multilinguality/` and can fetch raw, processed, and distilled artifacts from the HF dataset repo if needed.
 
@@ -81,27 +81,8 @@ multilinguality_model/
 │   ├── chat_template_multilingual-nonthinking.jinja
 │   └── chat_template_multilingual-augmented.jinja
 ├── configs/                             # training and merging configuration templates
-│   ├── merging/
-│   │   └── best_model_ties.yaml         # merge configuration used by repro workflow
-│   └── sft/
-│       ├── v10.json
-│       ├── v11.json
-│       ├── v12.json
-│       ├── v13.json
-│       ├── v14.json
-│       ├── v15.json
-│       ├── v16.json
-│       ├── v17_10k.json
-│       ├── v17_20k.json
-│       ├── v18.json
-│       ├── v19_15k.json
-│       ├── v19_20k.json
-│       ├── v20-chinese.json
-│       ├── v20-hindi.json
-│       ├── v20-italian.json
-│       ├── v20-russian.json
-│       ├── v20-spanish.json
-│       └── debug_test.json
+│   └── merging/
+│       └── best_model_ties.yaml         # merge configuration used by repro workflow
 ├── data_pipeline/                       # data download, parse, preprocess, benchmark, distill
 │   ├── distillation/
 │   │   ├── distill_fallback.py          # main distillation pipeline
