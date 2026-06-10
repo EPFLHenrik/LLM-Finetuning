@@ -224,16 +224,6 @@ Expected artifact:
 - `checkpoints/safety_model/dpo`
 
 
-## 7. Benchmarking
-To evaluate any checkpoint on the safety benchmarks, run the following command:
-
-`python -m code.safety_model.benchmark --name <my-model-name> --benchmark <benchmark_name> --checkpoint <checkpoint_dir>`
-
-replace `--benchmark <...>` with `--run_all` to run all benchmarks present in data/safety/processed/benchmark/.
-
-Example:
-`python -m code.safety_model.benchmark --name <my-model-name> --benchmark <benchmark_name> --checkpoint <checkpoint_dir>`
-
 ## 7. Model Benchmarking
 
 To evaluate any checkpoint on any benchmarks, `code/safety_model/benchmark.py` script has to be run with the following arguments:
