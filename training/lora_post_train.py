@@ -182,7 +182,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--learning-rate", type=float, default=2e-4)
     parser.add_argument("--per-device-train-batch-size", type=int, default=1)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=8)
-    parser.add_argument("--logging-steps", type=int, default=10)
+    parser.add_argument("--logging-steps", type=int, default=50)
     parser.add_argument("--save-strategy", choices=("epoch", "steps", "no"), default="epoch")
     parser.add_argument("--save-steps", type=int, default=500, help="Checkpoint save interval when save-strategy is steps")
     parser.add_argument("--lora-r", type=int, default=16)
@@ -194,6 +194,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--wandb-key", type=str, default=None, help="Optional W&B API key (sets WANDB_API_KEY and logs in)")
     parser.add_argument("--skip-wandb", action="store_true")
     parser.add_argument("--overwrite-output", action="store_true")
+    parser.add_argument("--append", action="store_true", help="Allow writing into an existing output dir without deleting it first (preserves existing adapter checkpoints)")
+    parser.add_argument("--adapter-folder", type=Path, default=None, help="Existing LoRA adapter checkpoint to continue training from (--model-folder must be the matching base model)")
     parser.add_argument("--merge-and-save", action="store_true", default=True)
     return parser
 
@@ -203,13 +205,18 @@ def main() -> None:
 
     if not args.model_folder.exists():
         raise SystemExit(f"Model folder not found: {args.model_folder}")
+    if args.adapter_folder and not args.adapter_folder.exists():
+        raise SystemExit(f"Adapter folder not found: {args.adapter_folder}")
     if not args.dataset_file.exists():
         raise SystemExit(f"Dataset file not found: {args.dataset_file}")
 
     if args.output_dir.exists():
-        if not args.overwrite_output:
-            raise SystemExit(f"Output dir already exists: {args.output_dir} (pass --overwrite-output)")
-        shutil.rmtree(args.output_dir)
+        if args.append:
+            pass
+        elif not args.overwrite_output:
+            raise SystemExit(f"Output dir already exists: {args.output_dir} (pass --overwrite-output or --append)")
+        else:
+            shutil.rmtree(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     if not torch.cuda.is_available():
@@ -248,15 +255,18 @@ def main() -> None:
     model.config.use_cache = False
     model.gradient_checkpointing_enable()
 
-    lora_config = LoraConfig(
-        r=args.lora_r,
-        lora_alpha=args.lora_alpha,
-        lora_dropout=args.lora_dropout,
-        target_modules=list(DEFAULT_LORA_TARGET_MODULES),
-        bias="none",
-        task_type=TaskType.CAUSAL_LM,
-    )
-    model = get_peft_model(model, lora_config)
+    if args.adapter_folder:
+        model = PeftModel.from_pretrained(model, args.adapter_folder, is_trainable=True)
+    else:
+        lora_config = LoraConfig(
+            r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            lora_dropout=args.lora_dropout,
+            target_modules=list(DEFAULT_LORA_TARGET_MODULES),
+            bias="none",
+            task_type=TaskType.CAUSAL_LM,
+        )
+        model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
 
     # Expect the dataset to already be preprocessed into conversational JSONL
@@ -308,13 +318,14 @@ def main() -> None:
         "assistant_only_loss": True,
     }
     # Configure saving strategy independently of evaluation
+    save_total_limit = None if args.append else 3
     if args.save_strategy == "steps":
         save_steps = args.save_steps if args.save_steps > 0 else args.logging_steps
         if save_steps <= 0:
             raise SystemExit("--save-steps must be positive when --save-strategy is steps")
-        sft_kwargs.update({"save_strategy": "steps", "save_steps": save_steps, "save_total_limit": 3})
+        sft_kwargs.update({"save_strategy": "steps", "save_steps": save_steps, "save_total_limit": save_total_limit})
     else:
-        sft_kwargs.update({"save_strategy": args.save_strategy, "save_total_limit": 3})
+        sft_kwargs.update({"save_strategy": args.save_strategy, "save_total_limit": save_total_limit})
 
     sft_config = SFTConfig(**sft_kwargs)
 

@@ -119,11 +119,18 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Output JSONL path (default: <student>.merged_reasoning.jsonl)",
     )
+    parser.add_argument(
+        "--prefer-teacher",
+        action="store_true",
+        default=False,
+        help="Prefer teacher's completion when correct; fall back to student only if teacher is wrong but student is correct.",
+    )
     args = parser.parse_args(argv)
 
     student_path = args.student.expanduser().resolve()
     teacher_path = args.teacher.expanduser().resolve()
-    output_path = args.output.expanduser().resolve() if args.output else student_path.with_suffix(".merged_reasoning.jsonl")
+    default_suffix = ".merged_teacher_pref.jsonl" if args.prefer_teacher else ".merged_reasoning.jsonl"
+    output_path = args.output.expanduser().resolve() if args.output else student_path.with_suffix(default_suffix)
 
     if not student_path.exists():
         raise FileNotFoundError(f"Student file not found: {student_path}")
@@ -170,7 +177,10 @@ def main(argv: list[str] | None = None) -> int:
         if not system_message:
             system_message = _pick_field(teacher_row, "system_message", fallback="teacher_system_message")
 
-        chosen_completion = student_completion if student_correct is True else trainer_completion
+        if args.prefer_teacher:
+            chosen_completion = trainer_completion if trainer_correct is True else student_completion
+        else:
+            chosen_completion = student_completion if student_correct is True else trainer_completion
         merged_row = {
             "prompt": prompt,
             "answer": answer,
@@ -183,14 +193,23 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Rows: {len(merged_rows)}")
     print(f"Dropped both-wrong rows: {dropped_both_wrong}")
 
-    merged_distillation_path = Path(__file__).resolve().parents[1] / "data" / "preprocessing" / "merged_distillation.jsonl"
+    distillation_filename = "teacher_distillation.jsonl" if args.prefer_teacher else "merged_distillation.jsonl"
+    merged_distillation_path = Path(__file__).resolve().parents[1] / "data" / "preprocessing" / distillation_filename
     merged_distillation_path.parent.mkdir(parents=True, exist_ok=True)
+    existing_merged: list[dict[str, Any]] = []
+    if merged_distillation_path.exists() and merged_distillation_path.stat().st_size > 0:
+        try:
+            existing_merged = _read_jsonl(merged_distillation_path)
+        except SystemExit:
+            existing_merged = []
+    seen_prompts = {r.get("prompt", "") for r in existing_merged}
+    new_merged = [r for r in merged_rows if r.get("prompt", "") not in seen_prompts]
     with merged_distillation_path.open("a", encoding="utf-8") as handle:
-        for row in merged_rows:
+        for row in new_merged:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
-    print(f"Appended {len(merged_rows)} rows to {merged_distillation_path}")
+    print(f"Appended {len(new_merged)} rows to {merged_distillation_path} ({len(merged_rows) - len(new_merged)} duplicates skipped)")
 
-    if wrong_rows:
+    if wrong_rows and not args.prefer_teacher:
         wrong_path = Path(__file__).resolve().parents[1] / "data" / "preprocessing" / "wrong_distillations.jsonl"
         existing: list[dict[str, Any]] = []
         if wrong_path.exists() and wrong_path.stat().st_size > 0:

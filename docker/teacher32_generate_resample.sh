@@ -3,6 +3,7 @@ set -euo pipefail
 
 HF_TOKEN="<HF_TOKEN_REDACTED>"
 TEACHER_MODEL="models/teacher32"
+export PYTORCH_ALLOC_CONF=expandable_segments:True
 
 log_stats() {
     local file="$1"
@@ -39,18 +40,21 @@ for train_file in data/preprocessing/*/train.jsonl; do
         --model-dir "$TEACHER_MODEL" \
         --output "$dir/train_teacher32.jsonl" \
         --hf-token "$HF_TOKEN" \
-        --max-new-tokens 8192 \
+        --max-new-tokens 6000 \
         --load-in-8bit \
-        --max-model-len 14000 \
-        --gpu-memory-utilization 0.90
+        --max-model-len 4096 \
+        --gpu-memory-utilization 0.90 \
+        --max-num-seqs 16 
 
     python training/resample_wrong_answers.py "$dir/train_teacher32.jsonl" \
         --model-dir "$TEACHER_MODEL" \
         --output "$dir/teacher32_corrected.jsonl" \
         --hf-token "$HF_TOKEN" \
+        --max-new-tokens 6000 \
         --load-in-8bit \
-        --max-model-len 14000 \
-        --gpu-memory-utilization 0.90
+        --max-model-len 4096 \
+        --gpu-memory-utilization 0.90 \
+        --max-num-seqs 16
 
     {
         echo "  --- stats: $dir ---"
@@ -91,3 +95,26 @@ for label, rows in buckets.items():
     stats(rows, label)
 PYEOF
 } | tee -a "$LOG_FILE"
+
+MODEL_DIR="models/full_sft_grpo"
+BENCHMARK_DIR="data/preprocessing/benchmarks"
+OUTPUT_ROOT="results/full_sft_grpo/benchmarks"
+
+MODEL_NAME="${MODEL_DIR#models/}"
+
+mapfile -t BENCHMARK_FILES < <(find "$BENCHMARK_DIR" -type f -name '*.jsonl' | sort)
+
+for benchmark_file in "${BENCHMARK_FILES[@]}"; do
+  relative="${benchmark_file#"$BENCHMARK_DIR"/}"
+  relative_no_ext="${relative%.jsonl}"
+  output_dir="$OUTPUT_ROOT/$MODEL_NAME/$relative_no_ext"
+
+  mkdir -p "$output_dir"
+  echo "[run] $relative_no_ext -> $output_dir"
+  python scripts/evaluate_training.py \
+    --checkpoints-dir "$MODEL_DIR" \
+    --validation-file "$benchmark_file" \
+    --output-dir "$output_dir" \
+    --wandb-key '<WANDB_API_KEY_REDACTED>' \
+    "$@"
+done

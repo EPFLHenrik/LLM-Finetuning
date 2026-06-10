@@ -132,14 +132,22 @@ def _build_sampling_params(*, max_new_tokens: int, temperature: float, top_p: fl
     )
 
 
-def _generate_completions_vllm(llm: LLM, prompts: list[str], sampling_params: SamplingParams) -> list[str]:
-    outputs = llm.generate(prompts, sampling_params=sampling_params)
+def _generate_completions_vllm(llm: LLM, prompts: list[str], sampling_params: SamplingParams, chunk_size: int = 0) -> list[str]:
+    if chunk_size <= 0 or len(prompts) <= chunk_size:
+        batches = [prompts]
+    else:
+        batches = [prompts[i : i + chunk_size] for i in range(0, len(prompts), chunk_size)]
+
     completions: list[str] = []
-    for request_output in outputs:
-        if request_output.outputs:
-            completions.append(request_output.outputs[0].text.strip())
-        else:
-            completions.append("")
+    for batch_idx, batch in enumerate(batches):
+        if len(batches) > 1:
+            print(f"Generating chunk {batch_idx + 1}/{len(batches)} ({len(batch)} prompts)...")
+        outputs = llm.generate(batch, sampling_params=sampling_params)
+        for request_output in outputs:
+            if request_output.outputs:
+                completions.append(request_output.outputs[0].text.strip())
+            else:
+                completions.append("")
     return completions
 
 
@@ -207,7 +215,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dtype", default="auto", help="vLLM dtype, for example auto, float16, or bfloat16")
     parser.add_argument("--load-in-8bit", action="store_true", help="Load model in FP8 quantization via vLLM (reduces VRAM usage, no bitsandbytes needed)")
     parser.add_argument("--max-model-len", type=int, default=None, help="Override vLLM max_model_len to reduce KV cache memory usage")
+    parser.add_argument("--max-num-seqs", type=int, default=32, help="Maximum number of sequences vLLM processes concurrently (lower = less activation memory)")
     parser.add_argument("--student", action="store_true", help="Student model")
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=0,
+        help="Split prompts into chunks of this size before passing to vLLM to reduce peak KV-cache memory (0 = no chunking)",
+    )
     args = parser.parse_args(argv)
 
     input_path = args.input.expanduser().resolve()
@@ -252,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.load_in_8bit:
         llm_kwargs["quantization"] = "fp8"
         llm_kwargs["enforce_eager"] = True
-        llm_kwargs["max_num_seqs"] = 32
+        llm_kwargs["max_num_seqs"] = args.max_num_seqs
     if args.max_model_len is not None:
         llm_kwargs["max_model_len"] = args.max_model_len
     llm = LLM(**llm_kwargs)
@@ -264,7 +279,7 @@ def main(argv: list[str] | None = None) -> int:
         seed=args.seed,
     )
 
-    completions = _generate_completions_vllm(llm, prompts, sampling_params)
+    completions = _generate_completions_vllm(llm, prompts, sampling_params, chunk_size=args.chunk_size)
 
     updated = 0
     newly_correct = 0

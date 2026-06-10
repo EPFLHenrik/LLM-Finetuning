@@ -83,6 +83,11 @@ FORMAT_WEIGHT = 0.40
 # Repetition penalty weight (multiplicative). 0.0 = no penalty, 1.0 = full erase
 REPETITION_WEIGHT = 0.20
 
+# Module-level mutable so reward functions can read CLI-overridden values.
+_acc_weight: float = ACC_WEIGHT
+_format_weight: float = FORMAT_WEIGHT
+_repetition_weight: float = REPETITION_WEIGHT
+
 
 def _read_json_rows(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
@@ -130,12 +135,7 @@ def _normalize_row(row: dict[str, Any], system_message: str) -> dict[str, Any]:
 
     normalized = dict(row)
     normalized["answer"] = answer
-    if isinstance(row.get("messages"), list):
-        # Strip assistant turns — GRPO needs only the prompt context, not the answer.
-        prompt_messages = [m for m in row["messages"] if m.get("role") != "assistant"]
-        normalized["prompt"] = prompt_messages if prompt_messages else _build_messages(prompt_text, system_message)
-    else:
-        normalized["prompt"] = _build_messages(prompt_text, system_message)
+    normalized["prompt"] = _build_messages(prompt_text, system_message)
     return normalized
 
 
@@ -181,7 +181,7 @@ def reward_format(prompts: list[Any], completions: list[str], **kwargs: Any) -> 
     for completion in completions:
         text = _normalize_completion(completion)
         extracted, _ = extract_boxed_answer_with_fallbacks(text)
-        rewards.append(FORMAT_WEIGHT * (1.0 if extracted is not None else 0.0))
+        rewards.append(_format_weight * (1.0 if extracted is not None else 0.0))
     return rewards
 
 
@@ -201,7 +201,7 @@ def reward_accuracy(prompts: list[Any], completions: list[str], **kwargs: Any) -
             r = 1.0 if extracted.strip().upper() == reference.strip().upper() else 0.0
         else:
             r = 0.0
-        rewards.append(ACC_WEIGHT * r)
+        rewards.append(_acc_weight * r)
     return rewards
 
 
@@ -210,7 +210,7 @@ def reward_repetition(prompts: list[Any], completions: list[str], **kwargs: Any)
     rewards = []
     for completion in completions:
         text = _normalize_completion(completion)
-        rewards.append(-REPETITION_WEIGHT * _repetition_score(text))
+        rewards.append(-_repetition_weight * _repetition_score(text))
     return rewards
 
 
@@ -308,9 +308,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--lora-alpha", type=int, default=32)
     parser.add_argument("--lora-dropout", type=float, default=0.05)
     parser.add_argument("--lora-target-modules", type=str, default=",".join(DEFAULT_LORA_TARGET_MODULES))
-    parser.add_argument("--peft-adapter", type=Path, default=None, help="Path to a PEFT adapter checkpoint to load on top of a base model")
-    parser.add_argument("--base-model", type=Path, default=None, help="Path to the base (unmerged) model when loading a PEFT adapter")
+    parser.add_argument("--adapter-folder", type=Path, default=None, help="Existing LoRA adapter checkpoint to continue training from (--model-folder must be the matching base model)")
     parser.add_argument("--dry-run", action="store_true", help="Print a sample of the normalized dataset and exit")
+    parser.add_argument("--beta", type=float, default=0.04, help="KL penalty coefficient (0 = no penalty, higher = stay closer to reference)")
+    parser.add_argument("--acc-weight", type=float, default=ACC_WEIGHT, help="Reward weight for accuracy")
+    parser.add_argument("--format-weight", type=float, default=FORMAT_WEIGHT, help="Reward weight for \\boxed{} format presence")
+    parser.add_argument("--repetition-weight", type=float, default=REPETITION_WEIGHT, help="Penalty weight for 3-gram repetition")
     return parser
 
 
@@ -319,6 +322,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.model_folder.exists():
         raise SystemExit(f"Model folder not found: {args.model_folder}")
+    if args.adapter_folder and not args.adapter_folder.exists():
+        raise SystemExit(f"Adapter folder not found: {args.adapter_folder}")
     if not args.dataset_file.exists():
         raise SystemExit(f"Dataset file not found: {args.dataset_file}")
 
@@ -330,6 +335,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if not torch.cuda.is_available():
         raise SystemExit("This script expects a CUDA-capable GPU for GRPO training.")
+
+    global _acc_weight, _format_weight, _repetition_weight
+    _acc_weight = args.acc_weight
+    _format_weight = args.format_weight
+    _repetition_weight = args.repetition_weight
 
     torch.manual_seed(args.seed)
     random.seed(args.seed)
@@ -344,9 +354,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[dry-run] normalized {len(normalized_rows)} rows")
         return 0
 
-    # If a PEFT adapter will be loaded on top of a base model, prefer the
-    # tokenizer from the base model; otherwise use the provided model folder.
-    tokenizer_source = args.base_model if args.peft_adapter else args.model_folder
+    tokenizer_source = args.model_folder
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_source, use_fast=True, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -367,6 +375,7 @@ def main(argv: list[str] | None = None) -> int:
     grpo_config = GRPOConfig(
         output_dir=str(args.output_dir),
         seed=args.seed,
+        beta=args.beta,
         num_train_epochs=args.num_train_epochs,
         learning_rate=args.learning_rate,
         per_device_train_batch_size=args.per_device_train_batch_size,
@@ -377,9 +386,7 @@ def main(argv: list[str] | None = None) -> int:
         report_to=[] if args.skip_wandb else ["wandb"],
         run_name=args.output_dir.name,
         num_generations=args.num_generations,
-        # Ensure generation_batch_size is divisible by num_generations.
-        # Use num_generations so each generation can be produced in one batch.
-        generation_batch_size=args.num_generations,
+        generation_batch_size=args.per_device_train_batch_size * args.num_generations,
         max_completion_length=args.max_completion_length,
         temperature=args.temperature,
         top_p=args.top_p,
@@ -396,17 +403,28 @@ def main(argv: list[str] | None = None) -> int:
     )
     # Disable PEFT bitsandbytes dispatch before importing PEFT symbols.
     _disable_peft_bnb_dispatch()
-    from peft import LoraConfig, PeftModel, TaskType
+    from peft import LoraConfig, PeftConfig, PeftModel, TaskType, set_peft_model_state_dict, load_peft_weights
 
     lora_config = None
-    if args.use_lora:
-        lora_config = LoraConfig(
-            task_type=TaskType.CAUSAL_LM,
-            r=args.lora_r,
-            lora_alpha=args.lora_alpha,
-            lora_dropout=args.lora_dropout,
-            target_modules=[module.strip() for module in args.lora_target_modules.split(",") if module.strip()],
-        )
+    if args.use_lora or args.adapter_folder:
+        if args.adapter_folder:
+            # Read config from the checkpoint so r/alpha/target_modules match exactly.
+            peft_cfg = PeftConfig.from_pretrained(str(args.adapter_folder))
+            lora_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=peft_cfg.r,
+                lora_alpha=peft_cfg.lora_alpha,
+                lora_dropout=peft_cfg.lora_dropout,
+                target_modules=list(peft_cfg.target_modules),
+            )
+        else:
+            lora_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=args.lora_r,
+                lora_alpha=args.lora_alpha,
+                lora_dropout=args.lora_dropout,
+                target_modules=[module.strip() for module in args.lora_target_modules.split(",") if module.strip()],
+            )
 
     if not args.skip_wandb:
         import wandb
@@ -417,14 +435,9 @@ def main(argv: list[str] | None = None) -> int:
             pass
         wandb.init(project=args.wandb_project, entity=args.wandb_entity, config=vars(args), name="GRPO test run")
 
-    # If a PEFT adapter path is provided, load the base model object and
-    # attach the adapter so we pass a fully prepared model object to the trainer.
+    # Always pass the base model as a string path so vLLM can initialize properly.
+    # If resuming from an adapter, we inject the weights after the trainer is built.
     model_arg = str(args.model_folder)
-    if args.peft_adapter:
-        if not args.base_model:
-            raise SystemExit("When using --peft-adapter you must pass --base-model pointing to the base model folder")
-        base_model = AutoModelForCausalLM.from_pretrained(str(args.base_model), trust_remote_code=True)
-        model_arg = PeftModel.from_pretrained(base_model, str(args.peft_adapter))
 
     _base_reward_funcs = [reward_format, reward_accuracy, reward_repetition]
     accumulators: dict[str, list[float]] = {f.__name__: [] for f in _base_reward_funcs}
@@ -438,6 +451,12 @@ def main(argv: list[str] | None = None) -> int:
         peft_config=lora_config,
         callbacks=[_WandbRewardCallback(accumulators)],
     )
+
+    if args.adapter_folder:
+        # Load the SFT adapter weights into the trainer's LoRA model.
+        # vLLM already has the base model; TRL will sync the LoRA weights to it before generation.
+        adapter_weights = load_peft_weights(str(args.adapter_folder))
+        set_peft_model_state_dict(trainer.model, adapter_weights)
 
     trainer.train()
     _save_merged_model(trainer, tokenizer, args.output_dir)

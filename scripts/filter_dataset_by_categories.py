@@ -30,7 +30,10 @@ DEFAULT_CATEGORIES = [
     "high_school_statistics",
     "high_school_microeconomics",
     "high_school_macroeconomics",
-    "high_school_mathematics"
+    "high_school_mathematics",
+    "moral_disputes",
+    "moral_scenarios",
+    "global_facts"
 ]
 
 

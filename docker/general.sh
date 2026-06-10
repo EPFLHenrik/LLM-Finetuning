@@ -12,7 +12,7 @@ python training/lora_post_train.py --dataset-file data/preprocessing/mmlu_aux_fi
 
 python scripts/evaluate_training.py --checkpoints-dir models/economics_after_grpo --validation-file data/preprocessing/ai2_arc_challenge/validation.jsonl --output-dir results/merged_science_finance_model/ai2_arc_challenge --wandb-key '<WANDB_API_KEY_REDACTED>'
 
-python scripts/evaluate_training.py --checkpoints-dir models/economics_after_grpo --validation-file validation_samples/general_knowledge.jsonl --output-dir results/economics_after_grpo_model/gen_val --wandb-key '<WANDB_API_KEY_REDACTED>'
+python scripts/evaluate_training.py --checkpoints-dir models/full_sft_grpo --validation-file validation_samples/general_knowledge.jsonl --output-dir results/full_sft_grpo/gen_val --wandb-key '<WANDB_API_KEY_REDACTED>'
 
 #python scripts/download_hf.py --hf-token '<HF_TOKEN_REDACTED>' --dataset-path cais/mmlu --dataset-config auxiliary_train --output-dir data/datasets/train_datasets/cais__mmlu__auxiliary_train
 
