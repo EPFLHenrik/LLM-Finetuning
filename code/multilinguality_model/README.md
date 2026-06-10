@@ -95,11 +95,6 @@ multilinguality_model/
 │   ├── pass_at_k.py
 │   ├── run_eval_vllm.py
 │   ├── score.py
-│   ├── bash/
-│   │   ├── eval_do_sample.sh
-│   │   ├── eval_group_models_hugo.sh
-│   │   ├── eval_loop.sh
-│   │   └── eval_merged.sh
 │   └── results/                       # pre-computed evaluation results
 │       ├── Qwen3-1.7B/                # base model, untuned
 │       ├── v1/                        # best SFT multilingual checkpoint
