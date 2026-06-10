@@ -233,3 +233,18 @@ replace `--benchmark <...>` with `--run_all` to run all benchmarks present in da
 
 Example:
 `python -m code.safety_model.benchmark --name <my-model-name> --benchmark <benchmark_name> --checkpoint <checkpoint_dir>`
+
+## 7. Model Benchmarking
+
+To evaluate any checkpoint on any benchmarks, `code/safety_model/benchmark.py` script has to be run with the following arguments:
+- `--name`, name of the model benchmark, by default the model checkpoint path.
+- `--benchmark`, name of the benchmark in `data/safety_model/benchmark/`.
+- `--checkpoint`, path of the model to be evaluated.
+- `--limit`, maximum number of samples per benchmark to evaluate. If not specified, the entire benchmark is considered.
+
+replace `--benchmark <...>` with `--run_all` to run all benchmarks present in `data/safety_model/benchmark/`.
+
+### Example:
+```
+python -m code.safety_model.benchmark --name sft_benchmark --checkpoint checkpoints/sft/hf_model --run_all
+```
