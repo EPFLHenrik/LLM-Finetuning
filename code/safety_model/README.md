@@ -11,7 +11,8 @@ Reproduce the final submitted safety model by:
 - generating distilled reasoning data,
 - training an SFT adapter,
 - creating DPO preference pairs,
-- training the final DPO adapter.
+- training the final DPO adapter,
+- Evaluate any model on any safety benchmark.
 
 ## Before You Start
 
